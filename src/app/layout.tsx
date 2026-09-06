@@ -56,7 +56,8 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable} h-full antialiased`}>
-      <body className="grain min-h-full flex flex-col">
+      {/* suppressHydrationWarning: browser extensions (e.g. ColorZilla) inject attributes on <body> before hydration. */}
+      <body className="grain min-h-full flex flex-col" suppressHydrationWarning>
         <JsonLd data={[organizationSchema(), websiteSchema()]} />
         <PixelProvider>
           <MotionProvider>
