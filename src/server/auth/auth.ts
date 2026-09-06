@@ -19,7 +19,8 @@ const google = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
  * Google sign-in. Roles live on the user row and are enforced server-side
  * in src/server/auth/session.ts and the services.
  */
-export const auth = betterAuth({
+function createAuth() {
+  return betterAuth({
   appName: "Pixel Forge",
   baseURL: appUrl,
   secret: process.env.BETTER_AUTH_SECRET ?? (process.env.NODE_ENV === "production" ? undefined : "development-only-secret-change-me-please"),
@@ -71,6 +72,22 @@ export const auth = betterAuth({
     nextCookies(),
   ],
 });
+}
 
-export type Session = typeof auth.$Infer.Session;
+type Auth = ReturnType<typeof createAuth>;
+let instance: Auth | undefined;
+
+/** The auth instance is created on first use, not at import, so builds and tooling that never serve a request do not need the secret. */
+export function getAuth(): Auth {
+  if (!instance) instance = createAuth();
+  return instance;
+}
+
+/** Same instance, addressed as a plain object for call sites (`auth.api.*`, `auth.handler`). */
+export const auth: Auth = new Proxy({} as Auth, {
+  get: (_, key) => Reflect.get(getAuth(), key),
+  has: (_, key) => Reflect.has(getAuth(), key),
+});
+
+export type Session = Auth["$Infer"]["Session"];
 export const roleValues = ROLES;

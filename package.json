@@ -7,7 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:seed": "node scripts/seed.mjs",
+    "qa:app": "node scripts/app-qa.mjs",
+    "qa:forge": "node scripts/forge-qa.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1127.0",
@@ -34,6 +39,7 @@
     "playwright": "^1.63.0",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vite": "^7.3.6",
     "vitest": "^5.0.0"
   }
 }

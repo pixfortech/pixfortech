@@ -1,5 +1,6 @@
 "use client";
 
+import { useModalDone } from "./ModalButton";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createProjectAction, updateProjectAction, setProjectMembersAction } from "@/server/actions/projects";
@@ -30,7 +31,9 @@ function useSubmit<T = unknown>(fn: (payload: Record<string, unknown>) => Promis
   return { submit, pending, error, errors };
 }
 
-export function ProjectForm({ clients, managers, project, workflow, onDone }: { clients: Opt[]; managers: Opt[]; project?: { id: string; title: string; summary: string | null; status: string; priority: string; health: string; progress: number; managerId: string | null; startDate: Date | null; targetDate: Date | null; phase: string | null; organisationId: string }; workflow?: string[]; onDone?: () => void }) {
+export function ProjectForm({ clients, managers, project, workflow, onDone: onDoneProp }: { clients: Opt[]; managers: Opt[]; project?: { id: string; title: string; summary: string | null; status: string; priority: string; health: string; progress: number; managerId: string | null; startDate: Date | null; targetDate: Date | null; phase: string | null; organisationId: string }; workflow?: string[]; onDone?: () => void }) {
+  const modalDone = useModalDone();
+  const onDone = onDoneProp ?? modalDone ?? undefined;
   const router = useRouter();
   const s = useSubmit<{ id: string }>((p) => (project ? updateProjectAction({ ...p, id: project.id }) : createProjectAction(p)), (d) => { onDone?.(); if (!project && d) router.push(`/admin/projects/${d.id}`); });
   const statuses = workflow ?? STATUSES;
@@ -82,7 +85,9 @@ export function MembersForm({ projectId, people, current }: { projectId: string;
   );
 }
 
-export function ClientForm({ client, onDone }: { client?: { id: string; name: string; website: string | null; industry: string | null; notes: string | null }; onDone?: () => void }) {
+export function ClientForm({ client, onDone: onDoneProp }: { client?: { id: string; name: string; website: string | null; industry: string | null; notes: string | null }; onDone?: () => void }) {
+  const modalDone = useModalDone();
+  const onDone = onDoneProp ?? modalDone ?? undefined;
   const router = useRouter();
   const s = useSubmit<string>((p) => (client ? updateClientAction({ ...p, id: client.id }) : createClientAction(p)), (id) => { onDone?.(); if (!client && id) router.push(`/admin/clients/${id}`); });
   return (
@@ -99,9 +104,15 @@ export function ClientForm({ client, onDone }: { client?: { id: string; name: st
   );
 }
 
-export function InviteForm({ organisations, roles, defaultOrganisationId, onDone }: { organisations: Opt[]; roles: string[]; defaultOrganisationId?: string; onDone?: () => void }) {
+export function InviteForm({ organisations, roles, defaultOrganisationId, onDone: onDoneProp }: { organisations: Opt[]; roles: string[]; defaultOrganisationId?: string; onDone?: () => void }) {
+  const modalDone = useModalDone();
+  const onDone = onDoneProp ?? modalDone ?? undefined;
   const { toast } = useRealtime();
-  const s = useSubmit((p) => inviteUserAction(p), () => { toast({ title: "Invitation sent", body: "They will receive an email to set a password.", kind: "success" }); onDone?.(); });
+  const s = useSubmit<{ id: string; emailed: boolean }>((p) => inviteUserAction(p), (d) => {
+    if (d?.emailed === false) toast({ title: "Account created, email not sent", body: "No email transport is configured. Send them a reset link from the sign-in page once email is set up.", kind: "error" });
+    else toast({ title: "Invitation sent", body: "They will receive an email to set a password.", kind: "success" });
+    onDone?.();
+  });
   const clientRoles = roles.filter((r) => r.startsWith("client"));
   return (
     <form onSubmit={(e) => s.submit(e)} className="grid gap-4" noValidate>

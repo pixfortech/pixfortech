@@ -46,7 +46,7 @@ export function AppShell({ area, nav, user, notifications, children, searchLinks
         <Monogram size={22} />
         <span className="font-display text-[0.9375rem] font-semibold tracking-[-0.01em]">Pixel Forge <span className="text-bone-400">{area === "admin" ? "Admin" : "Portal"}</span></span>
       </Link>
-      <ul className="flex flex-1 flex-col gap-0.5 px-2">
+      <ul className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2">
         {nav.map((n) => (
           <li key={n.href}>
             <Link href={n.href} onClick={() => setOpen(false)} aria-current={active(n.href) ? "page" : undefined} className={cn("flex items-center gap-3 rounded-md px-3 py-2 text-[0.875rem] transition-colors", active(n.href) ? "bg-bone-50/8 text-bone-50" : "text-bone-200 hover:bg-bone-50/5 hover:text-bone-50")}>
@@ -77,9 +77,12 @@ export function AppShell({ area, nav, user, notifications, children, searchLinks
     <div className="flex min-h-[100svh] bg-ink-900 text-bone-50">
       <aside className="hidden w-60 shrink-0 border-r border-line bg-ink-950 lg:block"><div className="sticky top-0 h-[100svh]">{sidebar}</div></aside>
       {open && (
-        <div className="fixed inset-0 z-[70] lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+        <div className="fixed inset-x-0 top-0 z-[70] h-dvh lg:hidden" role="dialog" aria-modal="true" aria-label="Menu" onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}>
           <div className="absolute inset-0 bg-ink-950/70" onClick={() => setOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-72 border-r border-line bg-ink-950 shadow-2">{sidebar}</aside>
+          <aside className="absolute top-0 left-0 flex h-full w-72 flex-col overflow-y-auto border-r border-line bg-ink-950 shadow-2">
+            <button type="button" autoFocus onClick={() => setOpen(false)} className="absolute top-3 right-3 grid h-8 w-8 place-items-center rounded-md text-bone-400 hover:bg-bone-50/5 hover:text-bone-50" aria-label="Close menu">×</button>
+            {sidebar}
+          </aside>
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col">

@@ -1,12 +1,15 @@
 "use client";
 
+import { useModalDone } from "./ModalButton";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createTaskAction, updateTaskAction } from "@/server/actions/tasks";
 import { AppButton, Field, inputCls, selectCls } from "@/components/app/primitives";
 
 type Opt = { id: string; name?: string; title?: string };
-export function TaskForm({ projectId, projects, people, milestones, task, onDone }: { projectId?: string; projects?: { id: string; code: string; title: string }[]; people: Opt[]; milestones?: Opt[]; task?: { id: string; title: string; description: string | null; status: string; priority: string; assigneeId: string | null; dueDate: Date | null; milestoneId: string | null; clientVisible: boolean; labels: string | null }; onDone?: () => void }) {
+export function TaskForm({ projectId, projects, people, milestones, task, onDone: onDoneProp }: { projectId?: string; projects?: { id: string; code: string; title: string }[]; people: Opt[]; milestones?: Opt[]; task?: { id: string; title: string; description: string | null; status: string; priority: string; assigneeId: string | null; dueDate: Date | null; milestoneId: string | null; clientVisible: boolean; labels: string | null }; onDone?: () => void }) {
+  const modalDone = useModalDone();
+  const onDone = onDoneProp ?? modalDone ?? undefined;
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);

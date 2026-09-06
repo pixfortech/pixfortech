@@ -88,9 +88,10 @@ export async function inviteUser(actor: Actor, input: { name: string; email: str
   const created = await auth.api.signUpEmail({ body: { name: input.name, email: input.email.toLowerCase(), password: tempPassword } });
   const userId = created.user.id;
   db.update(schema.users).set({ role: input.role, organisationId: staffRole ? (studioOrg()?.id ?? null) : input.organisationId, title: input.title ?? null }).where(eq(schema.users.id, userId)).run();
-  try { await auth.api.requestPasswordReset({ body: { email: input.email.toLowerCase(), redirectTo: "/reset-password" } }); } catch (err) { console.error("[invite] reset email failed", err); }
-  recordAudit({ actorId: actor.id, action: "user.invite", targetType: "user", targetId: userId, metadata: { email: input.email, role: input.role, organisationId: input.organisationId }, ip });
-  return userId;
+  let emailed = true;
+  try { await auth.api.requestPasswordReset({ body: { email: input.email.toLowerCase(), redirectTo: "/reset-password" } }); } catch (err) { emailed = false; console.error("[invite] reset email failed", err); }
+  recordAudit({ actorId: actor.id, action: "user.invite", targetType: "user", targetId: userId, metadata: { email: input.email, role: input.role, organisationId: input.organisationId, emailed }, ip });
+  return { id: userId, emailed };
 }
 
 export function updateUser(actor: Actor, id: string, patch: { role?: Role; disabled?: boolean; title?: string | null; organisationId?: string | null }, ip?: string | null) {

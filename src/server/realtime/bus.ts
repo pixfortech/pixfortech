@@ -21,9 +21,13 @@ declare global {
   var __pfBus: EventEmitter | undefined;
 }
 
+// One emitter per Node process. Route handlers, server actions and pages are
+// bundled separately in production, so the module can be instantiated more
+// than once; sharing through globalThis keeps every publisher and subscriber
+// on the same bus (and survives HMR in development).
 const emitter = globalThis.__pfBus ?? new EventEmitter();
 emitter.setMaxListeners(1000);
-if (process.env.NODE_ENV !== "production") globalThis.__pfBus = emitter;
+globalThis.__pfBus = emitter;
 
 export function publish(event: Omit<RealtimeEvent, "id" | "at">) {
   const full: RealtimeEvent = { ...event, id: crypto.randomUUID(), at: Date.now() };

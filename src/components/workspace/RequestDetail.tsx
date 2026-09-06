@@ -48,7 +48,7 @@ export function RequestDetail({ r, area, staff, currentUserId, assignees }: { r:
           <ol className="flex flex-wrap items-center gap-2 text-[0.75rem]" aria-label="Request pipeline">
             {PIPELINE.map((s, i) => (
               <li key={s} className="flex items-center gap-2">
-                <span className={cn("flex items-center gap-1.5 rounded-pill border px-2.5 py-1", i < stageIdx ? "border-line text-bone-400" : i === stageIdx ? "border-forge-500 bg-forge-500/10 text-forge-300" : "border-line-faint text-bone-600")}>
+                <span aria-current={i === stageIdx ? "step" : undefined} className={cn("flex items-center gap-1.5 rounded-pill border px-2.5 py-1", i < stageIdx ? "border-line text-bone-400" : i === stageIdx ? "border-forge-500 bg-forge-500/10 text-forge-300" : "border-line-faint text-bone-600")}>
                   <span className={cn("h-1.5 w-1.5", i <= stageIdx ? "bg-forge-500" : "bg-line-strong")} aria-hidden="true" />{LABEL[s]}
                 </span>
                 {i < PIPELINE.length - 1 && <span className="text-bone-600" aria-hidden="true">›</span>}
@@ -114,7 +114,7 @@ export function RequestDetail({ r, area, staff, currentUserId, assignees }: { r:
         <Card>
           <CardHeader title="Details" />
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3 px-5 pb-5 text-[0.8125rem]">
-            <dt className="text-bone-400">Status</dt><dd><Badge tone={statusTone(r.status)}>{LABEL[r.status]}</Badge></dd>
+            <dt className="text-bone-400">Status</dt><dd data-testid="request-status"><Badge tone={statusTone(r.status)}>{LABEL[r.status]}</Badge></dd>
             <dt className="text-bone-400">Priority</dt><dd><Badge tone={priorityTone(r.priority)}>{humanise(r.priority)}</Badge></dd>
             <dt className="text-bone-400">Project</dt><dd><Link href={`/${area}/projects/${r.project.id}`} className="link-line text-bone-50">{r.project.code}</Link></dd>
             <dt className="text-bone-400">Area</dt><dd className="text-bone-200">{r.area ?? "—"}</dd>

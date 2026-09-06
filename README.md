@@ -28,7 +28,50 @@ Copy `.env.example` to `.env.local` and set the values you need. Without an enqu
 | `src/pixel/` | The site-wide pixel system: engine, reveals, themes, behaviour controller, mascot, counter, mini game. See below. |
 | `src/components/enquiry/` | Multi-step enquiry form. Validation lives in `src/lib/enquiry-schema.ts`, delivery in `src/lib/enquiry-delivery.ts`. |
 | `src/app/globals.css` | Design tokens (colour, type, spacing, radius, elevation, motion, breakpoints) and base utilities. |
-| `scripts/` | Cover-art generator and visual QA helpers (screenshots, interaction checks) using the local Chromium. |
+| `src/server/` | The platform backend: `db/` (Drizzle schema, migrations, connection), `auth/` (better-auth config, permissions, session helpers), `services/` (tenancy-aware business logic), `actions/` (validated Server Actions), `storage/` (local/S3 drivers, signed downloads), `realtime/` (event bus), `email.ts`. |
+| `src/app/portal/`, `src/app/admin/` | Client portal and admin dashboard routes. Both read the session on the server and render nothing for the wrong role. |
+| `src/app/(auth)/` | Login, forgot/reset password, email verification. |
+| `src/components/app/`, `src/components/workspace/` | Product UI kit (shell, toasts, notification bell, command palette) and feature components (kanban, chat, requests, files, approvals, forms). |
+| `src/proxy.ts` | Edge redirect for unauthenticated `/portal` and `/admin` hits. Authorisation itself is always re-checked on the server. |
+| `scripts/` | Seed script, cover-art generator and visual QA helpers (screenshots, interaction checks) using the local Chromium. |
+
+## Scroll forging
+
+Content is forged as a pure function of scroll position. `src/pixel/reveal-logic.ts` holds the maths: every `[data-forge]` element assembles left to right while it crosses a band near the bottom of the viewport (`forgeBand`), freezes the instant scrolling stops, and unforges right to left when scrolled back. There are no timers or autonomous animations. The reveal manager sets a `--forge` custom property per element (CSS `clip-path`) and draws a few columns of pixel blocks around the front on the overlay canvas. Reduced motion skips the pixel blocks and keeps the state changes.
+
+## Client portal and admin platform
+
+The site also hosts a client portal (`/portal`) and an admin dashboard (`/admin`).
+
+**Stack**: better-auth (email + password, forgot/reset, email verification, magic links, optional Google), Drizzle ORM on SQLite (`better-sqlite3`, WAL mode, migrations applied on boot), Server Actions validated with Zod, Server-Sent Events for realtime, private file storage on disk or S3.
+
+**Roles**: `super_admin`, `admin`, `project_manager`, `team_member` (staff, land in `/admin`) and `client_admin`, `client_member` (clients, land in `/portal`). Every read and write goes through `src/server/services/*`, which resolve the actor's accessible projects (`accessibleProjectIds` / `requireProject`) before touching data. Clients only ever see their own organisation's projects, requests, files, conversations and approvals. Internal comments and internal conversations are filtered out at query level for clients, not hidden in the UI.
+
+**Data model** (`src/server/db/schema.ts`): users, sessions, accounts, verifications, organisations, organisation memberships, projects, project members, milestones, tasks, task comments, feature/change requests, request comments, files, conversations, messages, message reads, approvals, notifications, notification preferences, activity log, audit log, invitations. Foreign keys are enforced. The schema uses portable column types so it can move to Postgres by swapping the Drizzle driver and regenerating migrations.
+
+**Realtime**: `src/server/realtime/bus.ts` is an in-process event bus with audience scoping (users, projects, organisations, staff). `/api/realtime` streams matching events over SSE; the client provider refreshes the affected views, shows toasts, updates unread badges and, only after the user opts in from Settings, raises browser notifications. For multiple Node instances, replace the bus with Redis pub/sub or a hosted channel service behind the same `publish` / `subscribe` interface.
+
+**Files**: uploads are validated by extension allowlist, declared MIME, magic bytes, SVG content and size (25 MB), then stored under random keys outside `/public`. Downloads go through `/api/files/[id]`, which checks project access and either streams from disk or redirects to a short-lived presigned S3 URL. A malware-scan hook (`scanUpload`) is in place for wiring a scanner.
+
+### Local setup
+
+```bash
+cp .env.example .env.local     # set BETTER_AUTH_SECRET at minimum
+npm run db:seed                # migrates the database and loads demo data
+npm run dev
+```
+
+Demo logins (password `forge-demo-2026!`): `admin@pixelforge.test` (super admin), `pm@pixelforge.test` (project manager), `dev@pixelforge.test` and `design@pixelforge.test` (team), `maya@northbank.test` (client admin, Northbank), `tom@northbank.test` (client member), `daniel@meridian.test` (client admin, Meridian). Delete `data/pixelforge.sqlite` and reseed to reset.
+
+Without `RESEND_API_KEY`, verification, reset and invitation emails are printed to the server console with their links. `npm run db:generate` produces a new migration after schema changes.
+
+### Production checklist
+
+- Set `BETTER_AUTH_SECRET`, `NEXT_PUBLIC_APP_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, and a persistent `DATABASE_PATH` (or port to Postgres).
+- Use `STORAGE_DRIVER=s3` with a private bucket, or mount a persistent volume at `STORAGE_DIR`.
+- Set `REQUIRE_EMAIL_VERIFICATION=true` and create the first super admin with the seed script or by inviting through `/admin/team`.
+- Serve behind HTTPS; cookies are `Secure` in production and sessions are stored server-side.
+- Run `npm run qa:app` against a seeded instance for the end-to-end auth, isolation and realtime checks.
 
 ## The pixel system
 

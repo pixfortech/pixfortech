@@ -11,7 +11,7 @@ const W = Number(process.env.W ?? 1366);
 async function login(email, vw = W) {
   const ctx = await browser.newContext({ viewport: { width: vw, height: vw < 800 ? 812 : 900 } });
   const page = await ctx.newPage();
-  page.on("console", (m) => { if (m.type() === "error") errors.push(`[${email}] console: ${m.text().slice(0, 200)}`); });
+  page.on("console", (m) => { if (m.type() === "error") errors.push(`[${email}] console @${page.url()}: ${m.text().slice(0, 6000)}`); });
   page.on("pageerror", (e) => errors.push(`[${email}] pageerror: ${e.message}`));
   await page.goto(base + "/login", { waitUntil: "load", timeout: 90000 });
   await page.getByLabel("Email").fill(email);
@@ -89,7 +89,7 @@ await pm.page.goto(base + reqUrl, { waitUntil: "load" });
 await pm.page.getByRole("button", { name: "Under review" }).click();
 await pm.page.waitForTimeout(800);
 await shot(pm.page, "admin-request");
-await a.page.waitForFunction(() => document.body.innerText.includes("is now Under review") || document.body.innerText.includes("Under review"), null, { timeout: 8000 }).then(() => console.log("client sees Under review live ✓")).catch(() => console.log("client did not update ✗"));
+await a.page.waitForFunction(() => document.querySelector("[data-testid='request-status']")?.textContent?.includes("Under review"), null, { timeout: 8000 }).then(() => console.log("client sees Under review live ✓")).catch(() => console.log("client did not update ✗"));
 // PM internal note must not reach client
 await pm.page.getByLabel("Comment").fill("INTERNAL-ONLY-NOTE 4711");
 await pm.page.getByRole("checkbox", { name: /Internal note/ }).check();
@@ -100,9 +100,10 @@ console.log("internal note hidden from client:", !(await a.page.textContent("bod
 // Chat realtime
 await a.page.goto(base + projA + "/messages", { waitUntil: "load" });
 await pm.page.goto(base + projA.replace("/portal", "/admin") + "/messages", { waitUntil: "load" });
-await pm.page.getByLabel("Message").fill("Live message from the PM at " + Date.now());
+const liveText = "Live message from the PM at " + Date.now();
+await pm.page.getByLabel("Message").fill(liveText);
 await pm.page.getByRole("button", { name: "Send" }).click();
-await a.page.waitForFunction(() => document.body.innerText.includes("Live message from the PM"), null, { timeout: 8000 }).then(() => console.log("client chat live ✓")).catch(() => console.log("client chat not live ✗"));
+await a.page.waitForFunction((t) => document.body.innerText.includes(t), liveText, { timeout: 8000 }).then(() => console.log("client chat live ✓")).catch(() => console.log("client chat not live ✗"));
 await shot(a.page, "portal-chat-live");
 // Sign out
 await pm.page.getByRole("button", { name: "Sign out" }).click();

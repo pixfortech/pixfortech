@@ -24,7 +24,10 @@ function toActor(u: Record<string, unknown>): SessionUser {
 
 /** Current user or null. Reads the session cookie server-side. */
 export async function getSessionUser(): Promise<SessionUser | null> {
-  const session = await auth.api.getSession({ headers: await headers() });
+  // Read the request headers before touching the auth instance: during a build
+  // prerender, headers() bails out of static generation and auth is never created.
+  const requestHeaders = await headers();
+  const session = await auth.api.getSession({ headers: requestHeaders });
   if (!session?.user) return null;
   const u = toActor(session.user as unknown as Record<string, unknown>);
   if (u.disabled) return null;
@@ -32,7 +35,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 }
 
 export class AuthError extends Error {
-  constructor(public status: 401 | 403, message: string) { super(message); }
+  constructor(public status: 401 | 403 | 404 | 422, message: string) { super(message); }
 }
 
 /** For server actions and route handlers: throws instead of redirecting. */
