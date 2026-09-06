@@ -412,9 +412,11 @@ export class PixelEngine {
           if (o > cover) continue;
           const d = cover - o;
           const edge = d < 0.08;
-          const tone = (x * 3 + y * 5) % 7;
+          // Cheap integer hash for tone variety without visible stripes; ~4% of cells run hot.
+          const hsh = ((x * 73856093) ^ (y * 19349663)) >>> 0;
+          const tone = hsh % 25;
           ctx.globalAlpha = edge ? 0.5 + (d / 0.08) * 0.5 : 1;
-          ctx.fillStyle = edge && d < 0.03 ? hot : tone < 3 ? deep : tone === 6 ? hot : solid;
+          ctx.fillStyle = edge && d < 0.03 ? hot : tone < 10 ? deep : tone === 24 ? hot : solid;
           const s = edge ? cell * (0.6 + (d / 0.08) * 0.4) : cell;
           ctx.fillRect(x * cell + (cell - s) / 2, y * cell + (cell - s) / 2, s + 0.5, s + 0.5);
         }

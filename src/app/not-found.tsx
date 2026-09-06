@@ -13,7 +13,7 @@ export default function NotFound() {
       <div className="absolute inset-0 grid-lines opacity-60 [mask-image:radial-gradient(ellipse_at_50%_50%,black_10%,transparent_70%)]" aria-hidden="true" />
       <Container className="relative pt-32 pb-24">
         <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
-          <div className="lg:col-span-7">
+          <div className="min-w-0 lg:col-span-7">
             <Rise><Eyebrow className="mb-6">Error 404 · pixels missing</Eyebrow></Rise>
             <h1 id="nf-title" className="h1 max-w-[16ch]">
               <LineReveal lines={["We seem to have", "misplaced a few pixels."]} delay={0.1} />
@@ -30,7 +30,7 @@ export default function NotFound() {
               </div>
             </Rise>
           </div>
-          <Rise delay={0.3} className="lg:col-span-5">
+          <Rise delay={0.3} className="min-w-0 lg:col-span-5">
             <LostPixels />
           </Rise>
         </div>

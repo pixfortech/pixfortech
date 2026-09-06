@@ -36,7 +36,9 @@ export function PixelGame({ open, inline = false, onClose, onWin }: { open: bool
     behaviour.setGameOpen(true);
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
-    const size = Math.min(360, Math.floor(Math.min(window.innerWidth - 48, 360)));
+    // Fit the board to its container (minus the card padding) so it never widens the layout.
+    const host = canvas.parentElement?.getBoundingClientRect().width ?? window.innerWidth;
+    const size = Math.max(200, Math.min(360, Math.floor(host - 40)));
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     canvas.width = size * dpr; canvas.height = size * dpr;
     canvas.style.width = `${size}px`; canvas.style.height = `${size}px`;
