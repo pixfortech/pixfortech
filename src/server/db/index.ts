@@ -14,7 +14,6 @@ import * as schema from "./schema";
 const DB_PATH = process.env.DATABASE_PATH ?? path.join(process.cwd(), "data", "pixelforge.sqlite");
 
 declare global {
-  // eslint-disable-next-line no-var
   var __pfDb: ReturnType<typeof create> | undefined;
 }
 

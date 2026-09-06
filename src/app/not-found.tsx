@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { LineReveal, Rise } from "@/components/ui/Entrance";
 import { LostPixels } from "@/pixel/LostPixels";
+import { SiteChrome } from "@/components/layout/SiteChrome";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({ title: "Page not found", description: "This page was never forged, wandered off, or is hiding exceptionally well.", path: "/404", noIndex: true });
 
 export default function NotFound() {
   return (
+    <SiteChrome>
     <section className="relative flex min-h-[100svh] items-center overflow-hidden border-b border-line" aria-labelledby="nf-title">
       <div className="absolute inset-0 grid-lines opacity-60 [mask-image:radial-gradient(ellipse_at_50%_50%,black_10%,transparent_70%)]" aria-hidden="true" />
       <Container className="relative pt-32 pb-24">
@@ -36,5 +38,6 @@ export default function NotFound() {
         </div>
       </Container>
     </section>
+    </SiteChrome>
   );
 }

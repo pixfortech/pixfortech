@@ -49,7 +49,7 @@ export async function getProject(actor: Actor, id: string) {
 }
 
 export type ProjectInput = {
-  organisationId: string; title: string; summary?: string; status?: string; priority?: (typeof schema.PRIORITIES)[number]; managerId?: string | null;
+  organisationId: string; title: string; summary?: string | null; status?: string; priority?: (typeof schema.PRIORITIES)[number]; managerId?: string | null;
   startDate?: Date | null; targetDate?: Date | null; phase?: string | null; pixelTheme?: string | null;
 };
 

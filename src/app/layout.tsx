@@ -1,11 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Grotesk } from "next/font/google";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { MotionProvider } from "@/components/providers/MotionProvider";
-import { PixelProvider } from "@/pixel/PixelProvider";
-import { PixelUi } from "@/pixel/PixelUi";
 import { organizationSchema, websiteSchema } from "@/lib/seo";
 import { site } from "@/lib/content";
 import "./globals.css";
@@ -47,16 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       {/* suppressHydrationWarning: browser extensions (e.g. ColorZilla) inject attributes on <body> before hydration. */}
       <body className="grain min-h-full flex flex-col" suppressHydrationWarning>
         <JsonLd data={[organizationSchema(), websiteSchema()]} />
-        <PixelProvider>
-          <MotionProvider>
-            <Header />
-            <main id="main" className="flex-1">
-              {children}
-            </main>
-            <Footer />
-            <PixelUi />
-          </MotionProvider>
-        </PixelProvider>
+        {children}
       </body>
     </html>
   );

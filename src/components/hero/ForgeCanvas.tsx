@@ -40,7 +40,6 @@ export function ForgeCanvas({ className, anchor = { desktop: [0.745, 0.5], mobil
     let last = start;
     let mobile = false;
     let lastActivity = start;
-    let frameCount = 0;
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
@@ -60,7 +59,6 @@ export function ForgeCanvas({ className, anchor = { desktop: [0.745, 0.5], mobil
     };
 
     const frame = (now: number) => {
-      frameCount++;
       const t = (now - start) / 1000;
       // Once assembled and untouched, stop drawing entirely. Pointer movement
       // or scrolling wakes the loop again; the last frame stays on screen.

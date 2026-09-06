@@ -55,6 +55,7 @@ export function verifyDownload(fileId: string, userId: string, token: string | n
  * Malware scanning hook. Wire an ICAP/ClamAV/cloud scanner here; the file
  * record stores the outcome. Returns "skipped" when no scanner is configured.
  */
-export async function scanUpload(_buffer: Buffer, _mime: string): Promise<"clean" | "flagged" | "skipped"> {
+export async function scanUpload(buffer: Buffer, mime: string): Promise<"clean" | "flagged" | "skipped"> {
+  void buffer; void mime;
   return "skipped";
 }
