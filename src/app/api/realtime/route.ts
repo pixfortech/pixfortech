@@ -27,7 +27,10 @@ export async function GET(req: Request) {
       send("ready", { at: Date.now() });
       const unsub = subscribe((e) => { if (matches(e, scope)) send(e.type, { id: e.id, at: e.at, ...e.payload }); });
       const beat = setInterval(() => { try { controller.enqueue(encoder.encode(`: ping ${Date.now()}\n\n`)); } catch { /* closed */ } }, 25000);
-      cleanup = () => { unsub(); clearInterval(beat); };
+      // Project membership can change while a tab stays open; refresh the scope so
+      // added projects start streaming and removed ones stop within a minute.
+      const rescope = setInterval(() => { accessibleProjectIds(user).then((ids) => { scope.projectIds = new Set(ids); }).catch(() => undefined); }, 60000);
+      cleanup = () => { unsub(); clearInterval(beat); clearInterval(rescope); };
       req.signal.addEventListener("abort", () => { cleanup(); try { controller.close(); } catch { /* already closed */ } });
     },
     cancel() { cleanup(); },
