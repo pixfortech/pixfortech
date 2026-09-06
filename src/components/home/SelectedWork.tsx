@@ -18,8 +18,8 @@ export function SelectedWork() {
           title={<>Products that earn their keep.</>}
           lead={
             hasPlaceholders
-              ? "Case studies are being prepared for publication. The layouts below show how each project will be presented once the client work is approved."
-              : "A few of the storefronts, websites and applications we have designed and engineered."
+              ? "Client case studies are being forged as we speak. Until they are approved, these sample layouts show how each project will be told."
+              : "Storefronts, websites and applications we designed, engineered and still think about."
           }
         />
         <div className="mt-14 grid gap-x-8 gap-y-14 lg:grid-cols-2 lg:mt-20">
@@ -31,7 +31,7 @@ export function SelectedWork() {
         </div>
         <Reveal className="mt-14">
           <Button href="/work" variant="secondary" size="lg" arrow>
-            All work
+            See what we forged
           </Button>
         </Reveal>
       </Container>

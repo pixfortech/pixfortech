@@ -8,6 +8,7 @@ import { Arrow } from "@/components/ui/Button";
 import { ATTACHMENT_MAX_BYTES, BUDGETS, PROJECT_TYPES, TIMELINES, enquirySchema, labelFor, type EnquiryErrors, type EnquiryInput } from "@/lib/enquiry-schema";
 import { cn } from "@/lib/utils";
 import { ChoiceGroup, Field, TextArea, TextInput } from "./fields";
+import { behaviour } from "@/pixel/behaviour/store";
 
 type Step = 0 | 1 | 2;
 const STEPS = ["What", "Scope", "You"] as const;
@@ -91,6 +92,8 @@ export function EnquiryForm({ email }: { email: string }) {
       const json = (await res.json().catch(() => ({}))) as { ok?: boolean; message?: string; errors?: EnquiryErrors & { attachment?: string } };
       if (res.ok && json.ok) {
         setStatus("success");
+        behaviour.setFormActive(false);
+        behaviour.say("formSuccess", { state: "celebrating", stateMs: 4000, force: true });
       } else {
         setStatus("error");
         setMessage(json.message || "We could not send your enquiry. Please try again or email us directly.");
@@ -120,7 +123,7 @@ export function EnquiryForm({ email }: { email: string }) {
         </div>
         <h2 ref={headingRef} tabIndex={-1} className="h2 mt-6 outline-none">Thanks, {data.name.split(" ")[0]}. We have it.</h2>
         <p className="lead mt-5 max-w-[34rem]">
-          We will read your brief properly and reply to <span className="text-bone-50">{data.email}</span> within two working days, usually with a few questions before any proposal.
+          We will read it properly and reply to <span className="text-bone-50">{data.email}</span> within two working days, usually with a few questions before anything resembling a proposal.
         </p>
         <dl className="mt-8 grid gap-4 border-t border-line pt-6 text-small sm:grid-cols-3">
           <div><dt className="eyebrow mb-1">Building</dt><dd className="text-bone-50">{labelFor(PROJECT_TYPES, data.type)}</dd></div>
@@ -128,7 +131,7 @@ export function EnquiryForm({ email }: { email: string }) {
           <div><dt className="eyebrow mb-1">Timeline</dt><dd className="text-bone-50">{labelFor(TIMELINES, data.timeline)}</dd></div>
         </dl>
         <p className="mt-8 text-small text-bone-400">
-          In the meantime, <Link href="/insights" className="link-line text-bone-50">read how we think</Link> or <Link href="/process" className="link-line text-bone-50">see how an engagement runs</Link>.
+          In the meantime, <Link href="/insights" className="link-line text-bone-50">read how we think</Link> or <Link href="/process" className="link-line text-bone-50">see how an engagement runs</Link>. Pip will keep an eye on the pixels.
         </p>
       </div>
     );
@@ -166,15 +169,15 @@ export function EnquiryForm({ email }: { email: string }) {
       <AnimatePresence mode="wait" initial={false}>
         {step === 0 && panel("s0", (
           <div>
-            <h2 ref={headingRef} tabIndex={-1} className="h3 mb-6 outline-none">What are you building?</h2>
+            <h2 ref={headingRef} tabIndex={-1} className="h3 mb-6 outline-none">What are we forging?</h2>
             <ChoiceGroup legend="Project type" name="type" options={PROJECT_TYPES} value={data.type} onChange={(v) => set("type", v as EnquiryInput["type"])} error={errors.type} />
           </div>
         ))}
         {step === 1 && panel("s1", (
           <div className="flex flex-col gap-8">
             <h2 ref={headingRef} tabIndex={-1} className="h3 outline-none">Tell us about it.</h2>
-            <Field label="Project summary" htmlFor="summary" error={errors.summary} hint="What it is, who it is for, and what is not working today. A few sentences is enough.">
-              <TextArea id="summary" name="summary" value={data.summary} onChange={(e) => set("summary", e.target.value)} error={errors.summary} placeholder="We run a Shopify store selling… The current theme…" aria-describedby="summary-hint" />
+            <Field label="Project summary" htmlFor="summary" error={errors.summary} hint="What it is, who it is for, and what is not working today. A few sentences is plenty. Typos welcome.">
+              <TextArea id="summary" name="summary" value={data.summary} onChange={(e) => set("summary", e.target.value)} error={errors.summary} placeholder="We run a Shopify store selling ceramics. The theme fights us every time we…" aria-describedby="summary-hint" />
             </Field>
             <ChoiceGroup legend="Approximate budget" name="budget" options={BUDGETS} value={data.budget} onChange={(v) => set("budget", v as EnquiryInput["budget"])} error={errors.budget} columns={3} />
             <ChoiceGroup legend="Approximate timeline" name="timeline" options={TIMELINES} value={data.timeline} onChange={(v) => set("timeline", v as EnquiryInput["timeline"])} error={errors.timeline} />
@@ -241,10 +244,10 @@ export function EnquiryForm({ email }: { email: string }) {
             {status === "submitting" ? (
               <>
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-ink-950/30 border-t-ink-950 motion-reduce:animate-none" aria-hidden="true" />
-                Sending
+                Forging…
               </>
             ) : (
-              <>Send enquiry <Arrow /></>
+              <>Send it over <Arrow /></>
             )}
           </button>
         )}

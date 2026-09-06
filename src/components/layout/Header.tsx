@@ -8,6 +8,7 @@ import { Monogram, Wordmark } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { nav } from "@/lib/navigation";
+import { behaviour } from "@/pixel/behaviour/store";
 
 export function Header() {
   const pathname = usePathname();
@@ -26,6 +27,7 @@ export function Header() {
 
   // Lock scroll, trap escape, move focus
   useEffect(() => {
+    behaviour.setMenuOpen(open);
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";

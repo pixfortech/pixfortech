@@ -18,7 +18,7 @@ export default function ProcessPage() {
       <PageHeader
         eyebrow="Process"
         title={["Five stages.", "No surprises."]}
-        lead="Every engagement follows the same shape, whether it is a Shopify theme or a custom application. Each stage ends with something written down that you can hold us to."
+        lead="Every engagement follows the same shape, whether it is a Shopify theme or a custom application. Each stage ends with something written down that you can hold us to. We find that keeps everyone honest, us included."
       />
       <section className="section-y" aria-label="Stages">
         <Container>

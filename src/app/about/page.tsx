@@ -26,7 +26,7 @@ export default function AboutPage() {
       <PageHeader
         eyebrow="About"
         title={["A studio, not", "a supplier."]}
-        lead="Pixel Forge Technologies is a young, remote-first web engineering and digital product studio. We design and build websites, Shopify storefronts and web applications for businesses that need them to work as well as they look."
+        lead="Pixel Forge Technologies is a young, remote-first web engineering and digital product studio. We design and build websites, Shopify storefronts and web applications for businesses that need them to work as well as they look. Ideally better."
       />
 
       <section className="section-y" aria-labelledby="name-heading">

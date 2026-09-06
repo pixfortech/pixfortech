@@ -19,7 +19,7 @@ export function FinalCta() {
             </Reveal>
             <Reveal delay={0.1}>
               <p className="lead mt-8 max-w-[32rem]">
-                Tell us what you are building. We reply within two working days with honest questions, not a sales deck.
+                Tell us what you are building. A person replies within two working days, with questions rather than a pitch deck.
               </p>
             </Reveal>
             <Reveal delay={0.15}>

@@ -57,7 +57,7 @@ export function ProjectStarter() {
         <span>{type ? "Continue" : "Start a project"}</span>
         <Arrow />
       </button>
-      <p className="mt-3 text-[0.8125rem] text-bone-600">Two minutes. No account, no sales call unless you want one.</p>
+      <p className="mt-3 text-[0.8125rem] text-bone-600">Two minutes. No account, no sales call unless you ask for one.</p>
     </form>
   );
 }

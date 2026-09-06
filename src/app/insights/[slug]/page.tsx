@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { Reveal } from "@/components/ui/Reveal";
 import { Rise } from "@/components/ui/Entrance";
 import { Tag } from "@/components/ui/Tag";
 import { Blocks } from "@/components/ui/Blocks";

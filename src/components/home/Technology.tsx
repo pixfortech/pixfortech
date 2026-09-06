@@ -14,7 +14,7 @@ export function Technology() {
           number="05"
           id="tech-title"
           title={<>Tools we know well enough to argue about.</>}
-          lead="No logo wall. This is the stack we actually build with, chosen for the team that will maintain the product after us."
+          lead="No logo wall. This is the stack we actually ship with, chosen for whoever has to maintain the product after we leave."
         />
         <div className="mt-14 grid gap-10 lg:mt-20 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           {technologyGroups.map((g, gi) => {

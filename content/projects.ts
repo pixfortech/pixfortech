@@ -1,4 +1,5 @@
 import type { Project } from "./types";
+import type { PixelTheme } from "../src/pixel/types";
 
 /**
  * Case studies.
@@ -11,6 +12,28 @@ import type { Project } from "./types";
  */
 
 const sample = (heading: string, body: string[], list?: string[]) => ({ heading, body, list });
+
+/**
+ * Sample pixel identities. Each reads as a different world inside the same
+ * Pixel Forge universe: warm and modular for retail, cool and ordered for
+ * professional services, electric and lattice-like for a logistics product.
+ * Replace with palettes derived from the real client's brand assets.
+ */
+const clayAndCream: PixelTheme = {
+  primary: "#f2a07b", secondary: "#4a3630", accent: "#ffe9d6", background: "#f2a07b",
+  geometry: "dot", density: 0.55, behaviour: "cluster", speed: 0.8, size: 7,
+  transitionStyle: "rise", mascotVariation: "warm", seed: 11,
+};
+const steelAndPaper: PixelTheme = {
+  primary: "#7fa7c9", secondary: "#2b3440", accent: "#e3edf5", background: "#5a7f9e",
+  geometry: "square", density: 0.4, behaviour: "grid", speed: 0.5, size: 5,
+  transitionStyle: "sweep", mascotVariation: "cool", seed: 23,
+};
+const voltAndAmber: PixelTheme = {
+  primary: "#8b96ff", secondary: "#262a3f", accent: "#ffc861", background: "#5560d6",
+  geometry: "diamond", density: 0.65, behaviour: "lattice", speed: 1.3, size: 6,
+  transitionStyle: "grid", mascotVariation: "cool", seed: 37,
+};
 
 export const projects: Project[] = [
   {
@@ -28,6 +51,7 @@ export const projects: Project[] = [
     placeholder: true,
     published: true,
     featured: true,
+    pixelTheme: clayAndCream,
     sections: {
       context: sample("Context", ["Describe the client, what they sell, the size of the catalogue and the team that runs the store. Keep it to what a prospect needs to recognise their own situation."]),
       challenge: sample("Challenge", ["Explain the problems with the existing store: theme limitations, app load, slow pages, a merchant who cannot edit pages safely. Be specific and avoid blame."]),
@@ -55,6 +79,7 @@ export const projects: Project[] = [
     placeholder: true,
     published: true,
     featured: true,
+    pixelTheme: steelAndPaper,
     sections: {
       context: sample("Context", ["Describe the organisation, its audience and why the website matters commercially."]),
       challenge: sample("Challenge", ["Describe the state of the previous site and what was holding the organisation back."]),
@@ -82,6 +107,7 @@ export const projects: Project[] = [
     placeholder: true,
     published: true,
     featured: true,
+    pixelTheme: voltAndAmber,
     sections: {
       context: sample("Context", ["Describe the business process the application supports and who uses it."]),
       challenge: sample("Challenge", ["Describe the manual workflow, spreadsheets or legacy tooling being replaced."]),

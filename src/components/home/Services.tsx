@@ -23,15 +23,15 @@ export function Services() {
           eyebrow="Services"
           number="02"
           id="services-title"
-          title={<>What we design and build.</>}
-          lead="Each engagement starts with the problem, not the deliverable. These are the six things clients most often need from us."
+          title={<>Things we&rsquo;re suspiciously good at.</>}
+          lead="Six services, one habit: we start with the problem you bring, not the deliverable we would like to sell."
         />
         <Reveal className="mt-14 lg:mt-20">
           <ServicesList services={services} />
         </Reveal>
         <Reveal className="mt-12">
           <Button href="/services" variant="secondary" size="lg" arrow>
-            All services
+            Every service, explained
           </Button>
         </Reveal>
       </Container>

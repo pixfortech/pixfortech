@@ -3,6 +3,7 @@ import { site } from "@/lib/content";
 import { Monogram } from "@/components/ui/Logo";
 import { LocalTime } from "./LocalTime";
 import { nav } from "@/lib/navigation";
+import { PixelCounterLine } from "@/pixel/PixelCounter";
 
 const secondary = [
   { href: "/process", label: "Process" },
@@ -29,7 +30,7 @@ export function Footer() {
               <span className="font-display text-xl font-semibold tracking-[-0.02em]">Pixel Forge Technologies</span>
             </Link>
             <p className="mt-6 max-w-sm text-bone-400 text-small">
-              A web engineering and digital product studio. We design and build websites, Shopify stores and web applications that are fast, maintainable and made to be used.
+              A web engineering and digital product studio. We design and build websites, Shopify stores and web applications that are fast, maintainable and made to be used. Every pixel is on purpose.
             </p>
             <div className="mt-8 flex flex-col gap-2 text-small">
               <a href={`mailto:${site.email}`} className="link-line w-fit text-bone-50">{site.email}</a>
@@ -69,7 +70,7 @@ export function Footer() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-small text-bone-600">Social profiles coming soon.</p>
+                <p className="text-small text-bone-600">Social profiles are being forged. Soon.</p>
               )}
             </div>
           </div>
@@ -83,9 +84,12 @@ export function Footer() {
           </p>
         </div>
 
-        <div className="mt-8 flex flex-col gap-3 border-t border-line pt-6 text-[0.8125rem] text-bone-600 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {year} {site.legalName}. All rights reserved.</p>
-          <p className="num">Designed and engineered in-house.</p>
+        <div className="mt-8 flex flex-col gap-4 border-t border-line pt-6 pb-16 text-[0.8125rem] text-bone-600 sm:pb-12 lg:flex-row lg:items-start lg:justify-between lg:pb-0">
+          <div className="flex flex-col gap-1">
+            <p>© {year} {site.legalName}. All rights reserved.</p>
+            <p className="num">Designed, engineered and pixel-counted in-house.</p>
+          </div>
+          <PixelCounterLine className="max-w-md text-bone-400 lg:pr-24" />
         </div>
       </div>
     </footer>

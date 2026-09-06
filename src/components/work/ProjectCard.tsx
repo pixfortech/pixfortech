@@ -1,14 +1,21 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { usePixel } from "@/pixel/PixelProvider";
 import { Tag } from "@/components/ui/Tag";
 import { Arrow } from "@/components/ui/Button";
 import { technologyNames } from "@/lib/content";
 import type { Project } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
-export function ProjectCard({ project, priority = false, className, wide = false }: { project: Project; priority?: boolean; className?: string; wide?: boolean }) {
+export function ProjectCard({ project, priority = false, className, wide = false, headingLevel = "h3" }: { project: Project; priority?: boolean; className?: string; wide?: boolean; headingLevel?: "h2" | "h3" }) {
+  const Heading = headingLevel;
+  const { preview } = usePixel();
+  const enter = () => preview(project.pixelTheme);
+  const leave = () => preview(null);
   return (
-    <article className={cn("group relative", className)}>
+    <article className={cn("group relative", className)} onPointerEnter={enter} onPointerLeave={leave} onFocusCapture={enter} onBlurCapture={leave}>
       <Link href={`/work/${project.slug}`} className="block rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forge-400">
         <div className={cn("relative overflow-hidden rounded-md border border-line bg-ink-850", wide ? "aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9]" : "aspect-[4/3]")}>
           <Image
@@ -32,7 +39,7 @@ export function ProjectCard({ project, priority = false, className, wide = false
         </div>
         <div className="mt-5 flex flex-col gap-3">
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-            <h3 className="h3 group-hover:text-forge-300 transition-colors duration-(--dur-fast)">{project.title}</h3>
+            <Heading className="h3 group-hover:text-forge-300 transition-colors duration-(--dur-fast)">{project.title}</Heading>
             <span className="num text-small text-bone-400">{project.year}</span>
           </div>
           <p className="text-small text-bone-400">

@@ -27,7 +27,7 @@ export function Hero() {
             </h1>
             <Rise delay={0.35}>
               <p className="lead mt-7 max-w-[34rem]">
-                Strategy, design and engineering for websites, Shopify commerce and web applications built to perform. Precise to the pixel. Built to last.
+                Websites, Shopify stores and web applications, designed and engineered by the same people, to the pixel. Fast by default. Maintainable on purpose.
               </p>
             </Rise>
             <Rise delay={0.45}>
@@ -36,7 +36,7 @@ export function Hero() {
                   Start a project
                 </Button>
                 <Button href="/work" size="lg" variant="secondary">
-                  See the work
+                  See what we forged
                 </Button>
               </div>
             </Rise>

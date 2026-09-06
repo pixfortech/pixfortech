@@ -2,7 +2,7 @@ import { Container } from "./Container";
 import { Button } from "./Button";
 import { Reveal } from "./Reveal";
 
-export function CtaBand({ title = "Have something worth building?", body = "Tell us what you are working on. We reply within two working days.", cta = "Start a project" }: { title?: string; body?: string; cta?: string }) {
+export function CtaBand({ title = "Have something worth building?", body = "Tell us what you are working on. A person replies within two working days.", cta = "Start a project" }: { title?: string; body?: string; cta?: string }) {
   return (
     <section className="border-t border-line section-y" aria-labelledby="cta-band-title">
       <Container>

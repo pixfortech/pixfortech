@@ -22,7 +22,7 @@ export default function InsightsPage() {
       <PageHeader
         eyebrow="Insights"
         title={["Notes from", "the workbench."]}
-        lead="Practical writing on the things we fix most often: slow storefronts, drifting design systems and accessibility bolted on too late."
+        lead="Practical writing on the things we fix most often: slow storefronts, drifting design systems and accessibility bolted on a week before launch."
       />
       <section className="section-y" aria-label="Articles">
         <Container>

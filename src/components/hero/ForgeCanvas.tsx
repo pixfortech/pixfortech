@@ -39,6 +39,8 @@ export function ForgeCanvas({ className, anchor = { desktop: [0.745, 0.5], mobil
     let start = performance.now();
     let last = start;
     let mobile = false;
+    let lastActivity = start;
+    let frameCount = 0;
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
@@ -58,7 +60,12 @@ export function ForgeCanvas({ className, anchor = { desktop: [0.745, 0.5], mobil
     };
 
     const frame = (now: number) => {
+      frameCount++;
       const t = (now - start) / 1000;
+      // Once assembled and untouched, stop drawing entirely. Pointer movement
+      // or scrolling wakes the loop again; the last frame stays on screen.
+      const idle = t > 4.5 && now - lastActivity > 900 && !hasHeat();
+      if (idle && !reducedMotion) { raf = 0; return; }
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       const [ax, ay] = mobile ? anchor.mobile : anchor.desktop;
@@ -77,10 +84,12 @@ export function ForgeCanvas({ className, anchor = { desktop: [0.745, 0.5], mobil
       else raf = 0;
     };
 
+    const hasHeat = () => { for (let i = 0; i < cubes.length; i += 7) if (cubes[i].heat > 0.01) return true; return false; };
     const play = () => {
       if (reducedMotion) { frame(performance.now()); return; }
       if (!raf && visible) { last = performance.now(); raf = requestAnimationFrame(frame); }
     };
+    const wake = () => { lastActivity = performance.now(); play(); };
     const pause = () => { if (raf) cancelAnimationFrame(raf); raf = 0; };
 
     const ro = new ResizeObserver(resize);
@@ -97,6 +106,7 @@ export function ForgeCanvas({ className, anchor = { desktop: [0.745, 0.5], mobil
     document.addEventListener("visibilitychange", onVis);
 
     const onScroll = () => {
+      wake();
       const rect = canvas.getBoundingClientRect();
       // 0 while the hero top is in view; 1 once we've scrolled a full hero height
       scroll = Math.min(1, Math.max(0, -rect.top / Math.max(1, rect.height * 0.9)));
@@ -110,8 +120,9 @@ export function ForgeCanvas({ className, anchor = { desktop: [0.745, 0.5], mobil
       pointer.x = e.clientX - rect.left;
       pointer.y = e.clientY - rect.top;
       pointer.active = true;
+      wake();
     };
-    const onLeave = () => { pointer.active = false; };
+    const onLeave = () => { pointer.active = false; wake(); };
     const host = canvas.parentElement ?? canvas;
     host.addEventListener("pointermove", onMove);
     host.addEventListener("pointerleave", onLeave);

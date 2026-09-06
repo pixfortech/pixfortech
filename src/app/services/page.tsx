@@ -20,8 +20,8 @@ export default function ServicesPage() {
     <>
       <PageHeader
         eyebrow="Services"
-        title={["Design and", "engineering,", "together."]}
-        lead="Six things clients most often need from us. Each one starts with the problem you bring, and ends with something your team can run without us."
+        title={["Design and", "engineering.", "Same room."]}
+        lead="Six things we are suspiciously good at. Each starts with the problem you bring and ends with something your team can run without us."
       />
       <section className="section-y" aria-label="All services">
         <Container>
@@ -45,7 +45,7 @@ export default function ServicesPage() {
           </div>
         </Container>
       </section>
-      <CtaBand title="Not sure which one you need?" body="Describe the problem. We will tell you honestly what it takes, even if it is smaller than you expected." />
+      <CtaBand title="Not sure which one you need?" body="Describe the problem. We will tell you what it actually takes, even when the answer is smaller than you expected." />
     </>
   );
 }

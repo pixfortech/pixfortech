@@ -4,6 +4,8 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { MotionProvider } from "@/components/providers/MotionProvider";
+import { PixelProvider } from "@/pixel/PixelProvider";
+import { PixelUi } from "@/pixel/PixelUi";
 import { organizationSchema, websiteSchema } from "@/lib/seo";
 import { site } from "@/lib/content";
 import "./globals.css";
@@ -56,13 +58,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable} h-full antialiased`}>
       <body className="grain min-h-full flex flex-col">
         <JsonLd data={[organizationSchema(), websiteSchema()]} />
-        <MotionProvider>
-          <Header />
-          <main id="main" className="flex-1">
-            {children}
-          </main>
-          <Footer />
-        </MotionProvider>
+        <PixelProvider>
+          <MotionProvider>
+            <Header />
+            <main id="main" className="flex-1">
+              {children}
+            </main>
+            <Footer />
+            <PixelUi />
+          </MotionProvider>
+        </PixelProvider>
       </body>
     </html>
   );

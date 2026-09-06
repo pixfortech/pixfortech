@@ -22,8 +22,8 @@ export default function WorkPage() {
         title={["Built to be", "used."]}
         lead={
           hasPlaceholders
-            ? "Client case studies are being prepared for publication. The entries below are layout samples that show how each project will be presented once approved."
-            : "Websites, storefronts and applications we have designed and engineered, told as product stories rather than image galleries."
+            ? "Client case studies are being forged as we speak. The entries below are layout samples showing how each project will be told once it is approved."
+            : "Websites, storefronts and applications we designed and engineered, told as product stories rather than screenshot galleries."
         }
       />
       <section className="section-y" aria-label="Projects">
@@ -31,7 +31,7 @@ export default function WorkPage() {
           <div className="grid gap-x-8 gap-y-14 lg:grid-cols-2">
             {projects.map((p, i) => (
               <Reveal key={p.slug} delay={(i % 2) * 0.05} className={i === 0 ? "lg:col-span-2" : ""}>
-                <ProjectCard project={p} priority={i === 0} wide={i === 0} />
+                <ProjectCard project={p} priority={i === 0} wide={i === 0} headingLevel="h2" />
               </Reveal>
             ))}
           </div>

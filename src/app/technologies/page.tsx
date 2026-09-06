@@ -26,7 +26,7 @@ export default function TechnologiesPage() {
       <PageHeader
         eyebrow="Technologies"
         title={["Chosen, not", "collected."]}
-        lead="This is the stack we actually build with. It is deliberately short. Everything on it has shipped in production work we are responsible for."
+        lead="This is the stack we actually build with. It is deliberately short. Everything on it has shipped in production work we are still responsible for."
       />
       <section className="section-y" aria-label="Stack">
         <Container>

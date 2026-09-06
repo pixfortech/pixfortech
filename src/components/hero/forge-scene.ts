@@ -163,7 +163,7 @@ export function drawScene(ctx: CanvasRenderingContext2D, cubes: Cube[], input: F
     // Heat: arrives hot, cools; monogram stays warm; pointer reheats
     if (!opts.reducedMotion) {
       if (p > 0.98 && c.heat === 0 && intro < introDur + 2) c.heat = 1;
-      c.heat = Math.max(0, c.heat - dt * 0.55);
+      c.heat = Math.max(0, c.heat - dt * 0.9);
     }
 
     const driftX = Math.cos(t * 0.35 + c.drift) * 0.35;

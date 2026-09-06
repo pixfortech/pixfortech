@@ -13,7 +13,7 @@ export function ProcessPreview() {
           number="04"
           id="process-title"
           title={<>Discover. Design. Engineer. Refine. Launch.</>}
-          lead="Five stages, each with a written output you can hold us to. No mystery, no surprises at handover."
+          lead="Five stages, each ending in something written down that you can hold us to. Surprises are for birthdays, not handovers."
         />
         <ol className="mt-14 grid gap-px border border-line bg-line rounded-md overflow-hidden md:grid-cols-5 lg:mt-20">
           {process.map((stage, i) => (

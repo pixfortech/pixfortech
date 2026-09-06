@@ -5,6 +5,8 @@
  * the same shapes inside src/lib/content.ts.
  */
 
+import type { PixelTheme } from "../src/pixel/types";
+
 export type ImageAsset = {
   src: string;
   alt: string;
@@ -86,6 +88,12 @@ export type Project = {
   /** Whether the site owner has approved publishing this study. */
   published: boolean;
   featured: boolean;
+  /**
+   * The project's own pixel identity. Derive it from the client's real brand
+   * palette when one exists; the ambient field, reveals, transitions and the
+   * mascot's accent all take it on while the project is hovered or open.
+   */
+  pixelTheme: PixelTheme;
 };
 
 export type Article = {
