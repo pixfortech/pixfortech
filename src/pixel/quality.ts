@@ -13,6 +13,7 @@ export function pickQualityTier(input: { reducedMotion: boolean; width: number; 
 /** Particle budget for a tier at a given viewport area, before theme density. */
 export function particleBudget(tier: QualityTier, w: number, h: number): number {
   const area = (w * h) / (1280 * 800); // 1.0 at a laptop viewport
-  const base = tier === "high" ? 320 : tier === "medium" ? 170 : tier === "low" ? 80 : 60;
+  // Restrained on purpose: ambient pixels are accents, not weather.
+  const base = tier === "high" ? 110 : tier === "medium" ? 64 : tier === "low" ? 36 : 30;
   return Math.round(Math.min(base * 1.6, base * Math.max(0.45, Math.min(1.6, area))));
 }

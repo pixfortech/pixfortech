@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Schibsted_Grotesk } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -10,23 +10,11 @@ import { organizationSchema, websiteSchema } from "@/lib/seo";
 import { site } from "@/lib/content";
 import "./globals.css";
 
-const display = Schibsted_Grotesk({
-  variable: "--font-schibsted",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
   display: "swap",
-});
-
-const body = Geist({
-  variable: "--font-geist",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const mono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
-  weight: ["400", "500"],
+  weight: "variable",
 });
 
 export const metadata: Metadata = {
@@ -55,7 +43,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable} h-full antialiased`}>
+    <html lang="en" className={`${spaceGrotesk.variable} h-full antialiased`}>
       {/* suppressHydrationWarning: browser extensions (e.g. ColorZilla) inject attributes on <body> before hydration. */}
       <body className="grain min-h-full flex flex-col" suppressHydrationWarning>
         <JsonLd data={[organizationSchema(), websiteSchema()]} />

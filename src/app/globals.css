@@ -32,9 +32,11 @@
   --line-faint: color-mix(in oklab, var(--color-bone-50) 5%, transparent);
 
   /* Type */
-  --font-display: var(--font-schibsted), "Helvetica Neue", Arial, sans-serif;
-  --font-body: var(--font-geist), system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+  /* One family across the whole product: Space Grotesk. Code blocks use the system monospace stack. */
+  --font-display: var(--font-space-grotesk), "Helvetica Neue", Arial, sans-serif;
+  --font-body: var(--font-space-grotesk), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --font-label: var(--font-space-grotesk), system-ui, sans-serif;
 
   --text-display: clamp(3rem, 1.2rem + 8.4vw, 8.75rem);
   --text-h1: clamp(2.5rem, 1.4rem + 5.2vw, 5.75rem);
@@ -106,6 +108,7 @@
   --font-display: var(--font-display);
   --font-body: var(--font-body);
   --font-mono: var(--font-mono);
+  --font-label: var(--font-label);
 
   --text-display: var(--text-display);
   --text-display--line-height: 0.92;
@@ -174,7 +177,7 @@ body {
   font-family: var(--font-body);
   font-size: var(--text-body);
   line-height: 1.6;
-  font-feature-settings: "ss01", "cv11", "calt";
+  font-feature-settings: "calt", "ss01";
   text-rendering: optimizeLegibility;
   overflow-x: clip;
 }
@@ -219,7 +222,8 @@ body {
 }
 
 @utility eyebrow {
-  font-family: var(--font-mono);
+  font-family: var(--font-label);
+  font-weight: 500;
   font-size: var(--text-label);
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -348,8 +352,10 @@ body {
 
 /* Number badges */
 .num {
-  font-family: var(--font-mono);
+  font-family: var(--font-label);
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
 @keyframes scrollcue {
@@ -390,31 +396,12 @@ body {
 .pixel-fg { z-index: 45; }
 body > header, body > main, body > footer { position: relative; z-index: 1; }
 
-[data-reveal] {
-  transition:
-    opacity 0.55s var(--ease-out),
-    transform 0.7s var(--ease-out);
-}
-[data-reveal="hidden"] {
-  opacity: 0;
-  transform: translate3d(0, 22px, 0);
-}
-[data-reveal="deconstructing"] {
-  opacity: 0;
-  transform: translate3d(0, -10px, 0);
-  transition-duration: 0.45s, 0.5s;
-}
-[data-reveal="assembling"] {
-  opacity: 1;
-  transform: none;
-  transition-delay: var(--reveal-delay, 0s);
-}
-[data-reveal="revealed"] {
-  opacity: 1;
-  transform: none;
-}
+/* Scroll-forged content. --forge is 0..1, set only while an element is mid-forge. */
+[data-forge="unforged"] { clip-path: inset(0 100% 0 0); }
+[data-forge="active"] { clip-path: inset(-2px calc((1 - var(--forge, 1)) * 100%) -2px 0); }
+[data-forge="forged"] { clip-path: none; }
 @media (prefers-reduced-motion: reduce) {
-  [data-reveal] { transition: opacity 0.35s ease; transform: none !important; }
+  [data-forge] { clip-path: none !important; }
 }
 
 /* ------------------------------------------------------------------
@@ -566,7 +553,8 @@ body > header, body > main, body > footer { position: relative; z-index: 1; }
   border: 1px solid var(--line);
   background: var(--color-ink-900);
   color: var(--color-bone-200);
-  font-family: var(--font-mono);
+  font-family: var(--font-label);
+  font-weight: 500;
   font-size: 0.6875rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;

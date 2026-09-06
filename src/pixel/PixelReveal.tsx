@@ -18,9 +18,10 @@ type Props = {
 };
 
 /**
- * Continuous, reversible reveal. The element assembles from pixel blocks when
- * it meaningfully enters the viewport and deconstructs once it has left by a
- * margin, in either scroll direction. Content is always in the DOM.
+ * Scroll-forged reveal. The element is assembled left to right as its top
+ * edge travels through the forge band at the bottom of the viewport, driven
+ * purely by scroll position: stop scrolling and it freezes, scroll back and
+ * it unforges. Content is always in the DOM and visible without JavaScript.
  */
 export function PixelReveal({ children, className, delay = 0, as = "div", style, cell, id }: Props) {
   const ref = useRef<HTMLElement | null>(null);
@@ -36,7 +37,7 @@ export function PixelReveal({ children, className, delay = 0, as = "div", style,
   const Tag = as;
   const css: CSSProperties | undefined = delay ? ({ "--reveal-delay": `${delay}s` } as CSSProperties) : undefined;
   return (
-    <Tag ref={(el: HTMLElement | null) => { ref.current = el; }} id={id} className={className} data-reveal="revealed" style={css}>
+    <Tag ref={(el: HTMLElement | null) => { ref.current = el; }} id={id} className={className} data-forge="forged" style={css}>
       {children}
     </Tag>
   );

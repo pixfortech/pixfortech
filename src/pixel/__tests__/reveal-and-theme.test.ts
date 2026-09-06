@@ -1,24 +1,43 @@
 import { describe, expect, it } from "vitest";
-import { nextRevealTarget, stateFor, stepProgress } from "../reveal-logic";
+import { cellThreshold, forgeBand, forgeProgress, forgeState } from "../reveal-logic";
 import { resolveRouteTheme, routeThemes } from "../themes";
 import { themeForPath } from "../theme-resolver";
 import { pickQualityTier, particleBudget } from "../quality";
-import { buildOrders } from "../reveals";
 
-describe("reveal state machine", () => {
-  it("assembles once meaningfully visible and holds while inside the exit margin", () => {
-    expect(nextRevealTarget("hidden", 0.05, false)).toBe(0);
-    expect(nextRevealTarget("hidden", 0.2, false)).toBe(1);
-    expect(nextRevealTarget("revealed", 0, false)).toBe(1); // scrolled past but within margin
-    expect(nextRevealTarget("revealed", 0, true)).toBe(0); // fully out: deconstruct
+describe("scroll-driven forge progress", () => {
+  const vh = 900;
+  const band = forgeBand(vh);
+  it("is a pure function of position: unforged below, forged after the band", () => {
+    expect(forgeProgress(950, vh, band)).toBe(0);
+    expect(forgeProgress(vh, vh, band)).toBe(0);
+    expect(forgeProgress(vh - band, vh, band)).toBe(1);
+    expect(forgeProgress(100, vh, band)).toBe(1);
   });
-  it("reverses smoothly mid-flight instead of resetting", () => {
-    let p = 0;
-    p = stepProgress(p, 1, 300, 600); expect(p).toBeCloseTo(0.5);
-    p = stepProgress(p, 0, 100, 600); expect(p).toBeLessThan(0.5); expect(p).toBeGreaterThan(0);
-    expect(stateFor(p, 0)).toBe("deconstructing");
-    expect(stateFor(1, 1)).toBe("revealed");
-    expect(stateFor(0, 0)).toBe("hidden");
+  it("advances with scroll and reverses to the same value at the same position", () => {
+    const halfway = vh - band / 2;
+    const p1 = forgeProgress(halfway, vh, band);
+    expect(p1).toBeCloseTo(0.5);
+    // scroll down 100px (top moves up), then back up 100px: identical state
+    const down = forgeProgress(halfway - 100, vh, band);
+    expect(down).toBeGreaterThan(p1);
+    expect(forgeProgress(halfway - 100 + 100, vh, band)).toBeCloseTo(p1);
+  });
+  it("caps the band on tall viewports", () => {
+    expect(forgeBand(2000)).toBe(420);
+    expect(forgeBand(700)).toBe(294);
+  });
+  it("maps progress to states", () => {
+    expect(forgeState(0)).toBe("unforged");
+    expect(forgeState(0.4)).toBe("active");
+    expect(forgeState(1)).toBe("forged");
+  });
+  it("orders cells left to right with bounded grain", () => {
+    const cols = 40;
+    const left = [0, 1, 2, 3].map((y) => cellThreshold(2, y, cols, 7));
+    const right = [0, 1, 2, 3].map((y) => cellThreshold(37, y, cols, 7));
+    expect(Math.max(...left)).toBeLessThan(Math.min(...right));
+    for (const v of [...left, ...right]) { expect(v).toBeGreaterThanOrEqual(0); expect(v).toBeLessThanOrEqual(1); }
+    expect(cellThreshold(5, 5, cols, 7)).toBe(cellThreshold(5, 5, cols, 7));
   });
 });
 
@@ -47,16 +66,5 @@ describe("quality tiers", () => {
     expect(pickQualityTier({ reducedMotion: false, width: 390, cores: 8, coarse: true })).toBe("medium");
     expect(pickQualityTier({ reducedMotion: false, width: 390, cores: 4, coarse: true })).toBe("low");
     expect(particleBudget("low", 390, 844)).toBeLessThan(particleBudget("high", 1440, 900));
-  });
-});
-
-describe("block orders", () => {
-  it("are deterministic per seed and in range", () => {
-    const a = buildOrders("sweep", 10, 4, 5), b = buildOrders("sweep", 10, 4, 5);
-    expect(Array.from(a)).toEqual(Array.from(b));
-    for (const v of a) { expect(v).toBeGreaterThanOrEqual(0); expect(v).toBeLessThanOrEqual(1); }
-    // sweep dissolves left to right: first column lower than last on average
-    const col = (o: Float32Array, x: number) => [0, 1, 2, 3].reduce((s, y) => s + o[y * 10 + x], 0) / 4;
-    expect(col(a, 0)).toBeLessThan(col(a, 9));
   });
 });

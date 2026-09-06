@@ -1,7 +1,6 @@
 import { computeHome, mulberry, type FieldContext, type HomeResult, type Particle } from "./behaviours";
 import { particleBudget, pickQualityTier } from "./quality";
-import { drawRevealBlocks, RevealManager, type RevealEntry } from "./reveals";
-import { buildOrders } from "./reveals";
+import { drawForgeFront, RevealManager, type RevealEntry } from "./reveals";
 import { forgeTheme, hexToRgb, mixRgb, rgbCss } from "./themes";
 import type { PixelTheme, QualityTier, RevealOptions } from "./types";
 
@@ -10,6 +9,30 @@ type Ripple = { x: number; y: number; t: number; strength: number };
 type Burst = { x: number; y: number; vx: number; vy: number; life: number; colour: string; size: number };
 
 type TransitionPhase = "idle" | "out" | "in";
+
+/** Cell dissolve order for the route transition grid. 0 = first to cover. */
+function buildOrders(style: "sweep" | "scatter" | "rise" | "grid" | "edge", cols: number, rows: number, seed: number): Float32Array {
+  const rnd = mulberry(seed);
+  const out = new Float32Array(cols * rows);
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const i = y * cols + x;
+      const n = rnd() * 0.18;
+      switch (style) {
+        case "sweep": out[i] = (x / Math.max(1, cols - 1)) * 0.82 + n; break;
+        case "rise": out[i] = (1 - y / Math.max(1, rows - 1)) * 0.82 + n; break;
+        case "grid": out[i] = ((x + y) / Math.max(1, cols + rows - 2)) * 0.82 + n; break;
+        case "edge": {
+          const dx = Math.min(x, cols - 1 - x) / Math.max(1, cols / 2);
+          const dy = Math.min(y, rows - 1 - y) / Math.max(1, rows / 2);
+          out[i] = (1 - Math.min(dx, dy)) * 0.82 + n; break;
+        }
+        default: out[i] = rnd();
+      }
+    }
+  }
+  return out;
+}
 
 /**
  * PixelEngine
@@ -68,7 +91,18 @@ export class PixelEngine {
   private frameCount = 0;
   private onVis = () => { if (document.hidden) this.pause(); else this.play(); };
   private onResize = () => this.resize();
-  private onScroll = () => this.updateScroll();
+  private onScroll = () => { this.updateScroll(); this.scheduleForge(); };
+  private forgeRaf = 0;
+  /** Recompute scroll-driven forge progress once per frame while scrolling. Idle = frozen. */
+  private scheduleForge() {
+    if (this.forgeRaf) return;
+    this.forgeRaf = requestAnimationFrame(() => {
+      this.forgeRaf = 0;
+      this.reveals.update(this.h, this.inflight);
+      this.overlayDirty = true;
+      this.drawOverlay(0);
+    });
+  }
   private onMove = (e: PointerEvent) => this.movePointer(e);
   private onLeave = () => { this.pointer.active = false; };
   private onDown = (e: PointerEvent) => {
@@ -84,7 +118,7 @@ export class PixelEngine {
     this.bg = bg; this.fg = fg;
     this.bctx = bg.getContext("2d", { alpha: true })!;
     this.fctx = fg.getContext("2d", { alpha: true })!;
-    this.reveals = new RevealManager(() => undefined, () => this.play());
+    this.reveals = new RevealManager(() => this.scheduleForge());
     const mm = (q: string) => window.matchMedia(q).matches;
     const nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
     this.pointer.coarse = mm("(pointer: coarse)");
@@ -150,6 +184,7 @@ export class PixelEngine {
     this.seedField();
     this.transition.orders = null;
     this.fieldDirty = true;
+    this.scheduleForge();
   }
 
   private updateScroll() {
@@ -221,7 +256,7 @@ export class PixelEngine {
 
   // ---------------------------------------------------------------- reveals
   registerReveal(el: HTMLElement, opts: RevealOptions) {
-    return this.reveals.register(el, opts);
+    return this.reveals.register(el, opts, this.tier === "static");
   }
 
   // ------------------------------------------------------------- transitions
@@ -280,7 +315,7 @@ export class PixelEngine {
 
     // Idle detection: in static tier we only need one frame after changes.
     if (this.tier === "static") {
-      const busy = this.inflight.length > 0 || this.transition.phase !== "idle" || this.bursts.length > 0;
+      const busy = this.transition.phase !== "idle" || this.bursts.length > 0;
       if (!busy && !this.fieldDirty) { this.running = false; this.raf = 0; return; }
       this.fieldDirty = false;
     }
@@ -369,17 +404,19 @@ export class PixelEngine {
   private overlayDirty = false;
   private drawOverlay(dt: number) {
     const ctx = this.fctx;
-    this.reveals.step(dt, this.inflight);
-    const active = this.inflight.length > 0 || this.bursts.length > 0 || this.transition.phase !== "idle";
+    const animated = this.bursts.length > 0 || this.transition.phase !== "idle";
+    const active = this.inflight.length > 0 || animated;
     if (!active && !this.overlayDirty) return;
     ctx.clearRect(0, 0, this.w, this.h);
-    this.overlayDirty = active;
+    // Forge fronts are static between scroll frames; keep the overlay marked
+    // dirty only while something time-based is running.
+    this.overlayDirty = animated;
     if (!active) return;
-    const colours = { secondary: rgbCss(this.colour.secondary), primary: rgbCss(this.colour.primary), accent: rgbCss(this.colour.accent) };
+    const colours = { secondary: rgbCss(this.colour.secondary), primary: rgbCss(this.colour.primary), accent: rgbCss(this.colour.accent), ghost: rgbCss(this.colour.secondary, 0.35) };
 
-    // Reveal blocks
+    // Scroll-driven forge fronts
     if (this.tier !== "static") {
-      for (const e of this.inflight) drawRevealBlocks(ctx, e, colours, this.w, this.h);
+      for (const e of this.inflight) drawForgeFront(ctx, e, colours, this.w, this.h);
     }
 
     // Bursts
@@ -440,8 +477,8 @@ export class PixelEngine {
   routeChanged() {
     const tr = this.transition;
     if (tr.phase === "in" && tr.t < 0) { tr.t = 0; }
-    this.reveals.setAll("revealed");
     this.updateScroll();
+    this.scheduleForge();
     this.fieldDirty = true;
     this.play();
   }

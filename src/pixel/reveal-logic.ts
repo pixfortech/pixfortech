@@ -1,29 +1,47 @@
-import type { RevealState } from "./types";
+/**
+ * Scroll-forging maths. Pure functions so they can be unit tested.
+ *
+ * The forge front is the bottom edge of the viewport. An element starts
+ * forging the moment its top edge enters the viewport and is fully forged
+ * once its top has travelled `band` pixels up from the bottom. Progress is
+ * therefore a pure function of scroll position: scrolling powers it,
+ * stopping freezes it, and scrolling back reverses it.
+ */
+
+/** Height of the active forge band for a viewport. */
+export function forgeBand(viewportHeight: number): number {
+  return Math.round(Math.min(viewportHeight * 0.42, 420));
+}
 
 /**
- * Pure reveal state machine. Hysteresis keeps content stable while it is
- * meaningfully on screen: it assembles once a meaningful part enters the
- * viewport and only deconstructs once it has left by a margin.
- *
- * `visible` is the intersection ratio against the *enter* root (viewport
- * inset a little). `outside` is true only when the element is entirely
- * beyond the *exit* root (viewport expanded by a margin).
+ * @param top element top relative to the viewport (px)
+ * @param viewportHeight
+ * @param band forge band height
+ * @returns 0 (unforged) .. 1 (forged)
  */
-export function nextRevealTarget(state: RevealState, visible: number, outside: boolean, enterRatio = 0.12): 1 | 0 {
-  const revealed = state === "revealed" || state === "assembling";
-  if (!revealed) return visible >= enterRatio ? 1 : 0;
-  return outside ? 0 : 1;
+export function forgeProgress(top: number, viewportHeight: number, band: number): number {
+  if (top >= viewportHeight) return 0;
+  const travelled = viewportHeight - top;
+  if (travelled >= band) return 1;
+  return travelled / band;
 }
 
-/** Advance progress toward target with a fixed rate; reversible mid-flight. */
-export function stepProgress(progress: number, target: 0 | 1, dtMs: number, durationMs: number): number {
-  const rate = dtMs / Math.max(1, durationMs);
-  if (target === 1) return Math.min(1, progress + rate);
-  return Math.max(0, progress - rate * 1.35); // leaving is a touch quicker than arriving
+export type ForgeState = "unforged" | "active" | "forged";
+
+export function forgeState(progress: number): ForgeState {
+  if (progress <= 0) return "unforged";
+  if (progress >= 1) return "forged";
+  return "active";
 }
 
-export function stateFor(progress: number, target: 0 | 1): RevealState {
-  if (progress >= 1) return "revealed";
-  if (progress <= 0) return "hidden";
-  return target === 1 ? "assembling" : "deconstructing";
+/**
+ * Per-column dissolve threshold for a left-to-right front with a little
+ * grain so the edge reads as assembled units rather than a straight wipe.
+ * Returns the progress at which cell (x, y) becomes forged.
+ */
+export function cellThreshold(x: number, y: number, cols: number, seed: number): number {
+  const hsh = ((x * 73856093) ^ (y * 19349663) ^ (seed * 83492791)) >>> 0;
+  const noise = (hsh % 1000) / 1000; // 0..1
+  const base = (x + 0.5) / cols; // column position
+  return Math.min(1, Math.max(0, base + (noise - 0.5) * (2.4 / cols)));
 }
