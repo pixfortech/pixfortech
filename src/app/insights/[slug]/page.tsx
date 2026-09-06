@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Reveal } from "@/components/ui/Reveal";
+import { Rise } from "@/components/ui/Entrance";
 import { Tag } from "@/components/ui/Tag";
 import { Blocks } from "@/components/ui/Blocks";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -38,16 +39,16 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <div className="absolute inset-0 grid-lines opacity-60 [mask-image:linear-gradient(to_bottom,black,transparent_85%)]" aria-hidden="true" />
         <Container className="relative pt-32 pb-12 sm:pt-40 sm:pb-16">
           <Breadcrumbs items={[{ name: "Insights", path: "/insights" }, { name: a.category, path: "/insights" }]} />
-          <Reveal y={10}><h1 className="h1 mt-8 max-w-[22ch]">{a.title}</h1></Reveal>
-          <Reveal delay={0.1}><p className="lead mt-6 max-w-[40rem]">{a.description}</p></Reveal>
-          <Reveal delay={0.15}>
+          <Rise><h1 className="h1 mt-8 max-w-[22ch]">{a.title}</h1></Rise>
+          <Rise delay={0.1}><p className="lead mt-6 max-w-[40rem]">{a.description}</p></Rise>
+          <Rise delay={0.15}>
             <dl className="mt-10 flex flex-wrap gap-x-10 gap-y-4 text-small">
               <div><dt className="eyebrow mb-1">Published</dt><dd><time dateTime={a.date} className="num text-bone-50">{formatDate(a.date)}</time></dd></div>
               <div><dt className="eyebrow mb-1">Author</dt><dd className="text-bone-50">{a.author.name} <span className="text-bone-400">· {a.author.role}</span></dd></div>
               <div><dt className="eyebrow mb-1">Reading time</dt><dd className="text-bone-50">{a.readingTime}</dd></div>
               <div><dt className="eyebrow mb-1">Topic</dt><dd><Tag>{a.category}</Tag></dd></div>
             </dl>
-          </Reveal>
+          </Rise>
         </Container>
       </header>
       <Container className="section-y">

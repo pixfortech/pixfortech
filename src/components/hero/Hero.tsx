@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/Button";
-import { LineReveal, Reveal } from "@/components/ui/Reveal";
+import { LineReveal, Rise } from "@/components/ui/Entrance";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ForgeCanvas } from "./ForgeCanvas";
 
@@ -19,18 +19,18 @@ export function Hero() {
       <div className="container-x relative">
         <div className="flex min-h-[100svh] flex-col justify-end pb-12 pt-[52svh] sm:pb-16 lg:justify-center lg:pb-24 lg:pt-32">
           <div className="max-w-[44rem] lg:max-w-[52rem]">
-            <Reveal y={12}>
+            <Rise>
               <Eyebrow className="mb-6">Web engineering & product studio</Eyebrow>
-            </Reveal>
+            </Rise>
             <h1 id="hero-title" className="display">
               <LineReveal lines={["We forge", "digital experiences."]} delay={0.15} />
             </h1>
-            <Reveal delay={0.45} y={16}>
+            <Rise delay={0.35}>
               <p className="lead mt-7 max-w-[34rem]">
                 Strategy, design and engineering for websites, Shopify commerce and web applications built to perform. Precise to the pixel. Built to last.
               </p>
-            </Reveal>
-            <Reveal delay={0.6} y={16}>
+            </Rise>
+            <Rise delay={0.45}>
               <div className="mt-9 flex flex-wrap items-center gap-3">
                 <Button href="/contact" size="lg" arrow>
                   Start a project
@@ -39,7 +39,7 @@ export function Hero() {
                   See the work
                 </Button>
               </div>
-            </Reveal>
+            </Rise>
           </div>
         </div>
       </div>

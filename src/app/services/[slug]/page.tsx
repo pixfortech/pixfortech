@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Reveal } from "@/components/ui/Reveal";
+import { Rise } from "@/components/ui/Entrance";
 import { Tag } from "@/components/ui/Tag";
 import { Button } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -46,15 +47,15 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
           <Breadcrumbs items={[{ name: "Services", path: "/services" }, { name: s.title, path: `/services/${s.slug}` }]} />
           <div className="mt-8 grid gap-10 lg:grid-cols-12">
             <div className="lg:col-span-8">
-              <Reveal y={10}><p className="num text-forge-400 text-small mb-4">{s.index}</p></Reveal>
-              <Reveal y={10}><h1 className="h1 max-w-[16ch]">{s.title}</h1></Reveal>
-              <Reveal delay={0.1}><p className="lead mt-6 max-w-[38rem]">{s.summary}</p></Reveal>
-              <Reveal delay={0.15}><div className="mt-8"><Button href="/contact" size="lg" arrow>Discuss a project</Button></div></Reveal>
+              <Rise><p className="num text-forge-400 text-small mb-4">{s.index}</p></Rise>
+              <Rise><h1 className="h1 max-w-[16ch]">{s.title}</h1></Rise>
+              <Rise delay={0.1}><p className="lead mt-6 max-w-[38rem]">{s.summary}</p></Rise>
+              <Rise delay={0.15}><div className="mt-8"><Button href="/contact" size="lg" arrow>Discuss a project</Button></div></Rise>
             </div>
-            <Reveal delay={0.2} className="lg:col-span-3 lg:col-start-10">
+            <Rise delay={0.2} className="lg:col-span-3 lg:col-start-10">
               <p className="eyebrow mb-3">Technology</p>
               <ul className="flex flex-wrap gap-1.5">{techs.map((t) => <li key={t.slug}><Tag>{t.name}</Tag></li>)}</ul>
-            </Reveal>
+            </Rise>
           </div>
         </Container>
       </header>

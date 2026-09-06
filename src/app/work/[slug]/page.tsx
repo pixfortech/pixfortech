@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Reveal } from "@/components/ui/Reveal";
+import { Rise } from "@/components/ui/Entrance";
 import { Tag } from "@/components/ui/Tag";
 import { Arrow, Button } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -48,20 +49,20 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
               Sample layout. This case study uses placeholder content and does not describe a real client engagement.
             </p>
           )}
-          <Reveal y={10}>
+          <Rise>
             <h1 className="h1 mt-8 max-w-[18ch]">{project.title}</h1>
-          </Reveal>
-          <Reveal delay={0.1}>
+          </Rise>
+          <Rise delay={0.1}>
             <p className="lead mt-6 max-w-[40rem]">{project.summary}</p>
-          </Reveal>
-          <Reveal delay={0.15}>
+          </Rise>
+          <Rise delay={0.15}>
             <dl className="mt-12 grid grid-cols-2 gap-x-6 gap-y-8 border-t border-line pt-8 sm:grid-cols-4">
               <div><dt className="eyebrow mb-2">Client</dt><dd className="text-bone-50">{project.client}</dd></div>
               <div><dt className="eyebrow mb-2">Industry</dt><dd className="text-bone-50">{project.industry}</dd></div>
               <div><dt className="eyebrow mb-2">Services</dt><dd className="text-bone-50">{project.services.join(", ")}</dd></div>
               <div><dt className="eyebrow mb-2">Year</dt><dd className="num text-bone-50">{project.year}</dd></div>
             </dl>
-          </Reveal>
+          </Rise>
         </Container>
       </header>
 

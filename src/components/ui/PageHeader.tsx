@@ -1,6 +1,6 @@
 import { Container } from "./Container";
 import { Eyebrow } from "./Eyebrow";
-import { LineReveal, Reveal } from "./Reveal";
+import { LineReveal, Rise } from "./Entrance";
 import type { ReactNode } from "react";
 
 type Props = {
@@ -18,18 +18,18 @@ export function PageHeader({ eyebrow, title, lead, children, compact = false }: 
     <header className="relative overflow-hidden border-b border-line">
       <div className="absolute inset-0 grid-lines opacity-60 [mask-image:linear-gradient(to_bottom,black,transparent_85%)]" aria-hidden="true" />
       <Container className={compact ? "relative pt-32 pb-12 sm:pt-40 sm:pb-16" : "relative pt-32 pb-16 sm:pt-44 sm:pb-24"}>
-        <Reveal y={10}>
+        <Rise>
           <Eyebrow className="mb-6">{eyebrow}</Eyebrow>
-        </Reveal>
+        </Rise>
         <h1 className={compact ? "h1 max-w-[20ch]" : "display max-w-[14ch]"}>
           <LineReveal lines={lines} delay={0.1} />
         </h1>
         {lead ? (
-          <Reveal delay={0.35} y={14}>
+          <Rise delay={0.3}>
             <div className="lead mt-8 max-w-[38rem]">{lead}</div>
-          </Reveal>
+          </Rise>
         ) : null}
-        {children ? <Reveal delay={0.45} y={14} className="mt-10">{children}</Reveal> : null}
+        {children ? <Rise delay={0.4} className="mt-10">{children}</Rise> : null}
       </Container>
     </header>
   );

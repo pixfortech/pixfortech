@@ -80,9 +80,11 @@ export function Header() {
             </nav>
 
             <div className="flex items-center gap-2">
-              <Button href="/contact" size="md" className="hidden sm:inline-flex" magnetic={false}>
-                Start a project
-              </Button>
+              <div className="hidden sm:block">
+                <Button href="/contact" size="md" magnetic={false}>
+                  Start a project
+                </Button>
+              </div>
               <button
                 type="button"
                 className="flex h-10 w-10 items-center justify-center rounded-md text-bone-50 hover:bg-bone-50/5 lg:hidden"

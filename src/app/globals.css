@@ -17,7 +17,7 @@
   --color-bone-50: #f4f1ea; /* primary text */
   --color-bone-200: #cfcbc2; /* secondary text */
   --color-bone-400: #9a968d; /* muted text */
-  --color-bone-600: #6b685f; /* faint text */
+  --color-bone-600: #8a877e; /* faint text, 4.5:1 on ink-950 at small sizes */
 
   --color-forge-500: #ff5a2c; /* molten accent */
   --color-forge-400: #ff7a4f;
@@ -355,4 +355,22 @@ body {
 @keyframes scrollcue {
   0% { transform: translateY(-100%); }
   60%, 100% { transform: translateY(200%); }
+}
+
+/* ------------------------------------------------------------------
+   Above-the-fold entrance animations. CSS-only so hero text paints
+   before hydration (keeps LCP honest). Delay is set inline.
+------------------------------------------------------------------- */
+@keyframes rise-in {
+  from { transform: translate3d(0, 110%, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+.anim-rise { animation: rise-in 0.85s var(--ease-out) both; }
+.anim-fade-up { animation: fade-up 0.7s var(--ease-out) both; }
+@media (prefers-reduced-motion: reduce) {
+  .anim-rise, .anim-fade-up { animation: none; }
 }
