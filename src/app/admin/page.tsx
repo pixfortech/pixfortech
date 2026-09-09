@@ -49,7 +49,7 @@ export default async function AdminHome() {
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-12">
-        <div className="flex flex-col gap-6 lg:col-span-8">
+        <div className="flex min-w-0 flex-col gap-6 lg:col-span-8">
           {attention.length > 0 && (
             <Card className="border-[#f0b35a]/40"><CardHeader title="Projects needing attention" description="At risk or delayed. Check target dates and blockers." />
               <ul className="divide-y divide-line-faint px-5 pb-4">{attention.map((p) => <li key={p.id} className="flex items-center justify-between gap-3 py-2.5 text-[0.875rem]"><Link href={`/admin/projects/${p.id}`} className="min-w-0 truncate text-bone-50 hover:text-forge-300">{p.code} · {p.title}</Link><span className="flex items-center gap-2"><Badge tone={p.health === "at_risk" ? "warn" : "bad"} dot>{humanise(p.health)}</Badge><Badge tone={statusTone(p.status)}>{humanise(p.status)}</Badge></span></li>)}</ul>
@@ -59,7 +59,7 @@ export default async function AdminHome() {
           <section><div className="mb-3 flex items-center justify-between"><h2 className="text-[0.9375rem] font-semibold">Due in the next three days</h2><Link href="/admin/tasks?due=week" className="text-[0.75rem] text-forge-300">Due soon</Link></div><TaskList tasks={dueSoon.slice(0, 6)} area="admin" emptyTitle="Nothing due imminently" emptyBody="The calendar is calm." /></section>
           <section><h2 className="mb-3 text-[0.9375rem] font-semibold">Portfolio</h2><ProjectTable projects={projects.filter((p) => !["completed"].includes(p.status)).slice(0, 8)} area="admin" /></section>
         </div>
-        <aside className="flex flex-col gap-6 lg:col-span-4">
+        <aside className="flex min-w-0 flex-col gap-6 lg:col-span-4">
           <Card><CardHeader title="My tasks" action={<Link href="/admin/tasks?assignee=me" className="text-[0.75rem] text-forge-300">All</Link>} /><div className="px-5 pb-5">{myTasks.length === 0 ? <p className="text-[0.8125rem] text-bone-400">Nothing assigned to you. Either you are very efficient or someone forgot.</p> : <ul className="flex flex-col gap-1.5">{myTasks.slice(0, 6).map((t) => <li key={t.id}><Link href={`/admin/tasks/${t.id}`} className="flex items-center justify-between gap-2 rounded-md border border-line px-3 py-2 text-[0.8125rem] hover:border-bone-50"><span className="truncate">{t.title}</span><Badge tone={statusTone(t.status)}>{humanise(t.status)}</Badge></Link></li>)}</ul>}</div></Card>
           <Card><CardHeader title="Team workload" action={<Link href="/admin/team" className="text-[0.75rem] text-forge-300">Team</Link>} />
             <ul className="px-5 pb-5">{team.map((m) => <li key={m.id} className="flex items-center gap-3 border-b border-line-faint py-2 text-[0.8125rem] last:border-0"><Avatar name={m.name} image={m.image} size={22} /><span className="min-w-0 flex-1 truncate text-bone-50">{m.name}</span><span className="num text-bone-400" title="Open tasks">{m.openTasks} tasks</span><span className="num text-bone-400" title="Open requests">{m.openRequests} req</span><span className="h-1.5 w-16 overflow-hidden rounded-pill bg-ink-700"><span className={`block h-full ${m.openTasks + m.openRequests > 6 ? "bg-[#f0b35a]" : "bg-forge-500"}`} style={{ width: `${Math.min(100, (m.openTasks + m.openRequests) * 12)}%` }} /></span></li>)}</ul>

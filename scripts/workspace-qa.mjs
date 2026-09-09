@@ -4,10 +4,12 @@ import { launchBrowser, qaPassword, qaOutput } from "./qa-runtime.mjs";
 const base = process.argv[2] ?? "http://localhost:3000";
 const browser = await launchBrowser();
 const errors = [];
+const pages = [];
 const out = qaOutput("workspace");
 async function login(email, area) {
   const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } });
   const page = await ctx.newPage();
+  pages.push(page);
   page.setDefaultTimeout(30000);
   page.on("pageerror", e => errors.push(e.message));
   await page.goto(`${base}/login`);
@@ -85,6 +87,12 @@ try {
   }
   console.log("PASS: admin and client mobile layouts have no horizontal page overflow");
   assert.deepEqual(errors, [], "Unexpected browser exceptions");
+} catch (error) {
+  for (const [i, page] of pages.entries()) {
+    console.log("Failure page", i, new URL(page.url()).pathname, await page.title());
+    await page.screenshot({ path: `${out}/failure-${i}.png`, caret: "initial" });
+  }
+  throw error;
 } finally {
   await browser.close();
 }

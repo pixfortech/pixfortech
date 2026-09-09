@@ -51,7 +51,9 @@ Never run the demo seed script against production. Bootstrap the owner's real ac
 5. Use `https://pixfortech.com` as canonical and redirect `www`. Update both public URL variables, trusted origins, email links and any Google callback to `/api/auth/callback/google` on the canonical origin.
 6. Verify DNS and SSL, then rerun critical QA on the canonical hostname.
 
-Current status: release gates are not complete. No domain DNS changes have been applied. The deployment branch is pushed. The Netlify repository setting points to it, but cloud checkout requires completing the normal GitHub connection in Netlify. The first cloud build stopped before cloning; it did not deploy an application.
+Current status: the temporary hostname is publicly deployed from the deployment branch. GitHub checkout and the Linux cloud build work. The optional Netlify branding overlay is disabled for this project. No domain DNS changes have been applied. The application still uses the isolated QA database; the production database is not populated. Live authentication email testing awaits approval for the recipient inbox, and final hostname/database cutover remains gated on complete temporary-host QA.
+
+Temporary-host validation has passed core login/logout, role redirects, foreign project/request denial, live request status, private internal comments, chat, toasts and unread indicators. Private R2 boundary/ownership/download tests and chat/request attachment integration pass. Approval creation, client decisions and the audit trail pass. Project/task creation, authorized global search, internal-task exclusion and persisted profile/preferences pass. All 20 sitemap pages, the interactive 404 and observable reduced-motion/mobile public behavior pass. Production QA found and fixed delayed status publication, upload-size constraints, interaction readiness and an admin mobile grid overflow; final mobile/kanban regression checks are tracked separately. Live Resend invitation, verification, reset and magic-link delivery have not yet passed the production gate.
 
 ## Validation and rollback
 
