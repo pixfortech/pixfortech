@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { useHydrated } from "@/lib/useHydrated";
+import { uploadPrivateFile } from "@/lib/uploadPrivateFile";
 import { useRouter } from "next/navigation";
 import { markConversationReadAction, sendMessageAction, typingAction } from "@/server/actions/collab";
 import { useRealtime } from "@/components/app/RealtimeProvider";
@@ -15,7 +17,8 @@ const STAFF = ["super_admin", "admin", "project_manager", "team_member"];
 
 export function Chat({ conversationId, projectId, messages, readers, currentUserId, internal, participants, compact }: { conversationId: string; projectId: string; messages: ChatMessage[]; readers: Reader[]; currentUserId: string; internal?: boolean; participants: { id: string; name: string }[]; compact?: boolean }) {
   const router = useRouter();
-  const { subscribe } = useRealtime();
+  const { subscribe, toast } = useRealtime();
+  const hydrated = useHydrated();
   const [text, setText] = useState("");
   const [pending, start] = useTransition();
   const [typing, setTyping] = useState<Record<string, { name: string; at: number }>>({});
@@ -41,10 +44,14 @@ export function Chat({ conversationId, projectId, messages, readers, currentUser
       const res = await sendMessageAction({ conversationId, body: body || (files.length ? `Shared ${files.length} file${files.length > 1 ? "s" : ""}` : ""), replyToId: replyTo?.id ?? "" });
       if (!res.ok) return;
       if (files.length) {
-        const fd = new FormData(); fd.set("projectId", projectId); fd.set("messageId", res.data!.id);
-        for (const f of files) fd.append("files", f);
-        await fetch("/api/upload", { method: "POST", body: fd });
-        setFiles([]);
+        try {
+          for (const file of files) {
+            await uploadPrivateFile(file, { projectId, messageId: res.data!.id });
+            setFiles((remaining) => remaining.filter((candidate) => candidate !== file));
+          }
+        } catch {
+          toast({ title: "Message sent, but attachments failed", body: "The remaining files are still selected. Try sending them again.", kind: "error" });
+        }
       }
       setText(""); setReplyTo(null);
       router.refresh();
@@ -101,8 +108,8 @@ export function Chat({ conversationId, projectId, messages, readers, currentUser
         {replyTo && <p className="mb-1 flex items-center justify-between rounded-md bg-ink-900 px-2 py-1 text-[0.75rem] text-bone-400">Replying to {replyTo.authorName} <button type="button" onClick={() => setReplyTo(null)} aria-label="Cancel reply">×</button></p>}
         {files.length > 0 && <p className="mb-1 px-1 text-[0.75rem] text-bone-400">{files.map((f) => f.name).join(", ")} <button type="button" onClick={() => setFiles([])} className="ml-1 text-bone-200">clear</button></p>}
         <div className="flex items-end gap-2">
-          <textarea value={text} onChange={(e) => onType(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} rows={1} placeholder={internal ? "Internal note to the team…" : "Write a message. @name to mention someone."} aria-label="Message" className="max-h-32 min-h-10 flex-1 resize-y rounded-md border border-line bg-ink-900 px-3 py-2 text-[0.875rem] text-bone-50 placeholder:text-bone-600 focus:border-forge-400 focus:outline-none" />
-          <input ref={fileInput} type="file" multiple className="sr-only" aria-label="Attach files" onChange={(e) => { setFiles(Array.from(e.target.files ?? [])); e.target.value = ""; }} />
+          <textarea disabled={!hydrated} value={text} onChange={(e) => onType(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} rows={1} placeholder={internal ? "Internal note to the team…" : "Write a message. @name to mention someone."} aria-label="Message" className="max-h-32 min-h-10 flex-1 resize-y rounded-md border border-line bg-ink-900 px-3 py-2 text-[0.875rem] text-bone-50 placeholder:text-bone-600 focus:border-forge-400 focus:outline-none" />
+          <input disabled={!hydrated} ref={fileInput} type="file" multiple className="sr-only" aria-label="Attach files" onChange={(e) => { setFiles(Array.from(e.target.files ?? [])); e.target.value = ""; }} />
           <button type="button" onClick={() => fileInput.current?.click()} className="grid h-10 w-10 place-items-center rounded-md border border-line text-bone-400 hover:border-bone-50 hover:text-bone-50" aria-label="Attach files">＋</button>
           <button type="button" onClick={send} disabled={pending || (!text.trim() && !files.length)} className="h-10 rounded-md bg-bone-50 px-4 text-[0.875rem] font-medium text-ink-950 hover:bg-forge-500 disabled:opacity-50">Send</button>
         </div>

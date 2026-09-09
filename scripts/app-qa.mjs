@@ -29,7 +29,7 @@ async function login(email, vw = W) {
   await page.waitForLoadState("load");
   return { ctx, page };
 }
-const shot = (page, name) => page.screenshot({ path: `${out}/${name}-${W}.png`, fullPage: process.env.FULL ? true : false });
+const shot = (page, name) => page.screenshot({ path: `${out}/${name}-${W}.png`, caret: "initial", fullPage: process.env.FULL ? true : false });
 
 // Unauthenticated redirect
 {
@@ -115,6 +115,7 @@ await pm.page.goto(base + projA.replace("/portal", "/admin") + "/messages", { wa
 const liveText = "Live message from the PM at " + Date.now();
 await pm.page.getByLabel("Message").fill(liveText);
 await pm.page.getByRole("button", { name: "Send" }).click();
+await pm.page.waitForFunction(() => document.querySelector('textarea[aria-label="Message"]')?.value === "", null, { timeout: 30000 });
 await a.page.waitForFunction((t) => document.body.innerText.includes(t), liveText, { timeout: 8000 }).then(() => console.log("client chat live ✓")).catch(() => console.log("client chat not live ✗"));
 await shot(a.page, "portal-chat-live");
 // Sign out

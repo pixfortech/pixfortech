@@ -6,6 +6,7 @@ import { createRequestAction } from "@/server/actions/requests";
 import { AppButton, Field, inputCls, selectCls } from "@/components/app/primitives";
 import { FileDropzone } from "./FileDropzone";
 import { useRealtime } from "@/components/app/RealtimeProvider";
+import { uploadPrivateFile } from "@/lib/uploadPrivateFile";
 
 const TYPES = [["edit", "Edit"], ["bug", "Bug"], ["feature", "New feature"], ["design", "Design change"], ["content", "Content change"], ["integration", "Integration"], ["performance", "Performance"], ["other", "Other"]];
 
@@ -28,11 +29,11 @@ export function RequestForm({ projects, area, defaultProjectId }: { projects: { 
       if (!res.ok) { setError(res.error); setErrors(res.fieldErrors ?? {}); return; }
       const { id, ref } = res.data!;
       if (files.length) {
-        const up = new FormData();
-        up.set("projectId", String(payload.projectId)); up.set("requestId", id);
-        for (const f of files) up.append("files", f);
-        const r = await fetch("/api/upload", { method: "POST", body: up });
-        if (!r.ok) toast({ title: "Request sent, but attachments failed", body: "You can add them from the request page.", kind: "error" });
+        try {
+          for (const file of files) await uploadPrivateFile(file, { projectId: String(payload.projectId), requestId: id });
+        } catch {
+          toast({ title: "Request sent, but attachments failed", body: "You can add them from the request page.", kind: "error" });
+        }
       }
       toast({ title: `${ref} submitted`, body: "The team has been notified.", kind: "success" });
       router.push(`/${area}/requests/${id}`);

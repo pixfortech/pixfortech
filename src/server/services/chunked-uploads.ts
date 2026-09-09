@@ -11,7 +11,7 @@ import { storage } from "../storage";
 export const CHUNK_BYTES = 3 * 1024 * 1024;
 const inputSchema = z.object({
   name: z.string().min(1).max(240), mime: z.string().max(150), size: z.number().int().min(1).max(MAX_FILE_BYTES),
-  target: z.object({ projectId: z.string().min(1), taskId: z.string().optional(), requestId: z.string().optional(), clientVisible: z.boolean().optional() }),
+  target: z.object({ projectId: z.string().min(1), taskId: z.string().optional(), requestId: z.string().optional(), messageId: z.string().optional(), clientVisible: z.boolean().optional() }),
 });
 
 export async function beginUpload(actor: Actor, input: unknown) {

@@ -385,7 +385,7 @@ export const uploadSessions = pgTable("upload_sessions", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
-  target: jsonb("target").$type<{ projectId: string; taskId?: string; requestId?: string; clientVisible?: boolean }>().notNull(),
+  target: jsonb("target").$type<{ projectId: string; taskId?: string; requestId?: string; messageId?: string; clientVisible?: boolean }>().notNull(),
   name: text("name").notNull(),
   mime: text("mime").notNull(),
   size: integer("size").notNull(),

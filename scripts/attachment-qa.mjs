@@ -1,0 +1,44 @@
+import assert from "node:assert/strict";
+import { launchBrowser, qaPassword } from "./qa-runtime.mjs";
+
+const base = process.argv[2] ?? "http://localhost:3000";
+const browser = await launchBrowser();
+try {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto(`${base}/login`);
+  await page.getByLabel("Email").fill("maya@northbank.test");
+  await page.getByLabel("Password").fill(qaPassword());
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.waitForURL(/\/portal/);
+  await page.goto(`${base}/portal/projects`);
+  const project = await page.locator("a[href^='/portal/projects/']").first().getAttribute("href");
+  const bytes = Buffer.from("Private attachment integration test");
+  const chatName = `chat-attachment-${Date.now()}.txt`;
+  await page.goto(`${base}${project}/messages`);
+  await page.getByLabel("Message", { exact: true }).fill("Chat attachment QA");
+  const chatInput = page.locator('input[aria-label="Attach files"]:enabled');
+  await chatInput.waitFor({ state: "attached" });
+  await chatInput.setInputFiles({ name: chatName, mimeType: "text/plain", buffer: bytes });
+  await page.getByRole("button", { name: "Send", exact: true }).click();
+  const chatLink = page.locator("a[href^='/api/files/']").filter({ hasText: chatName });
+  await chatLink.waitFor({ state: "visible", timeout: 60000 });
+  const downloaded = await context.request.get(base + await chatLink.getAttribute("href"));
+  assert.equal(downloaded.status(), 200);
+  assert.deepEqual(await downloaded.body(), bytes);
+  const requestName = `request-attachment-${Date.now()}.txt`;
+  await page.goto(`${base}/portal/requests/new`);
+  await page.getByLabel("Title", { exact: true }).fill("Request attachment QA");
+  await page.getByLabel("Description", { exact: true }).fill("Verify private attachments on newly created requests.");
+  const requestInput = page.locator('input[aria-label="Choose files"]:enabled');
+  await requestInput.waitFor({ state: "attached" });
+  await requestInput.setInputFiles({ name: requestName, mimeType: "text/plain", buffer: bytes });
+  await page.getByRole("button", { name: "Submit request", exact: true }).click();
+  await page.waitForURL(/\/portal\/requests\/[a-f0-9-]+$/, { timeout: 60000 });
+  const requestLink = page.getByRole("link", { name: requestName, exact: true });
+  await requestLink.waitFor({ state: "visible" });
+  const requestFile = await context.request.get(base + await requestLink.getAttribute("href"));
+  assert.equal(requestFile.status(), 200);
+  assert.deepEqual(await requestFile.body(), bytes);
+  console.log("PASS: chat and new-request attachments use private chunked storage and authorized downloads");
+} finally { await browser.close(); }
