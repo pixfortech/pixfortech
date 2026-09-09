@@ -92,7 +92,7 @@ const logSize = () => readFileSync(log, "utf8").length;
     await tom.page.getByLabel("New password").fill(PASSWORD);
     await tom.page.getByLabel("Confirm password").fill(PASSWORD);
     await tom.page.getByRole("button", { name: "Change password" }).click();
-    await tom.page.waitForTimeout(2000);
+    await tom.page.getByTestId("password-form").getByRole("status").waitFor({ timeout: 60000 });
     const changedMsg = (await tom.page.textContent("body")) ?? "";
     await shot(tom.page, "password-changed");
     ok("password changed back from settings", /password (changed|updated)/i.test(changedMsg), changedMsg.match(/password (changed|updated)[^.]*/i)?.[0] ?? "no confirmation text");

@@ -246,6 +246,7 @@ if (!production) {
   ok("attention queue lists the new urgent request", (await admin.getByTestId("attention-queue").textContent())?.includes(title));
   await admin.getByTestId("bell").click(); await admin.waitForTimeout(400);
   ok("popover shows actor and category", /Maya Fernandes/.test((await admin.getByTestId("notification-list").textContent()) ?? "") && /REQUEST/i.test((await admin.getByTestId("notification-list").textContent()) ?? ""));
+  ok("live notification reconciles with its saved row", (await admin.getByTestId("notification-list").getByRole("link").filter({ hasText: title }).count()) === 1);
   await admin.screenshot({ path: `${out}/notification-popover.png` });
   ok("PiP present but quiet in the product", (await admin.getByTestId("mascot").count()) === 1);
   await a.close(); await c.close();
