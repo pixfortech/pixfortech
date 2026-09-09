@@ -8,6 +8,7 @@ mkdirSync(out, { recursive: true });
 const PASSWORD = qaPassword();
 const browser = await launchBrowser();
 const errors = [];
+const expectedErrors = new WeakMap();
 const failures = [];
 const report = console.log;
 console.log = (...args) => {
@@ -19,7 +20,12 @@ const W = Number(process.env.W ?? 1366);
 async function login(email, vw = W) {
   const ctx = await browser.newContext({ viewport: { width: vw, height: vw < 800 ? 812 : 900 } });
   const page = await ctx.newPage();
-  page.on("console", (m) => { if (m.type() === "error") errors.push(`[${email}] console @${page.url()}: ${m.text().slice(0, 6000)}`); });
+  page.on("console", (m) => {
+    if (m.type() !== "error") return;
+    const expected = (expectedErrors.get(page) ?? []).some(({ status, path }) =>
+      m.text().includes(`status of ${status} `) && new URL(m.location().url || base).pathname === path);
+    if (!expected) errors.push(`[${email}] console @${page.url()}: ${m.text().slice(0, 6000)}`);
+  });
   page.on("pageerror", (e) => errors.push(`[${email}] pageerror: ${e.message}`));
   await page.goto(base + "/login", { waitUntil: "load", timeout: 90000 });
   await page.getByLabel("Email").fill(email);
@@ -68,6 +74,7 @@ const aId = projA.split("/")[3];
 let isolation = "n/a";
 for (const id of ids) {
   if (id === aId) continue;
+  expectedErrors.set(a.page, [{ status: 404, path: `/portal/projects/${id}` }]);
   const r = await a.page.goto(base + `/portal/projects/${id}`, { waitUntil: "load" });
   const status = r?.status();
   const text = await a.page.textContent("body");
@@ -78,7 +85,13 @@ console.log("client A -> other projects:", isolation, "| checked", ids.length - 
 assert.notEqual(isolation, "n/a", "Must exercise a foreign project");
 // API isolation: file download and request detail for foreign ids
 const foreignReq = await pm.page.evaluate(async () => { const r = await fetch("/api/search?q=CSV"); const j = await r.json(); return j.requests?.[0]?.id; });
-if (foreignReq) { const r = await a.page.goto(base + `/portal/requests/${foreignReq}`, { waitUntil: "load" }); console.log("client A -> client B request:", r?.status(), /misplaced|not found/i.test((await a.page.textContent("body")) ?? "") ? "404 ✓" : "VISIBLE ✗"); }
+if (foreignReq) {
+  expectedErrors.set(a.page, [{ status: 404, path: `/portal/requests/${foreignReq}` }]);
+  const r = await a.page.goto(base + `/portal/requests/${foreignReq}`, { waitUntil: "load" });
+  assert.equal(r?.status(), 404, "Foreign requests must return 404");
+  console.log("client A -> client B request:", r?.status(), /misplaced|not found/i.test((await a.page.textContent("body")) ?? "") ? "404 ✓" : "VISIBLE ✗");
+}
+expectedErrors.set(a.page, []);
 
 // Realtime request flow: client submits, PM gets toast without refresh
 await pm.page.goto(base + "/admin", { waitUntil: "load" });
@@ -99,14 +112,15 @@ assert.ok(Number(unread) > 0, "New request must update unread count");
 const reqUrl = a.page.url().replace(base, "").replace("/portal", "/admin");
 await pm.page.goto(base + reqUrl, { waitUntil: "load" });
 await pm.page.getByRole("button", { name: "Under review" }).click();
-await pm.page.waitForTimeout(800);
+await pm.page.waitForFunction(() => document.querySelector("[data-testid='request-status']")?.textContent?.includes("Under review"), null, { timeout: 30000 });
 await shot(pm.page, "admin-request");
 await a.page.waitForFunction(() => document.querySelector("[data-testid='request-status']")?.textContent?.includes("Under review"), null, { timeout: 8000 }).then(() => console.log("client sees Under review live ✓")).catch(() => console.log("client did not update ✗"));
 // PM internal note must not reach client
 await pm.page.getByLabel("Comment").fill("INTERNAL-ONLY-NOTE 4711");
 await pm.page.getByRole("checkbox", { name: /Internal note/ }).check();
 await pm.page.getByRole("button", { name: "Add internal note" }).click();
-await pm.page.waitForTimeout(800);
+await pm.page.waitForFunction(() => document.querySelector('textarea')?.value === "", null, { timeout: 30000 });
+assert.ok((await pm.page.textContent("body"))?.includes("INTERNAL-ONLY-NOTE 4711"), "Internal comment must be saved before checking isolation");
 await a.page.reload({ waitUntil: "load" });
 console.log("internal note hidden from client:", !(await a.page.textContent("body"))?.includes("INTERNAL-ONLY-NOTE") ? "✓" : "LEAK ✗");
 // Chat realtime
@@ -119,9 +133,10 @@ await pm.page.waitForFunction(() => document.querySelector('textarea[aria-label=
 await a.page.waitForFunction((t) => document.body.innerText.includes(t), liveText, { timeout: 8000 }).then(() => console.log("client chat live ✓")).catch(() => console.log("client chat not live ✗"));
 await shot(a.page, "portal-chat-live");
 // Sign out
+expectedErrors.set(pm.page, [{ status: 401, path: "/api/realtime" }]);
 await pm.page.getByRole("button", { name: "Sign out" }).click();
 await pm.page.waitForURL(/\/login/, { timeout: 10000 }).then(() => console.log("sign out ✓"));
 await a.ctx.close(); await pm.ctx.close(); await browser.close();
 if (errors.length) console.log("ERRORS:\n" + [...new Set(errors)].slice(0, 12).join("\n"));
 assert.deepEqual(failures, [], "Product QA failures");
-assert.deepEqual(errors.filter((message) => !message.includes("404 (Not Found)")), [], "Unexpected browser errors");
+assert.deepEqual(errors, [], "Unexpected browser errors");

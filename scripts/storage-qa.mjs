@@ -31,7 +31,12 @@ try {
   assert.equal(response.status(), 200, "Accept exactly 25 MB");
   const upload = await response.json();
   const partUrl = (part) => `${endpoint}?id=${upload.id}&part=${part}`;
-  assert.equal((await b.request.put(partUrl(0), { headers, data: Buffer.alloc(1) })).status(), 404, "Reject stolen upload session");
+  const stolen = await b.request.put(partUrl(0), { headers, data: Buffer.alloc(1) });
+  if (stolen.status() !== 404) {
+    const detail = await stolen.json().catch(() => ({}));
+    console.log("Unexpected chunk denial", stolen.status(), typeof detail.error === "string" ? detail.error.slice(0, 160) : "Non-JSON response");
+  }
+  assert.equal(stolen.status(), 404, "Reject stolen upload session");
   assert.equal((await a.request.put(partUrl(-1), { headers, data: Buffer.alloc(1) })).status(), 422, "Reject invalid chunk index");
   assert.equal((await a.request.put(partUrl(0), { headers, data: Buffer.alloc(1) })).status(), 422, "Reject incomplete chunk");
   const bytes = Buffer.alloc(data.size, 65);

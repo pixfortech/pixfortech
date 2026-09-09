@@ -99,8 +99,9 @@ export async function transitionRequest(actor: Actor, id: string, status: Reques
   const ref = requestCode(r.number);
   (await recordActivity({ organisationId: project.organisationId, projectId: project.id, actorId: actor.id, kind: "request.status", summary: `moved ${ref} to ${REQUEST_STATUS_LABELS[status]}${note ? ` · ${note}` : ""}`, targetType: "request", targetId: id, href: `/requests/${id}` }));
   const recipients = isStaff(actor) ? [...(await projectClientIds(project.id, project.organisationId)), r.requesterId] : (await projectStaffIds(project.id, project.managerId));
-  await notify({ recipientIds: recipients, category: "request", title: `${ref} is now ${REQUEST_STATUS_LABELS[status]}`, body: r.title, href: `/requests/${id}`, projectId: project.id, actorId: actor.id });
+  // Publish the persisted status before email delivery can delay live clients.
   (await publish({ type: "request.updated", audience: { projectIds: [project.id], staff: true }, payload: { id, ref, status, projectId: project.id } }));
+  await notify({ recipientIds: recipients, category: "request", title: `${ref} is now ${REQUEST_STATUS_LABELS[status]}`, body: r.title, href: `/requests/${id}`, projectId: project.id, actorId: actor.id });
 }
 
 export async function assignRequest(actor: Actor, id: string, assigneeId: string | null, estimate?: string | null, estimatedCompletion?: Date | null) {
