@@ -6,6 +6,7 @@ import { useOptimistic, useState, useTransition } from "react";
 import { moveTaskAction } from "@/server/actions/tasks";
 import { Avatar, Badge, dueTone, fmtDate, humanise, priorityTone } from "@/components/app/primitives";
 import { cn } from "@/lib/utils";
+import { useHydrated } from "@/lib/useHydrated";
 
 export type BoardTask = { id: string; key: string; title: string; status: string; priority: string; dueDate: Date | null; assigneeName: string | null; assigneeImage: string | null; projectCode: string; projectTitle: string; clientVisible: boolean; labels: string | null };
 const COLS = [["todo", "To do"], ["in_progress", "In progress"], ["in_review", "In review"], ["blocked", "Blocked"], ["done", "Done"]] as const;
@@ -13,7 +14,8 @@ const COLS = [["todo", "To do"], ["in_progress", "In progress"], ["in_review", "
 /** Kanban with native pointer drag and drop plus keyboard moves. Optimistic, server-confirmed. */
 export function TaskBoard({ tasks, showProject }: { tasks: BoardTask[]; showProject?: boolean }) {
   const router = useRouter();
-  const [, start] = useTransition();
+  const [pending, start] = useTransition();
+  const hydrated = useHydrated();
   const [optimistic, apply] = useOptimistic(tasks, (state, patch: { id: string; status: string }) => state.map((t) => (t.id === patch.id ? { ...t, status: patch.status } : t)));
   const [dragging, setDragging] = useState<string | null>(null);
   const [over, setOver] = useState<string | null>(null);
@@ -31,7 +33,7 @@ export function TaskBoard({ tasks, showProject }: { tasks: BoardTask[]; showProj
   const backlog = optimistic.filter((t) => t.status === "backlog");
 
   return (
-    <div>
+    <div aria-busy={pending}>
       {error && <p role="alert" className="mb-3 text-[0.8125rem] text-forge-300">{error}</p>}
       <div className="grid gap-3 md:grid-cols-5">
         {COLS.map(([status, label]) => {
@@ -41,7 +43,7 @@ export function TaskBoard({ tasks, showProject }: { tasks: BoardTask[]; showProj
               <header className="flex items-center justify-between px-3 py-2.5"><h3 className="text-[0.75rem] font-medium uppercase tracking-[0.08em] text-bone-400">{label}</h3><span className="num text-[0.75rem] text-bone-600">{items.length}</span></header>
               <ul className="flex flex-1 flex-col gap-2 px-2 pb-2">
                 {items.map((t) => (
-                  <li key={t.id} draggable onDragStart={(e) => { e.dataTransfer.setData("text/task", t.id); setDragging(t.id); }} onDragEnd={() => setDragging(null)} className={cn("pf-drag rounded-md border border-line bg-ink-900 p-3 text-[0.8125rem] shadow-1", dragging === t.id && "opacity-50")}>
+                  <li key={t.id} draggable={hydrated && !pending} onDragStart={(e) => { e.dataTransfer.setData("text/task", t.id); setDragging(t.id); }} onDragEnd={() => setDragging(null)} className={cn("pf-drag rounded-md border border-line bg-ink-900 p-3 text-[0.8125rem] shadow-1", dragging === t.id && "opacity-50")}>
                     <div className="flex items-start justify-between gap-2">
                       <Link href={`/admin/tasks/${t.id}`} className="font-medium text-bone-50 hover:text-forge-300">{t.title}</Link>
                       <Badge tone={priorityTone(t.priority)}>{t.priority}</Badge>
@@ -52,7 +54,7 @@ export function TaskBoard({ tasks, showProject }: { tasks: BoardTask[]; showProj
                       {t.dueDate && <Badge tone={dueTone(t.dueDate, t.status === "done")}>{fmtDate(t.dueDate)}</Badge>}
                     </div>
                     <label className="sr-only" htmlFor={`mv-${t.id}`}>Move {t.title}</label>
-                    <select id={`mv-${t.id}`} value={t.status === "backlog" ? "todo" : t.status} onChange={(e) => move(t.id, e.target.value)} className="mt-2 w-full rounded-sm border border-line bg-ink-850 px-1 py-0.5 text-[0.6875rem] text-bone-400 md:sr-only md:focus:not-sr-only">
+                    <select id={`mv-${t.id}`} disabled={!hydrated || pending} value={t.status === "backlog" ? "todo" : t.status} onChange={(e) => move(t.id, e.target.value)} className="mt-2 w-full rounded-sm border border-line bg-ink-850 px-1 py-0.5 text-[0.6875rem] text-bone-400 md:sr-only md:focus:not-sr-only">
                       {COLS.map(([s, l]) => <option key={s} value={s}>{l}</option>)}
                     </select>
                   </li>

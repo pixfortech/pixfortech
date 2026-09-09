@@ -116,13 +116,14 @@ await pm.page.waitForFunction(() => document.querySelector("[data-testid='reques
 await shot(pm.page, "admin-request");
 await a.page.waitForFunction(() => document.querySelector("[data-testid='request-status']")?.textContent?.includes("Under review"), null, { timeout: 8000 }).then(() => console.log("client sees Under review live ✓")).catch(() => console.log("client did not update ✗"));
 // PM internal note must not reach client
-await pm.page.getByLabel("Comment").fill("INTERNAL-ONLY-NOTE 4711");
+const internalNote = `INTERNAL-ONLY-NOTE ${Date.now()}`;
+await pm.page.getByLabel("Comment").fill(internalNote);
 await pm.page.getByRole("checkbox", { name: /Internal note/ }).check();
 await pm.page.getByRole("button", { name: "Add internal note" }).click();
 await pm.page.waitForFunction(() => document.querySelector('textarea')?.value === "", null, { timeout: 30000 });
-assert.ok((await pm.page.textContent("body"))?.includes("INTERNAL-ONLY-NOTE 4711"), "Internal comment must be saved before checking isolation");
+await pm.page.getByText(internalNote, { exact: true }).waitFor({ state: "visible", timeout: 30000 });
 await a.page.reload({ waitUntil: "load" });
-console.log("internal note hidden from client:", !(await a.page.textContent("body"))?.includes("INTERNAL-ONLY-NOTE") ? "✓" : "LEAK ✗");
+console.log("internal note hidden from client:", !(await a.page.textContent("body"))?.includes(internalNote) ? "✓" : "LEAK ✗");
 // Chat realtime
 await a.page.goto(base + projA + "/messages", { waitUntil: "load" });
 await pm.page.goto(base + projA.replace("/portal", "/admin") + "/messages", { waitUntil: "load" });
