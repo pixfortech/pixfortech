@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { isCoolingDown } from "./heuristics";
-import { GAME_IDS, linesFor, type GameId, type MessageKey } from "./messages";
+import { GAME_IDS, linesFor, type GameId, type MessageKey, type PipLine } from "./messages";
 import { mergeHistory, pickGame, pickLine, recordGame, recordShown, type GameHistory, type ShownHistory } from "./selection";
 
 export type MascotState =
@@ -222,6 +222,22 @@ class BehaviourStore {
     const duration = opts.durationMs ?? (opts.action ? 12000 : Math.min(9000, 3500 + pick.line.text.length * 45));
     this.bubbleTimer = window.setTimeout(() => this.clearBubble(bubble.id), duration);
     return true;
+  }
+
+  /**
+   * Hand a line to a caller that renders it itself (PiP's bench speaks in
+   * its own scene, not from the corner). Same history, same rule: nothing
+   * repeats until the category is exhausted, then silence until lines expire.
+   */
+  takeLine(key: MessageKey): PipLine | null {
+    if (this.state.dismissed) return null;
+    const now = Date.now();
+    const p = this.p();
+    const pick = pickLine(linesFor(key), p.shown, now);
+    if (!pick) return null;
+    p.shown = recordShown(p.shown, pick.line.id, now);
+    this.savePersisted();
+    return pick.line;
   }
 
   /** Route personality: one line per route per session, after the visitor has settled. */

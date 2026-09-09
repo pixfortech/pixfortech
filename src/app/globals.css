@@ -672,3 +672,21 @@ body > header { z-index: 50; }
 .pf-drag { cursor: grab; }
 .pf-drag:active { cursor: grabbing; }
 .pf-internal { background: repeating-linear-gradient(135deg, rgba(240,179,90,0.08) 0 6px, rgba(240,179,90,0.03) 6px 12px); border-left: 3px solid #f0b35a; }
+
+/* PiP's bench (home page): a canvas scene, PiP's hit area, and an in-scene line. */
+.pf-bench { position: relative; margin: 0; width: 100%; max-width: 34rem; aspect-ratio: 36 / 20; }
+.pf-bench--mobile { max-width: none; aspect-ratio: 26 / 14; }
+/* Placeholder before the bench code arrives: same footprint as the layout it will pick. */
+@media (max-width: 30rem) { .pf-bench--auto { max-width: none; aspect-ratio: 26 / 14; } }
+.pf-bench__canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: pan-y; }
+.pf-bench__pip { position: absolute; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: var(--radius-sm); touch-action: manipulation; }
+.pf-bench__pip:focus-visible { outline: 2px dashed var(--color-forge-400); outline-offset: 2px; opacity: 0.8; }
+.pf-bench__bubble {
+  position: absolute; z-index: 1; width: max-content; max-width: min(15rem, 62%);
+  background: var(--color-bone-50); color: var(--color-ink-950); border-radius: var(--radius-md);
+  padding: 0.5rem 0.7rem; font-size: 0.8125rem; line-height: 1.35; box-shadow: var(--shadow-2);
+  animation: pip-bubble-in 0.35s var(--ease-out) both; pointer-events: none;
+}
+.pf-bench__bubble::after { content: ""; position: absolute; left: 1rem; bottom: -0.4rem; width: 0.45rem; height: 0.45rem; background: var(--color-bone-50); }
+.pf-bench__bubble p { margin: 0; }
+@media (prefers-reduced-motion: reduce) { .pf-bench__bubble { animation: none; } }
