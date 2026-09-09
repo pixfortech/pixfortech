@@ -8,6 +8,7 @@ import { createClientAction, updateClientAction, inviteUserAction, updateUserAct
 import { AppButton, Field, humanise, inputCls, selectCls } from "@/components/app/primitives";
 import { useRealtime } from "@/components/app/RealtimeProvider";
 import { useHydrated } from "@/lib/useHydrated";
+import { copy } from "@content/microcopy";
 
 type Opt = { id: string; name: string };
 const STATUSES = ["lead", "discovery", "planning", "design", "development", "internal_qa", "client_review", "changes_requested", "final_qa", "deployment", "maintenance", "completed", "on_hold"];
@@ -162,15 +163,54 @@ export function ProfileForm({ user }: { user: { name: string; title: string | nu
   );
 }
 
-export function PasswordForm() {
+export function passwordStrength(pw: string): { score: 0 | 1 | 2 | 3 | 4; label: string } {
+  if (!pw) return { score: 0, label: "" };
+  let score = 0;
+  if (pw.length >= 10) score++;
+  if (pw.length >= 14) score++;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
+  if (/\d/.test(pw) && /[^\w\s]/.test(pw)) score++;
+  if (/^(.)\1+$/.test(pw) || /^(?:password|qwerty|letmein|12345678)/i.test(pw)) score = 0;
+  const labels = ["Too short", "Weak", "Okay", "Strong", "Forged"] as const;
+  return { score: score as 0 | 1 | 2 | 3 | 4, label: labels[score] };
+}
+
+export function PasswordForm({ required, onChanged }: { required?: boolean; onChanged?: () => void } = {}) {
   const hydrated = useHydrated();
-  const [current, setCurrent] = useState(""); const [next, setNext] = useState(""); const [msg, setMsg] = useState<string | null>(null); const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  const [current, setCurrent] = useState(""); const [next, setNext] = useState(""); const [confirm, setConfirm] = useState("");
+  const [msg, setMsg] = useState<{ kind: "ok" | "bad"; text: string } | null>(null); const [busy, setBusy] = useState(false);
+  const strength = passwordStrength(next);
+  const mismatch = confirm.length > 0 && confirm !== next;
+  const canSubmit = hydrated && !busy && current.length > 0 && next.length >= 10 && confirm === next && next !== current;
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (next.length < 10) { setMsg({ kind: "bad", text: copy.profile.passwordShort }); return; }
+    if (next !== confirm) { setMsg({ kind: "bad", text: copy.profile.passwordMismatch }); return; }
+    if (next === current) { setMsg({ kind: "bad", text: copy.profile.passwordSame }); return; }
+    setBusy(true); setMsg(null);
+    try {
+      const { authClient } = await import("@/lib/auth/client");
+      const res = await authClient.changePassword({ currentPassword: current, newPassword: next, revokeOtherSessions: true });
+      if (res.error) { setMsg({ kind: "bad", text: res.error.status === 400 || /invalid|incorrect|password/i.test(res.error.message ?? "") ? copy.profile.passwordWrong : (res.error.message ?? "Could not change the password.") }); return; }
+      setMsg({ kind: "ok", text: copy.profile.passwordChanged }); setCurrent(""); setNext(""); setConfirm("");
+      onChanged?.(); router.refresh();
+    } finally { setBusy(false); }
+  };
   return (
-    <form onSubmit={async (e) => { e.preventDefault(); setBusy(true); setMsg(null); const { authClient } = await import("@/lib/auth/client"); const res = await authClient.changePassword({ currentPassword: current, newPassword: next, revokeOtherSessions: true }); setBusy(false); setMsg(res.error ? "The current password is wrong or the new one is too short (10+ characters)." : "Password changed. Other sessions were signed out."); if (!res.error) { setCurrent(""); setNext(""); } }} className="grid gap-4" noValidate>
+    <form onSubmit={submit} className="grid gap-4" noValidate data-testid="password-form">
+      {required && <p className="rounded-md border border-[#f0b35a]/50 bg-[#f0b35a]/10 px-3 py-2 text-[0.8125rem] text-[#f5c98a]" role="alert">{copy.auth.mustChangeBody}</p>}
       <Field label="Current password" htmlFor="pw-cur"><input id="pw-cur" type="password" autoComplete="current-password" disabled={!hydrated} value={current} onChange={(e) => setCurrent(e.target.value)} className={inputCls} /></Field>
-      <Field label="New password" htmlFor="pw-new" hint="At least ten characters."><input id="pw-new" type="password" autoComplete="new-password" disabled={!hydrated} value={next} onChange={(e) => setNext(e.target.value)} className={inputCls} /></Field>
-      {msg && <p className="text-[0.8125rem] text-bone-200">{msg}</p>}
-      <div className="flex justify-end"><AppButton type="submit" variant="secondary" disabled={busy || !current || next.length < 10}>{busy ? "Saving…" : "Change password"}</AppButton></div>
+      <Field label="New password" htmlFor="pw-new" hint="At least ten characters. Length beats symbols.">
+        <input id="pw-new" type="password" autoComplete="new-password" disabled={!hydrated} value={next} onChange={(e) => setNext(e.target.value)} className={inputCls} aria-describedby="pw-strength" />
+      </Field>
+      <div id="pw-strength" className="-mt-2 flex items-center gap-2" aria-live="polite">
+        <span className="flex h-1 flex-1 gap-1" aria-hidden="true">{[1, 2, 3, 4].map((i) => <span key={i} className={`flex-1 rounded-pill ${strength.score >= i ? (strength.score <= 1 ? "bg-[#ff9b9b]" : strength.score === 2 ? "bg-[#f0b35a]" : "bg-[#7ed0a2]") : "bg-ink-700"}`} />)}</span>
+        <span className="num w-16 text-right text-[0.6875rem] text-bone-400">{strength.label}</span>
+      </div>
+      <Field label="Confirm password" htmlFor="pw-confirm" error={mismatch ? copy.profile.passwordMismatch : undefined}><input id="pw-confirm" type="password" autoComplete="new-password" disabled={!hydrated} value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputCls} /></Field>
+      {msg && <p role={msg.kind === "bad" ? "alert" : "status"} className={`text-[0.8125rem] ${msg.kind === "bad" ? "text-forge-300" : "text-[#9fe0bb]"}`}>{msg.text}</p>}
+      <div className="flex justify-end"><AppButton type="submit" variant={required ? "primary" : "secondary"} disabled={!canSubmit}>{busy ? "Saving…" : "Change password"}</AppButton></div>
     </form>
   );
 }

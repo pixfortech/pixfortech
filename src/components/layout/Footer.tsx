@@ -4,6 +4,8 @@ import { Monogram } from "@/components/ui/Logo";
 import { LocalTime } from "./LocalTime";
 import { nav } from "@/lib/navigation";
 import { PixelCounterLine } from "@/pixel/PixelCounter";
+import { AccountControl } from "./AccountMenu";
+import { PipRestore } from "@/pixel/mascot/PipRestore";
 
 const secondary = [
   { href: "/process", label: "Process" },
@@ -57,6 +59,7 @@ export function Footer() {
                 {legal.map((n) => (
                   <li key={n.href}><Link href={n.href} className="link-line text-bone-200 hover:text-bone-50">{n.label}</Link></li>
                 ))}
+                <li><AccountControl variant="footer" /></li>
               </ul>
             </div>
             <div className="col-span-2 sm:col-span-1">
@@ -89,7 +92,10 @@ export function Footer() {
             <p>© {year} {site.legalName}. All rights reserved.</p>
             <p className="num">Designed, engineered and pixel-counted in-house.</p>
           </div>
-          <PixelCounterLine className="max-w-md text-bone-400 lg:pr-24" />
+          <div className="flex flex-col gap-3 lg:items-end">
+            <PixelCounterLine className="max-w-md text-bone-400 lg:pr-24" />
+            <PipRestore />
+          </div>
         </div>
       </div>
     </footer>

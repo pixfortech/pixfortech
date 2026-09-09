@@ -1,15 +1,30 @@
 import type { SessionUser } from "@/server/auth/session";
 import { getPrefs, NOTIFICATION_CATEGORIES } from "@/server/services/notifications";
 import { Card, CardHeader, PageTitle } from "@/components/app/primitives";
-import { PasswordForm, PreferencesForm, ProfileForm } from "./forms";
+import { PasswordForm, PreferencesForm } from "./forms";
+import { ProfileEditor } from "./ProfileEditor";
+import { canPublishProfile, ensureIdentityDefaults, getProfile } from "@/server/services/profile";
+import { copy } from "@content/microcopy";
+import { site } from "@/lib/content";
 
-export function ProfilePage({ user, area }: { user: SessionUser; area: "portal" | "admin" }) {
+export async function ProfilePage({ user, area, passwordRequired }: { user: SessionUser; area: "portal" | "admin"; passwordRequired?: boolean }) {
+  await ensureIdentityDefaults(user.id);
+  const profile = await getProfile(user.id);
+  if (!profile) return null;
   return (
     <div className="max-w-3xl">
-      <PageTitle eyebrow={area === "admin" ? "Admin" : "Portal"} title="Your profile" description="How you appear to the people you work with." />
+      <PageTitle eyebrow={area === "admin" ? "Admin" : "Portal"} title={copy.profile.pageTitle} description={copy.profile.pageLead} />
       <div className="grid gap-6">
-        <Card><CardHeader title="Details" /><div className="px-5 pb-5"><ProfileForm user={user} /></div></Card>
-        <Card><CardHeader title="Password" description="Changing it signs out your other devices." /><div className="px-5 pb-5"><PasswordForm /></div></Card>
+        {passwordRequired && (
+          <Card className="border-[#f0b35a]/50" id="password">
+            <CardHeader title={copy.auth.mustChangeTitle} description={copy.profile.passwordBody} />
+            <div className="px-5 pb-5"><PasswordForm required /></div>
+          </Card>
+        )}
+        <ProfileEditor profile={profile} canPublish={canPublishProfile(user)} siteOrigin={site.url} />
+        {!passwordRequired && (
+          <Card id="password"><CardHeader title={copy.profile.passwordTitle} description={copy.profile.passwordBody} /><div className="px-5 pb-5"><PasswordForm /></div></Card>
+        )}
       </div>
     </div>
   );

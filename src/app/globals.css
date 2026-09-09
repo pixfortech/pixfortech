@@ -529,6 +529,28 @@ body > header, body > main, body > footer { position: relative; z-index: 1; }
   cursor: pointer;
 }
 .pip:hover .pip-dismiss, .pip:focus-within .pip-dismiss { opacity: 1; }
+@media (pointer: coarse) { .pip-dismiss { opacity: 0.85; } }
+.pip--compact { width: 2.5rem; height: 2.5rem; }
+@media (min-width: 40rem) { .pip--compact { width: 3.25rem; height: 3.25rem; } }
+/* Where PiP stood: a single pixel that brings him back. */
+.pip-corner {
+  position: fixed;
+  right: max(0.9rem, env(safe-area-inset-right));
+  bottom: max(0.9rem, env(safe-area-inset-bottom));
+  z-index: 46;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
+.pip-corner span { display: block; width: 0.5rem; height: 0.5rem; background: var(--color-forge-500); box-shadow: 0 0 0 1px rgba(244,241,234,0.15); animation: pip-ember 2.4s ease-in-out infinite; }
+.pip-corner:hover, .pip-corner:focus-visible { opacity: 1; }
+.pip-corner:focus-visible { outline: 2px solid var(--color-forge-400); outline-offset: 2px; }
 .pip-dismiss:hover { color: var(--color-bone-50); border-color: var(--color-bone-50); }
 @media (prefers-reduced-motion: reduce) {
   .pip-body, .pip-c--ember, .pip-c--fx { animation: none !important; }
@@ -599,6 +621,41 @@ body > header, body > main, body > footer { position: relative; z-index: 1; }
 .pf-game__canvas { display: block; margin: 0 auto; border-radius: var(--radius-md); background: var(--color-ink-900); touch-action: none; cursor: crosshair; }
 .pf-game__canvas:focus-visible { outline: 2px solid var(--color-forge-400); outline-offset: 3px; }
 .pf-game__foot { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.8125rem; color: var(--color-bone-200); }
+.pf-game__body { display: grid; place-items: center; }
+
+/* Grid-based games: touch-sized cells, visible keyboard cursor, no hover-only states. */
+.pf-grid { display: grid; gap: 4px; width: min(100%, 22rem); aspect-ratio: 1; touch-action: manipulation; outline: none; }
+.pf-grid:focus-visible { outline: 2px solid var(--color-forge-400); outline-offset: 4px; border-radius: var(--radius-sm); }
+.pf-grid__cell { position: relative; display: block; width: 100%; aspect-ratio: 1; border: 0; border-radius: 3px; padding: 0; cursor: pointer; transition: transform 0.15s var(--ease-out), background-color 0.2s ease, opacity 0.2s ease; }
+.pf-grid__cell:disabled { cursor: default; }
+.pf-grid__cell--cursor { box-shadow: 0 0 0 2px var(--color-bone-50) inset; }
+.pf-grid__cell--miss { animation: pf-cell-miss 0.35s ease; }
+.pf-grid__cell--flicker { animation: pf-cell-flicker 1.4s steps(2, end) infinite; }
+.pf-grid__cell--critical { animation: pf-cell-critical 0.5s ease-in-out infinite; }
+.pf-grid__cell--lost { background: transparent !important; box-shadow: 0 0 0 1px var(--line) inset; opacity: 0.5; }
+@keyframes pf-cell-miss { 0%, 100% { transform: none; } 50% { transform: translateX(-3px); } }
+@keyframes pf-cell-flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@keyframes pf-cell-critical { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.94); } }
+.pf-spark { display: grid; grid-template-columns: 0.75rem 1fr 0.75rem; align-items: center; gap: 0.35rem; width: min(100%, 24rem); }
+.pf-grid--spark { aspect-ratio: 5 / 4; }
+.pf-spark__tile { background: var(--color-ink-900); box-shadow: 0 0 0 1px var(--line) inset; padding: 6%; }
+.pf-spark__tile--lit { box-shadow: 0 0 0 1px var(--color-forge-500) inset; }
+.pf-spark__tile--fixed { cursor: default; opacity: 0.85; }
+.pf-spark__end { width: 0.75rem; height: 2.5rem; border-radius: 2px; margin-top: calc(1 / 4 * 100% + 0.5rem); }
+.pf-spark__end--anvil { transition: background-color 0.3s ease; }
+@media (prefers-reduced-motion: reduce) { .pf-grid__cell--flicker, .pf-grid__cell--critical, .pf-grid__cell--miss { animation: none; } .pf-grid__cell--flicker { outline: 1px dashed var(--color-forge-400); outline-offset: -3px; } }
+
+/* Page scenes: PiP doing something relevant, in the page's palette. */
+.pf-scene { margin: 0; width: 100%; max-width: 30rem; aspect-ratio: 32 / 20; }
+.pf-scene__svg { display: block; overflow: visible; }
+.pf-scene__spark { animation: pip-fx 2.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .pf-scene__spark { animation: none; } }
+
+/* Hero scene: the canvas takes pointer input everywhere, the copy stays clickable on top. */
+.hero-scene { touch-action: pan-y; cursor: crosshair; outline: none; }
+.hero-scene:focus-visible { outline: 2px solid var(--color-forge-400); outline-offset: -2px; }
+.hero-copy { pointer-events: auto; }
+@media (prefers-reduced-motion: reduce) { .hero-scene { cursor: default; } }
 
 /* ------------------------------------------------------------------
    Product surfaces

@@ -48,9 +48,35 @@ export const users = pgTable("user", {
   title: text("title"),
   timezone: text("timezone"),
   disabled: boolean("disabled").notNull().default(false),
+  /** Professional profile. Authorisation never derives from any of these; the immutable id is the identity. */
+  username: text("username"),
+  /** Public, SEO-friendly address under /people/. Present only once chosen; published only when publicProfile is true. */
+  publicSlug: text("public_slug"),
+  publicProfile: boolean("public_profile").notNull().default(false),
+  displayName: text("display_name"),
+  bio: text("bio"),
+  linkedinUrl: text("linkedin_url"),
+  githubUrl: text("github_url"),
+  websiteUrl: text("website_url"),
+  /** Avatar stored through the private storage driver; served via /api/avatar/[id]. */
+  avatarKey: text("avatar_key"),
+  avatarMime: text("avatar_mime"),
+  /** Set by the owner bootstrap: the next successful sign-in must change the password. */
+  mustChangePassword: boolean("must_change_password").notNull().default(false),
+  /** Lightweight PiP/game experience state mirrored from the browser so returning users never hear a repeat. */
+  experience: jsonb("experience").$type<Record<string, unknown>>(),
   createdAt: now(),
   updatedAt: updated(),
-}, (t) => [uniqueIndex("user_email_idx").on(t.email), index("user_org_idx").on(t.organisationId)]);
+}, (t) => [uniqueIndex("user_email_idx").on(t.email), index("user_org_idx").on(t.organisationId), uniqueIndex("user_username_idx").on(t.username), uniqueIndex("user_public_slug_idx").on(t.publicSlug)]);
+
+/** Every public slug a user has ever held, so old profile links redirect permanently. */
+export const profileSlugHistory = pgTable("profile_slug_history", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  slug: text("slug").notNull(),
+  replacedBy: text("replaced_by").notNull(),
+  createdAt: now(),
+}, (t) => [uniqueIndex("profile_slug_history_slug_idx").on(t.slug), index("profile_slug_history_user_idx").on(t.userId)]);
 
 export const sessions = pgTable("session", {
   id: text("id").primaryKey(),

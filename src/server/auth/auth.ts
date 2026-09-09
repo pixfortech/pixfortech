@@ -3,6 +3,8 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { magicLink } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
+import { createAuthMiddleware } from "better-auth/api";
+import { eq } from "drizzle-orm";
 import { db, schema } from "../db";
 import { sendEmail } from "../email";
 import { ROLES } from "../db/schema";
@@ -37,6 +39,12 @@ function createAuth() {
       title: { type: "string", required: false },
       timezone: { type: "string", required: false },
       disabled: { type: "boolean", required: false, defaultValue: false, input: false },
+      username: { type: "string", required: false, input: false },
+      publicSlug: { type: "string", required: false, input: false },
+      publicProfile: { type: "boolean", required: false, defaultValue: false, input: false },
+      displayName: { type: "string", required: false, input: false },
+      avatarKey: { type: "string", required: false, input: false },
+      mustChangePassword: { type: "boolean", required: false, defaultValue: false, input: false },
     },
   },
   emailAndPassword: {
@@ -45,6 +53,8 @@ function createAuth() {
     minPasswordLength: 10,
     requireEmailVerification: process.env.REQUIRE_EMAIL_VERIFICATION !== "false",
     revokeSessionsOnPasswordReset: true,
+    // A bootstrap-issued temporary password is retired by any successful reset.
+    onPasswordReset: async ({ user }) => { await clearMustChangePassword(user.id); },
     sendResetPassword: async ({ user, url }) => {
       await sendEmail({ to: user.email, subject: "Reset your Pixel Forge password", text: `Hello ${user.name},\n\nSomeone asked to reset the password for this account. If that was you, open the link below within the hour:\n\n${url}\n\nIf it was not you, ignore this email. The pixels are safe.` });
     },
@@ -67,6 +77,12 @@ function createAuth() {
     database: { generateId: () => crypto.randomUUID() },
   },
   rateLimit: { enabled: true, window: 60, max: 30, storage: "database" },
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      // A successful in-app password change also retires a temporary password.
+      if (ctx.path === "/change-password" && ctx.context.session?.user?.id) await clearMustChangePassword(ctx.context.session.user.id);
+    }),
+  },
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {
@@ -76,6 +92,10 @@ function createAuth() {
     nextCookies(),
   ],
 });
+}
+
+async function clearMustChangePassword(userId: string) {
+  await db.update(schema.users).set({ mustChangePassword: false, updatedAt: new Date() }).where(eq(schema.users.id, userId));
 }
 
 type Auth = ReturnType<typeof createAuth>;

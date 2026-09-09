@@ -2,10 +2,13 @@ import "server-only";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "./auth";
-import { isStaff, type Actor } from "./permissions";
+import { homeFor, isStaff, type Actor } from "./permissions";
 import type { Role } from "../db/schema";
 
-export type SessionUser = Actor & { name: string; email: string; image: string | null; emailVerified: boolean; title: string | null; timezone: string | null };
+export type SessionUser = Actor & {
+  name: string; email: string; image: string | null; emailVerified: boolean; title: string | null; timezone: string | null;
+  username: string | null; publicSlug: string | null; publicProfile: boolean; displayName: string | null; avatarKey: string | null; mustChangePassword: boolean;
+};
 
 function toActor(u: Record<string, unknown>): SessionUser {
   return {
@@ -19,6 +22,12 @@ function toActor(u: Record<string, unknown>): SessionUser {
     disabled: Boolean(u.disabled),
     title: (u.title as string | null) ?? null,
     timezone: (u.timezone as string | null) ?? null,
+    username: (u.username as string | null) ?? null,
+    publicSlug: (u.publicSlug as string | null) ?? null,
+    publicProfile: Boolean(u.publicProfile),
+    displayName: (u.displayName as string | null) ?? null,
+    avatarKey: (u.avatarKey as string | null) ?? null,
+    mustChangePassword: Boolean(u.mustChangePassword),
   };
 }
 
@@ -55,5 +64,8 @@ export async function requireStaff(): Promise<SessionUser> {
 export async function requirePageUser(next: string): Promise<SessionUser> {
   const u = await getSessionUser();
   if (!u) redirect(`/login?next=${encodeURIComponent(next)}`);
+  // A temporary (bootstrap) password must be replaced before anything else is used.
+  const profilePath = `${homeFor(u)}/profile`;
+  if (u.mustChangePassword && !next.startsWith(profilePath)) redirect(`${profilePath}?password=required`);
   return u;
 }

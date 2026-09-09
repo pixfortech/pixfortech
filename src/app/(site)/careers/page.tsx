@@ -1,5 +1,6 @@
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { PipScene } from "@/pixel/scenes/PipScene";
 import { Reveal } from "@/components/ui/Reveal";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { Tag } from "@/components/ui/Tag";
@@ -18,7 +19,7 @@ export default function CareersPage() {
   const applyTo = site.email;
   return (
     <>
-      <PageHeader eyebrow="Careers" title={["Learn the craft", "on real work."]} lead={careersIntro.body[0]} />
+      <PageHeader art={<PipScene kind="careers" />} eyebrow="Careers" title={["Learn the craft", "on real work."]} lead={careersIntro.body[0]} />
 
       <section className="section-y" aria-labelledby="values-heading">
         <Container>

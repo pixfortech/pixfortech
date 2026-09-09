@@ -10,15 +10,22 @@ export function Hero() {
       <div className="absolute inset-0 grid-lines opacity-70 [mask-image:radial-gradient(ellipse_at_70%_45%,black_20%,transparent_70%)]" aria-hidden="true" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_50%,rgba(255,90,44,0.06),transparent_55%)]" aria-hidden="true" />
 
-      {/* Scene: full-bleed on desktop, top band on mobile */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[52svh] min-h-[22rem] lg:pointer-events-auto lg:inset-0 lg:h-auto lg:min-h-0">
+      {/* Scene: full-bleed on desktop, top band on mobile. Interactive by pointer, touch and keyboard. */}
+      <div
+        className="hero-scene absolute inset-x-0 top-0 h-[52svh] min-h-[22rem] lg:inset-0 lg:h-auto lg:min-h-0"
+        tabIndex={0}
+        role="application"
+        aria-roledescription="interactive scene"
+        aria-label="The Pixel Forge block. Move the pointer to warm the cubes, click or tap to send a pulse, drag to pull them along. With a keyboard, use the arrow keys to move the heat and Enter to pulse."
+        data-testid="hero-scene"
+      >
         <ForgeCanvas className="h-full w-full" />
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-ink-900 lg:hidden" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-ink-900 lg:hidden" aria-hidden="true" />
       </div>
 
-      <div className="container-x relative">
+      <div className="container-x relative pointer-events-none">
         <div className="flex min-h-[100svh] flex-col justify-end pb-12 pt-[52svh] sm:pb-16 lg:justify-center lg:pb-24 lg:pt-32">
-          <div className="max-w-[44rem] lg:max-w-[52rem]">
+          <div className="hero-copy max-w-[44rem] lg:max-w-[52rem]">
             <Rise>
               <Eyebrow className="mb-6">Web engineering & product studio</Eyebrow>
             </Rise>

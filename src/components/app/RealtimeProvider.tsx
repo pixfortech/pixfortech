@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { Toaster, type Toast } from "./Toaster";
+import { copy } from "@content/microcopy";
 
 type RealtimeState = { connected: boolean; unread: number; lastEventAt: number };
 type Listener = (type: string, data: Record<string, unknown>) => void;
@@ -66,7 +67,12 @@ export function RealtimeProvider({ children, initialUnread, area, userId }: { ch
           for (const listener of listeners.current) listener(type, data);
           if (type === "notification") {
             const href = typeof data.href === "string" ? `/${area}${data.href}` : undefined;
-            toast({ title: String(data.title ?? "Update"), body: data.body ? String(data.body) : undefined, href, kind: String(data.category ?? "info") });
+            const category = String(data.category ?? "default");
+            const headline = copy.notifications.headline[category as keyof typeof copy.notifications.headline] ?? copy.notifications.headline.default;
+            const actor = typeof data.actorName === "string" && data.actorName ? data.actorName : null;
+            const event = String(data.title ?? "Update");
+            // Personality in the headline; the real event, with who did it, in the body.
+            toast({ title: headline, body: [actor ? `${actor}: ${event}` : event, data.body ? String(data.body) : null].filter(Boolean).join(" · "), href, kind: category });
             if (data.browser && document.hidden && typeof Notification !== "undefined" && Notification.permission === "granted") {
               try { new Notification(String(data.title), { body: data.body ? String(data.body) : undefined, tag: id }); } catch { /* unavailable */ }
             }
@@ -100,7 +106,7 @@ export function RealtimeProvider({ children, initialUnread, area, userId }: { ch
       {children}
       <Toaster toasts={toasts} onDismiss={dismiss} />
       {!state.connected && state.lastEventAt > 0 && (
-        <div className="fixed bottom-4 left-4 z-[80] rounded-md border border-line bg-ink-850 px-3 py-2 text-[0.75rem] text-bone-400" role="status">Reconnecting to live updates…</div>
+        <div className="fixed bottom-4 left-4 z-[80] rounded-md border border-line bg-ink-850 px-3 py-2 text-[0.75rem] text-bone-400" role="status">{copy.notifications.reconnecting}</div>
       )}
     </Ctx.Provider>
   );

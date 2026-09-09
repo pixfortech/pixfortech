@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { PipScene } from "@/pixel/scenes/PipScene";
 import { Reveal } from "@/components/ui/Reveal";
 import { CtaBand } from "@/components/ui/CtaBand";
 import { Tag } from "@/components/ui/Tag";
@@ -18,7 +19,7 @@ export default function ServicesPage() {
   const services = getServices();
   return (
     <>
-      <PageHeader
+      <PageHeader art={<PipScene kind="services" />}
         eyebrow="Services"
         title={["Design and", "engineering.", "Same room."]}
         lead="Six things we are suspiciously good at. Each starts with the problem you bring and ends with something your team can run without us."

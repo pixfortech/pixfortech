@@ -1,5 +1,6 @@
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { PipScene } from "@/pixel/scenes/PipScene";
 import { Reveal } from "@/components/ui/Reveal";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { CtaBand } from "@/components/ui/CtaBand";
@@ -23,7 +24,7 @@ export default function TechnologiesPage() {
   const techs = getTechnologies();
   return (
     <>
-      <PageHeader
+      <PageHeader art={<PipScene kind="technologies" />}
         eyebrow="Technologies"
         title={["Chosen, not", "collected."]}
         lead="This is the stack we actually build with. It is deliberately short. Everything on it has shipped in production work we are still responsible for."

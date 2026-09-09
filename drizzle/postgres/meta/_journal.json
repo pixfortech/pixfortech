@@ -29,6 +29,13 @@
       "when": 1788858543831,
       "tag": "0003_friendly_robbie_robertson",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788939699926,
+      "tag": "0004_profile_identity",
+      "breakpoints": true
     }
   ]
 }

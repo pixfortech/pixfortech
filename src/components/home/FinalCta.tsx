@@ -2,6 +2,7 @@ import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 import { site } from "@/lib/content";
 import { ProjectStarter } from "@/components/enquiry/ProjectStarter";
+import { PipScene } from "@/pixel/scenes/PipScene";
 
 export function FinalCta() {
   return (
@@ -26,6 +27,9 @@ export function FinalCta() {
               <p className="mt-6 text-small text-bone-400">
                 Prefer email? <a href={`mailto:${site.email}`} className="link-line text-bone-50">{site.email}</a>
               </p>
+            </Reveal>
+            <Reveal delay={0.2}>
+              <PipScene kind="forge" className="mt-10 max-w-[22rem]" />
             </Reveal>
           </div>
           <Reveal delay={0.1} className="lg:col-span-5">

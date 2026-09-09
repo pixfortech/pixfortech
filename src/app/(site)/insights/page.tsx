@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { PipScene } from "@/pixel/scenes/PipScene";
 import { Reveal } from "@/components/ui/Reveal";
 import { CtaBand } from "@/components/ui/CtaBand";
 import { Tag } from "@/components/ui/Tag";
@@ -19,7 +20,7 @@ export default function InsightsPage() {
   const articles = getArticles();
   return (
     <>
-      <PageHeader
+      <PageHeader art={<PipScene kind="insights" />}
         eyebrow="Insights"
         title={["Notes from", "the workbench."]}
         lead="Practical writing on the things we fix most often: slow storefronts, drifting design systems and accessibility bolted on a week before launch."

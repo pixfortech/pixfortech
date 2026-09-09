@@ -1,5 +1,6 @@
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { PipScene } from "@/pixel/scenes/PipScene";
 import { Reveal } from "@/components/ui/Reveal";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { CtaBand } from "@/components/ui/CtaBand";
@@ -23,7 +24,7 @@ const beliefs = [
 export default function AboutPage() {
   return (
     <>
-      <PageHeader
+      <PageHeader art={<PipScene kind="about" />}
         eyebrow="About"
         title={["A studio, not", "a supplier."]}
         lead="Pixel Forge Technologies is a young, remote-first web engineering and digital product studio. We design and build websites, Shopify storefronts and web applications for businesses that need them to work as well as they look. Ideally better."

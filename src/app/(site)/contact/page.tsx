@@ -4,6 +4,7 @@ import { LineReveal, Rise } from "@/components/ui/Entrance";
 import { Suspense } from "react";
 import { EnquiryForm } from "@/components/enquiry/EnquiryForm";
 import { FocalPoint } from "@/pixel/FocalPoint";
+import { PipScene } from "@/pixel/scenes/PipScene";
 import { site } from "@/lib/content";
 import { pageMetadata } from "@/lib/seo";
 
@@ -47,6 +48,9 @@ export default function ContactPage() {
                 <p className="mt-10 text-small text-bone-400">
                   Prefer email? <a href={`mailto:${site.email}`} className="link-line text-bone-50">{site.email}</a>
                 </p>
+              </Rise>
+              <Rise delay={0.5} className="mt-10 hidden max-w-[20rem] lg:block">
+                <PipScene kind="contact" />
               </Rise>
             </div>
             <Rise delay={0.2} className="lg:col-span-7">

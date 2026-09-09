@@ -1,5 +1,6 @@
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { PipScene } from "@/pixel/scenes/PipScene";
 import { Reveal } from "@/components/ui/Reveal";
 import { CtaBand } from "@/components/ui/CtaBand";
 import { ProjectCard } from "@/components/work/ProjectCard";
@@ -17,7 +18,7 @@ export default function WorkPage() {
   const hasPlaceholders = projects.some((p) => p.placeholder);
   return (
     <>
-      <PageHeader
+      <PageHeader art={<PipScene kind="work" />}
         eyebrow="Work"
         title={["Built to be", "used."]}
         lead={

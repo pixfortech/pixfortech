@@ -1,5 +1,6 @@
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { PipScene } from "@/pixel/scenes/PipScene";
 import { Reveal } from "@/components/ui/Reveal";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { CtaBand } from "@/components/ui/CtaBand";
@@ -15,7 +16,7 @@ export const metadata = pageMetadata({
 export default function ProcessPage() {
   return (
     <>
-      <PageHeader
+      <PageHeader art={<PipScene kind="process" />}
         eyebrow="Process"
         title={["Five stages.", "No surprises."]}
         lead="Every engagement follows the same shape, whether it is a Shopify theme or a custom application. Each stage ends with something written down that you can hold us to. We find that keeps everyone honest, us included."

@@ -1,22 +1,22 @@
 import { existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
-import { Pool, neonConfig } from "@neondatabase/serverless";
-import ws from "ws";
-import { drizzle } from "drizzle-orm/neon-serverless";
-import { migrate } from "drizzle-orm/neon-serverless/migrator";
+import { Pool as NeonPool } from "@neondatabase/serverless";
+import { drizzle as drizzleNeon } from "drizzle-orm/neon-serverless";
+import { migrate as migrateNeon } from "drizzle-orm/neon-serverless/migrator";
+import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
+import { migrate as migratePg } from "drizzle-orm/node-postgres/migrator";
+import { createPool, directUrl } from "./lib/pool";
 import { getTableConfig, PgTable } from "drizzle-orm/pg-core";
 import * as schema from "../src/server/db/schema";
 
 if (existsSync(".env.local")) process.loadEnvFile(".env.local");
-neonConfig.webSocketConstructor = ws;
-const url = process.env.DATABASE_URL_UNPOOLED;
-if (!url || new URL(url).hostname.includes("-pooler")) throw new Error("A direct DATABASE_URL_UNPOOLED is required.");
-const pool = new Pool({ connectionString: url });
+const pool = createPool(directUrl());
 const quote = (name: string) => `"${name.replaceAll('"', '""')}"`;
 
 async function main() {
-  await migrate(drizzle(pool), { migrationsFolder: "drizzle/postgres" });
+  if (pool instanceof NeonPool) await migrateNeon(drizzleNeon(pool as unknown as NeonPool), { migrationsFolder: "drizzle/postgres" });
+  else await migratePg(drizzlePg(pool), { migrationsFolder: "drizzle/postgres" });
   if (!process.argv.includes("--import-sqlite")) return;
   const source = process.env.DATABASE_PATH ?? path.resolve("data/pixelforge.sqlite");
   const sqlite = new Database(source, { readonly: true, fileMustExist: true });
@@ -62,7 +62,7 @@ async function main() {
       }
       const actual = await client.query(`SELECT ${names.map(quote).join(",")} FROM ${quote(t.name)}`);
       const canonical = (values: unknown[][]) => values.map((r) => JSON.stringify(r)).sort();
-      const actualValues = actual.rows.map((row) => names.map((name) => row[name] instanceof Date ? row[name].toISOString() : row[name]));
+      const actualValues = actual.rows.map((row: Record<string, unknown>) => names.map((name) => row[name] instanceof Date ? row[name].toISOString() : row[name]));
       if (JSON.stringify(canonical(expected)) !== JSON.stringify(canonical(actualValues))) throw new Error(`Verification failed for ${t.name}; import rolled back.`);
       console.log(`${t.name}: ${rows.length} rows verified`);
     }

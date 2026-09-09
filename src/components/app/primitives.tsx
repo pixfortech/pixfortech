@@ -132,7 +132,7 @@ export function PageTitle({ eyebrow, title, description, actions }: { eyebrow?: 
   );
 }
 
-export function AppButton({ children, variant = "primary", size = "md", className, href, ...rest }: { children: ReactNode; variant?: "primary" | "secondary" | "ghost" | "danger"; size?: "sm" | "md"; className?: string; href?: string } & Omit<ComponentProps<"button">, "className" | "children">) {
+export function AppButton({ children, variant = "primary", size = "md", className, href, target, rel, ...rest }: { children: ReactNode; variant?: "primary" | "secondary" | "ghost" | "danger"; size?: "sm" | "md"; className?: string; href?: string; target?: string; rel?: string } & Omit<ComponentProps<"button">, "className" | "children">) {
   const cls = cn(
     "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forge-400 disabled:opacity-50 disabled:pointer-events-none",
     size === "sm" ? "h-8 px-3 text-[0.8125rem]" : "h-10 px-4 text-[0.875rem]",
@@ -142,7 +142,7 @@ export function AppButton({ children, variant = "primary", size = "md", classNam
     variant === "danger" && "border border-[#ff6b6b]/50 text-[#ff9b9b] hover:bg-[#ff6b6b]/10",
     className,
   );
-  if (href) return <Link href={href} className={cls}>{children}</Link>;
+  if (href) return <Link href={href} className={cls} target={target} rel={rel}>{children}</Link>;
   return <ReadyButton type="button" className={cls} {...rest}>{children}</ReadyButton>;
 }
 

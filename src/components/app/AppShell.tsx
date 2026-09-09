@@ -7,6 +7,7 @@ import { Monogram } from "@/components/ui/Logo";
 import { Avatar } from "./primitives";
 import { NotificationBell, type NotificationItem } from "./NotificationBell";
 import { CommandPalette } from "./CommandPalette";
+import { WorkspacePip } from "@/pixel/mascot/WorkspacePip";
 import { authClient } from "@/lib/auth/client";
 import { cn } from "@/lib/utils";
 
@@ -99,6 +100,7 @@ export function AppShell({ area, nav, user, notifications, children, searchLinks
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
       <CommandPalette area={area} links={searchLinks} />
+      <WorkspacePip mode={area} unread={notifications.filter((n) => !n.readAt).length} />
     </div>
   );
 }

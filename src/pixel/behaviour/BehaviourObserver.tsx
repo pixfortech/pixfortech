@@ -28,6 +28,9 @@ export function BehaviourObserver() {
     const max = scrollProgress(window.scrollY, window.innerHeight, document.documentElement.scrollHeight);
     behaviour.setMaxScroll(max);
     if (pathname !== "/404" && document.title.toLowerCase().includes("not found")) behaviour.setRoute("/404");
+    // Page personality: one line per route, once the visitor has settled and interacted.
+    const t = window.setTimeout(() => { if (interacted.current || behaviour.get().maxScroll > 0.05) behaviour.sayRoute(pathname); }, 14_000);
+    return () => clearTimeout(t);
   }, [pathname]);
 
   useEffect(() => {
@@ -91,6 +94,18 @@ export function BehaviourObserver() {
       });
     };
 
+    // Connectivity
+    const onOffline = () => { behaviour.setOnline(false); behaviour.say("offline", { force: true, state: "lost", stateMs: 6000 }); };
+    const onOnline = () => { behaviour.setOnline(true); behaviour.say("reconnect", { force: true, state: "celebrating", stateMs: 2500 }); };
+    // Hero interaction events dispatched by the scene: tap, drag, secret.
+    const onHero = (e: Event) => {
+      const kind = (e as CustomEvent<{ kind: "tap" | "drag" | "secret" | "hover" }>).detail?.kind;
+      if (kind === "secret") behaviour.say("heroSecret", { state: "celebrating", stateMs: 2500 });
+      else if (kind === "tap") { if (behaviour.count("heroTap") < 2) behaviour.say("heroTap", { state: "curious", stateMs: 1800 }); else if (Math.random() < 0.35) behaviour.say("heroTap", { state: "curious", stateMs: 1800 }); }
+      else if (kind === "drag") behaviour.say("heroDrag", { state: "guiding", stateMs: 2500 });
+      else if (kind === "hover" && behaviour.count("hero") === 0) behaviour.say("hero", { state: "guiding", stateMs: 3000 });
+    };
+
     // Forms: quiet while typing
     const formSelector = "input, textarea, select, [contenteditable=true]";
     const onFocusIn = (e: FocusEvent) => { const t = e.target as HTMLElement | null; if (t?.matches(formSelector) && t.getAttribute("type") !== "radio") behaviour.setFormActive(true); };
@@ -106,8 +121,10 @@ export function BehaviourObserver() {
       if (st.mascot === "sleeping") return;
       const msOnRoute = now - routeStart.current;
       if (shouldTriggerDwell({ msOnRoute, interacted: interacted.current, formActive: st.formActive, dialogOpen: st.gameOpen || st.menuOpen, shownRecently: behaviour.count("dwell") >= 1 && msOnRoute < 150_000 })) {
-        const invite = behaviour.count("gameInvite") === 0 && !reduced.current;
-        if (invite) behaviour.say("gameInvite", { state: "bored", stateMs: 6000, action: { label: "Help Pip", kind: "game" }, durationMs: 14000 });
+        const game = behaviour.count("gameInvite") === 0 && !reduced.current ? behaviour.nextGame() : null;
+        if (game) {
+          if (behaviour.say(`game.${game}.invite`, { state: "bored", stateMs: 6000, action: { label: "Help PiP", kind: "game", game }, durationMs: 14000 })) { behaviour.gameOffered(game); behaviour.noteEvent("gameInvite"); }
+        }
         else behaviour.say("dwell", { state: "bored", stateMs: 5000 });
         routeStart.current = now; // don't re-fire until another full dwell period
       } else if (idleMs > 25_000 && idleMs < 27_000 && st.mascot === "idle") {
@@ -115,6 +132,9 @@ export function BehaviourObserver() {
       }
     }, 2000);
 
+    window.addEventListener("offline", onOffline);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("pf:hero", onHero);
     window.addEventListener("pointermove", onMove, { passive: true });
     window.addEventListener("keydown", onKey);
     window.addEventListener("touchstart", onTouch, { passive: true });
@@ -126,6 +146,9 @@ export function BehaviourObserver() {
       clearTimeout(settle);
       if (raf) cancelAnimationFrame(raf);
       if (scrollRaf) cancelAnimationFrame(scrollRaf);
+      window.removeEventListener("offline", onOffline);
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("pf:hero", onHero);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("touchstart", onTouch);

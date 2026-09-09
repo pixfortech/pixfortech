@@ -3,30 +3,32 @@
 import { useCallback, useEffect, useState } from "react";
 import { BehaviourObserver } from "./behaviour/BehaviourObserver";
 import { behaviour } from "./behaviour/store";
+import type { GameId } from "./behaviour/messages";
 import { Mascot } from "./mascot/Mascot";
-import { PixelGame } from "./game/PixelGame";
+import { GameHost } from "./game/GameHost";
 import { PixelCounterPill } from "./PixelCounter";
+import { PipAccountSync } from "./mascot/PipAccountSync";
 
-/** Everything playful that sits above the page: mascot, counter pill, game. */
+/** Everything playful that sits above the page: mascot, counter pill, the games. */
 export function PixelUi() {
-  const [gameOpen, setGameOpen] = useState(false);
-  const [session, setSession] = useState(0);
+  const [game, setGame] = useState<{ id: GameId; session: number; seed: number } | null>(null);
   // A fresh key per opening remounts the game with clean state.
-  const openGame = useCallback(() => { setSession((n) => n + 1); setGameOpen(true); }, []);
-  const closeGame = useCallback(() => { setGameOpen(false); }, []);
+  const openGame = useCallback((id: GameId) => setGame((g) => ({ id, session: (g?.session ?? 0) + 1, seed: Date.now() & 0xfffff })), []);
+  const closeGame = useCallback(() => setGame(null), []);
 
-  // Greeting once per session, after the visitor has settled in.
+  // Greeting once per session, after the visitor has settled in. Returning visitors get a different line.
   useEffect(() => {
-    const t = setTimeout(() => behaviour.say("greeting", { state: "curious", stateMs: 3000 }), 6000);
+    const t = setTimeout(() => { if (!behaviour.say(behaviour.isReturningVisitor() ? "returning" : "greeting", { state: "curious", stateMs: 3000 })) behaviour.say("greeting", { state: "curious", stateMs: 3000 }); }, 6000);
     return () => clearTimeout(t);
   }, []);
 
   return (
     <>
       <BehaviourObserver />
+      <PipAccountSync />
       <PixelCounterPill />
       <Mascot onPlay={openGame} />
-      <PixelGame key={session} open={gameOpen} onClose={closeGame} />
+      {game && <GameHost key={game.session} game={game.id} open onClose={closeGame} seed={game.seed} />}
     </>
   );
 }

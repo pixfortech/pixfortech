@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { nav } from "@/lib/navigation";
 import { behaviour } from "@/pixel/behaviour/store";
+import { AccountControl } from "./AccountMenu";
 
 export function Header() {
   const pathname = usePathname();
@@ -82,6 +83,9 @@ export function Header() {
             </nav>
 
             <div className="flex items-center gap-2">
+              <div className="hidden md:block">
+                <AccountControl variant="desktop" />
+              </div>
               <div className="hidden sm:block">
                 <Button href="/contact" size="md" magnetic={false}>
                   Start a project
@@ -141,7 +145,8 @@ export function Header() {
                   </motion.div>
                 ))}
               </nav>
-              <div className="mt-auto pt-10">
+              <div className="mt-auto flex flex-col gap-3 pt-10">
+                <AccountControl variant="mobile" onNavigate={() => setOpen(false)} />
                 <Button href="/contact" size="lg" className="w-full" magnetic={false} arrow onClick={() => setOpen(false)}>
                   Start a project
                 </Button>
