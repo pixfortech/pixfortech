@@ -17,6 +17,7 @@
     "db:import-sqlite": "tsx scripts/migrate-postgres.ts --import-sqlite",
     "admin:bootstrap": "tsx scripts/admin-bootstrap.ts",
     "admin:check": "tsx scripts/admin-bootstrap.ts --check",
+    "email:check": "tsx scripts/email-check.ts",
     "test:integration": "vitest run --config scripts/vitest.integration.config.mts"
   },
   "dependencies": {

@@ -60,6 +60,19 @@ describe("admin bootstrap", () => {
     expect(r.action).toBe("exists");
     if (r.action === "exists") expect(r.admins[0].email).toBe(email);
   });
+  it("F: with verification required the owner starts unverified and the audit row says so", async () => {
+    await pool.query(`DELETE FROM audit_events WHERE action = 'admin.bootstrap' AND target_id IN (SELECT id FROM "user" WHERE email = $1)`, [email]);
+    await pool.query(`DELETE FROM "user" WHERE email = $1`, [email]);
+    const r = await runBootstrap(pool, { email, name: "Test Owner", requireVerification: true });
+    expect(r.action).toBe("created");
+    if (r.action !== "created") return;
+    expect(r.emailVerified).toBe(false);
+    expect(await listSuperAdmins(pool)).toMatchObject([{ email, enabled: true, emailVerified: false }]);
+    const audit = await pool.query(`SELECT metadata FROM audit_events WHERE action = 'admin.bootstrap' AND target_id = (SELECT id FROM "user" WHERE email = $1)`, [email]);
+    const meta = typeof audit.rows[0].metadata === "string" ? JSON.parse(audit.rows[0].metadata) : audit.rows[0].metadata;
+    expect(meta).toMatchObject({ verification: "pending" });
+    expect(JSON.stringify(audit.rows)).not.toContain(r.temporaryPassword);
+  });
   it("generates distinct passwords of at least 20 characters", () => {
     const a = generateTemporaryPassword(), b = generateTemporaryPassword();
     expect(a).not.toBe(b);

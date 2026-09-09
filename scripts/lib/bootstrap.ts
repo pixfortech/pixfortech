@@ -9,11 +9,17 @@ import type { Pool } from "pg";
  * generated here, returned once to the caller, and never stored in plain
  * text or logged by this module.
  */
-export type BootstrapInput = { email?: string | null; name?: string | null; check?: boolean };
+/**
+ * `requireVerification` creates the owner unverified so the first sign-in is
+ * gated on the verification link the application emails (production runs
+ * with REQUIRE_EMAIL_VERIFICATION=true). Without it the address is trusted
+ * because it came from the operator's own environment.
+ */
+export type BootstrapInput = { email?: string | null; name?: string | null; check?: boolean; requireVerification?: boolean };
 export type SuperAdminSummary = { email: string; enabled: boolean; emailVerified: boolean; createdAt: string };
 export type BootstrapResult =
   | { action: "exists"; admins: SuperAdminSummary[] }
-  | { action: "created"; email: string; temporaryPassword: string }
+  | { action: "created"; email: string; temporaryPassword: string; emailVerified: boolean }
   | { action: "none" };
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -58,16 +64,17 @@ export async function runBootstrap(pool: Pool, input: BootstrapInput): Promise<B
     const userId = randomUUID();
     const temporaryPassword = generateTemporaryPassword();
     const hash = await hashPassword(temporaryPassword);
-    // The address came from the operator's own environment, so it is treated as verified for the first sign-in;
-    // the temporary password must be replaced before anything else can be used.
+    // The temporary password must be replaced before anything else can be used. The address is trusted
+    // unless the operator asked for the verification link to gate the first sign-in.
+    const emailVerified = !input.requireVerification;
     await client.query(
-      `INSERT INTO "user" (id, name, email, email_verified, role, organisation_id, must_change_password) VALUES ($1, $2, $3, true, 'super_admin', $4, true)`,
-      [userId, name, email, orgId],
+      `INSERT INTO "user" (id, name, email, email_verified, role, organisation_id, must_change_password) VALUES ($1, $2, $3, $5, 'super_admin', $4, true)`,
+      [userId, name, email, orgId, emailVerified],
     );
     await client.query(`INSERT INTO account (id, account_id, provider_id, user_id, password) VALUES ($1, $2, 'credential', $2, $3)`, [randomUUID(), userId, hash]);
-    await client.query(`INSERT INTO audit_events (id, actor_id, action, target_type, target_id, metadata) VALUES ($1, NULL, 'admin.bootstrap', 'user', $2, $3)`, [randomUUID(), userId, JSON.stringify({ email, method: "temporary-password" })]);
+    await client.query(`INSERT INTO audit_events (id, actor_id, action, target_type, target_id, metadata) VALUES ($1, NULL, 'admin.bootstrap', 'user', $2, $3)`, [randomUUID(), userId, JSON.stringify({ email, method: "temporary-password", verification: emailVerified ? "trusted" : "pending" })]);
     await client.query("COMMIT");
-    return { action: "created", email, temporaryPassword };
+    return { action: "created", email, temporaryPassword, emailVerified };
   } catch (error) {
     await client.query("ROLLBACK").catch(() => undefined);
     throw error;
