@@ -67,10 +67,10 @@ export function GameHost({ game, open, inline = false, onClose, onWin, seed = 7 
     behaviour.gameOffered(game);
     behaviour.say(`game.${game}.start`, { force: true, durationMs: 4500 });
     if (!inline) closeRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.preventDefault(); onClose(); } };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.preventDefault(); closeRef.current?.click(); } };
     window.addEventListener("keydown", onKey);
     return () => { window.removeEventListener("keydown", onKey); behaviour.setGameOpen(false); };
-  }, [open, game, inline, onClose]);
+  }, [open, game, inline]);
 
   const onResult = useCallback((r: GameResult, d?: string) => {
     setResult(r); setDetail(d);

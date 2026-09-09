@@ -28,7 +28,7 @@ export function PipCornerRestore() {
   const s = useBehaviour();
   if (!s.dismissed) return null;
   return (
-    <button type="button" onClick={() => behaviour.restore()} aria-label={copy.pip.show} title={copy.pip.restoreHint} data-testid="pip-corner-restore" className="pip-corner">
+    <button type="button" onClick={() => behaviour.restore()} aria-label="Show the PiP mascot" title={copy.pip.restoreHint} data-testid="pip-corner-restore" className="pip-corner">
       <span aria-hidden="true" />
     </button>
   );

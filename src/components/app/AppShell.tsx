@@ -89,7 +89,7 @@ export function AppShell({ area, nav, user, notifications, children, searchLinks
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-40 flex h-14 items-center gap-2 border-b border-line bg-ink-900/85 px-3 backdrop-blur-md sm:px-5">
           <button type="button" className="grid h-9 w-9 place-items-center rounded-md text-bone-200 hover:bg-bone-50/5 lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu"><span className="block h-3 w-4 border-y border-current" aria-hidden="true" /></button>
-          <button type="button" onClick={() => window.dispatchEvent(new Event("pf:open-search"))} className="flex h-9 flex-1 items-center gap-2 rounded-md border border-line bg-ink-850/60 px-3 text-left text-[0.8125rem] text-bone-400 hover:border-line-strong sm:max-w-md" aria-label="Search (Ctrl or Command K)">
+          <button type="button" onClick={() => window.dispatchEvent(new Event("pf:open-search"))} className="flex h-9 flex-1 items-center gap-2 rounded-md border border-line bg-ink-850/60 px-3 text-left text-[0.8125rem] text-bone-400 hover:border-line-strong sm:max-w-md" aria-label="Search projects, requests, tasks. Ctrl or Command K">
             <span aria-hidden="true">⌕</span><span className="flex-1 truncate">Search projects, requests, tasks…</span><kbd className="hidden rounded-xs border border-line px-1.5 text-[0.6875rem] sm:inline">⌘K</kbd>
           </button>
           <div className="ml-auto flex items-center gap-1">

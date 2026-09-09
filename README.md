@@ -45,6 +45,10 @@ The site also hosts a client portal (`/portal`) and an admin dashboard (`/admin`
 
 **Stack**: better-auth (email + password, forgot/reset, email verification, magic links, optional Google), Drizzle ORM on SQLite (`better-sqlite3`, WAL mode, migrations applied on boot), Server Actions validated with Zod, Server-Sent Events for realtime, private file storage on disk or S3.
 
+**Profiles and public pages**: every account has a display identity (name, display name, title, timezone, bio, LinkedIn/GitHub/website, avatar) and a unique username (`src/lib/profile/identity.ts` holds the rules, `src/lib/profile/reserved.ts` the reserved names). Staff can choose a public address and publish a page at `/people/<slug>`; old addresses redirect permanently through `profile_slug_history`. Client profiles are always private. Authorisation never reads usernames or slugs.
+
+**Owner bootstrap**: `npm run admin:check` and `npm run admin:bootstrap` (see `docs/DEPLOYMENT.md`).
+
 **Roles**: `super_admin`, `admin`, `project_manager`, `team_member` (staff, land in `/admin`) and `client_admin`, `client_member` (clients, land in `/portal`). Every read and write goes through `src/server/services/*`, which resolve the actor's accessible projects (`accessibleProjectIds` / `requireProject`) before touching data. Clients only ever see their own organisation's projects, requests, files, conversations and approvals. Internal comments and internal conversations are filtered out at query level for clients, not hidden in the UI.
 
 **Data model** (`src/server/db/schema.ts`): users, sessions, accounts, verifications, organisations, organisation memberships, projects, project members, milestones, tasks, task comments, feature/change requests, request comments, files, conversations, messages, message reads, approvals, notifications, notification preferences, activity log, audit log, invitations. Foreign keys are enforced. The schema uses portable column types so it can move to Postgres by swapping the Drizzle driver and regenerating migrations.
@@ -56,9 +60,12 @@ The site also hosts a client portal (`/portal`) and an admin dashboard (`/admin`
 ### Local setup
 
 ```bash
-cp .env.example .env.local     # set BETTER_AUTH_SECRET at minimum
-npm run db:seed                # migrates the database and loads demo data
+cp .env.example .env.local     # set DATABASE_URL to a local PostgreSQL and BETTER_AUTH_SECRET
+npm run db:migrate             # applies drizzle/postgres migrations (node-postgres for localhost, Neon otherwise)
+DATABASE_PATH=./data/qa-fixture.sqlite node scripts/seed.mjs && DATABASE_PATH=./data/qa-fixture.sqlite npm run db:import-sqlite
 npm run dev
+npm run test:integration       # profile slug and bootstrap suites against the local database
+node scripts/experience-qa.mjs # browser QA for login/account, profiles, hero, PiP, games, realtime, mobile
 ```
 
 Demo logins (password `forge-demo-2026!`): `admin@pixelforge.test` (super admin), `pm@pixelforge.test` (project manager), `dev@pixelforge.test` and `design@pixelforge.test` (team), `maya@northbank.test` (client admin, Northbank), `tom@northbank.test` (client member), `daniel@meridian.test` (client admin, Meridian). Delete `data/pixelforge.sqlite` and reseed to reset.
@@ -72,6 +79,14 @@ Without `RESEND_API_KEY`, verification, reset and invitation emails are printed 
 - Set `REQUIRE_EMAIL_VERIFICATION=true` and create the first super admin with the seed script or by inviting through `/admin/team`.
 - Serve behind HTTPS; cookies are `Secure` in production and sessions are stored server-side.
 - Run `npm run qa:app` against a seeded instance for the end-to-end auth, isolation and realtime checks.
+
+## PiP, games and microcopy
+
+- `src/pixel/behaviour/messages.ts` is PiP's speech library: every line has a stable id, grouped by context, plus per-game invite/start/win/lose/exit lines. `selection.ts` holds the pure rotation rules (no repeats until a category is exhausted, a 14-day expiry, game rotation across sessions and visits) and is unit tested.
+- `store.ts` persists what a visitor has heard in `localStorage`, session caps in `sessionStorage`, and mirrors a signed-in user's copy through `/api/experience` so they never hear a repeat on another device. Hiding PiP is persistent; the footer link and the corner pixel bring him back.
+- `src/pixel/game/` holds the five mini-games behind one `GameHost` shell (consent first, Escape closes, keyboard and touch, no sound, reduced motion respected).
+- `src/pixel/scenes/PipScene.tsx` draws a different PiP composition for each public page in the page's palette.
+- `content/microcopy.ts` is the brand microcopy registry (navigation, auth, profile, dashboard, notifications, empty states). Functional labels and legal text stay literal in their components.
 
 ## The pixel system
 

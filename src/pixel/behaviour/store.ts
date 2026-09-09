@@ -148,6 +148,9 @@ class BehaviourStore {
     if (lx !== qx || ly !== qy) this.set({ look: [qx, qy] });
   }
 
+  /** Load persisted state after hydration so a hidden PiP stays hidden from the first paint onwards. */
+  hydrate() { const p = this.p(); if (p.hidden !== this.state.dismissed) this.set({ dismissed: p.hidden, mascot: p.hidden ? "hidden" : this.state.mascot }); }
+
   /** Hide PiP. Persistent until the visitor brings him back; he never reappears on his own. */
   dismiss() {
     const p = this.p(); p.hidden = true; this.savePersisted();
@@ -202,7 +205,8 @@ class BehaviourStore {
     const cap = SESSION_MAX[key];
     if (cap && !opts.force && (s.counts[key] ?? 0) >= cap) return false;
     const priority = priorityOf(key);
-    if (this.state.bubble && priority < this.currentPriority) return false;
+    // Forced lines are explicit events (reconnect after offline, a game the visitor accepted) and replace whatever is showing.
+    if (this.state.bubble && priority < this.currentPriority && !opts.force) return false;
 
     const pick = pickLine(linesFor(key), p.shown, now);
     if (!pick) return false; // Every line heard recently: stay silent rather than repeat.

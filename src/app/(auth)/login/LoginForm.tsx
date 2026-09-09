@@ -5,6 +5,8 @@ import { useHydrated } from "@/lib/useHydrated";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 import { Field, inputCls, AppButton } from "@/components/app/primitives";
+import { copy } from "@content/microcopy";
+import { behaviour } from "@/pixel/behaviour/store";
 
 
 export function LoginForm({ next, google }: { next?: string; google: boolean }) {
@@ -27,13 +29,14 @@ export function LoginForm({ next, google }: { next?: string; google: boolean }) 
         return;
       }
       const res = await authClient.signIn.email({ email, password, rememberMe: true });
-      if (res.error) { setError(res.error.status === 403 ? "Please verify your email first. We have sent you a new link." : "That email and password do not match."); return; }
+      if (res.error) { setError(res.error.status === 403 ? copy.auth.loginUnverified : copy.auth.loginWrong); return; }
+      behaviour.say("loginSuccess", { force: true, state: "celebrating", stateMs: 2000 });
       router.replace(next ?? "/redirect");
       router.refresh();
     } finally { setBusy(false); }
   }
 
-  if (sent) return <p className="rounded-md border border-line bg-ink-900 px-4 py-3 text-[0.875rem] text-bone-200">Check your inbox. The sign-in link works once and expires in a few minutes.</p>;
+  if (sent) return <p className="rounded-md border border-line bg-ink-900 px-4 py-3 text-[0.875rem] text-bone-200">{copy.auth.magicSent}</p>;
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
@@ -44,7 +47,7 @@ export function LoginForm({ next, google }: { next?: string; google: boolean }) 
       {error && <p role="alert" className="text-[0.8125rem] text-forge-300">{error}</p>}
       <AppButton type="submit" disabled={busy || !email || (mode === "password" && !password)}>{busy ? "Signing in…" : mode === "password" ? "Sign in" : "Email me a sign-in link"}</AppButton>
       <div className="flex items-center justify-between text-[0.8125rem]">
-        <button type="button" onClick={() => setMode(mode === "password" ? "magic" : "password")} className="text-bone-400 hover:text-bone-50">{mode === "password" ? "Use a magic link instead" : "Use a password instead"}</button>
+        <button type="button" onClick={() => setMode(mode === "password" ? "magic" : "password")} className="text-bone-400 hover:text-bone-50">{mode === "password" ? copy.auth.magicSwitch : copy.auth.passwordSwitch}</button>
         {google && <button type="button" onClick={() => authClient.signIn.social({ provider: "google", callbackURL: next ?? "/redirect" })} className="text-bone-400 hover:text-bone-50">Continue with Google</button>}
       </div>
     </form>

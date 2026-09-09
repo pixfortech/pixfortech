@@ -131,7 +131,7 @@ export function EnquiryForm({ email }: { email: string }) {
           <div><dt className="eyebrow mb-1">Timeline</dt><dd className="text-bone-50">{labelFor(TIMELINES, data.timeline)}</dd></div>
         </dl>
         <p className="mt-8 text-small text-bone-400">
-          In the meantime, <Link href="/insights" className="link-line text-bone-50">read how we think</Link> or <Link href="/process" className="link-line text-bone-50">see how an engagement runs</Link>. Pip will keep an eye on the pixels.
+          In the meantime, <Link href="/insights" className="link-line text-bone-50">read how we think</Link> or <Link href="/process" className="link-line text-bone-50">see how an engagement runs</Link>. PiP will keep an eye on the pixels.
         </p>
       </div>
     );

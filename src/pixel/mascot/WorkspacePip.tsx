@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { behaviour } from "../behaviour/store";
 import { Mascot } from "./Mascot";
-import { GameHost } from "../game/GameHost";
+import dynamic from "next/dynamic";
+const GameHost = dynamic(() => import("../game/GameHost").then((m) => m.GameHost), { ssr: false });
 import type { GameId } from "../behaviour/messages";
 import { PipAccountSync } from "./PipAccountSync";
 
@@ -18,7 +19,7 @@ export function WorkspacePip({ mode, unread, empty }: { mode: "auth" | "admin" |
   const pathname = usePathname();
   const [game, setGame] = useState<{ id: GameId; session: number; seed: number } | null>(null);
 
-  useEffect(() => { behaviour.setQuiet(true); return () => behaviour.setQuiet(false); }, []);
+  useEffect(() => { behaviour.hydrate(); behaviour.setQuiet(true); return () => behaviour.setQuiet(false); }, []);
   useEffect(() => { behaviour.setRoute(pathname); }, [pathname]);
 
   // Sign-in screen: one line, once per session.

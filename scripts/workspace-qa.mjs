@@ -45,7 +45,7 @@ try {
   await p.reload();
   await p.getByRole("heading", { name: marker + " task", exact: true }).waitFor();
   console.log("PASS: task creation persists");
-  await p.getByRole("button", { name: "Search (Ctrl or Command K)", exact: true }).click();
+  await p.getByRole("button", { name: "Search projects, requests, tasks. Ctrl or Command K", exact: true }).click();
   await p.getByRole("textbox", { name: "Search", exact: true }).fill(marker);
   await p.getByRole("option").filter({ hasText: marker + " task" }).waitFor();
   await p.keyboard.press("Escape");

@@ -34,6 +34,10 @@ Store secrets in Netlify environment variables, never Git:
 
 Production fails closed when required storage/authentication secrets are absent. Build tracing excludes local databases, uploads, environment files and QA artifacts.
 
+## Profile identity and public pages
+
+Migration `0004_profile_identity` adds username, public slug, publish flag, display name, bio, social links, avatar key, `must_change_password` and a small `experience` JSON column to `user`, plus `profile_slug_history` for permanent redirects. Only published, enabled staff accounts resolve at `/people/<slug>`; client accounts are private by design and never appear in listings, sitemap or redirects. Avatars are stored under `avatars/` in the private bucket and served through `/api/avatar/<id>` (public and cacheable only for published staff).
+
 ## Database migration
 
 `npm run db:migrate` applies `drizzle/postgres` migrations using the direct connection. Set `DATABASE_PATH` to the intended SQLite source and run `npm run db:import-sqlite`. The import refuses a nonempty target, takes a consistent SQLite backup, checks integrity and foreign keys, imports in relationship order inside a PostgreSQL transaction, and compares every imported row before commit.
@@ -42,7 +46,11 @@ The inspected original SQLite database contained zero rows in all tables. It was
 
 Never run the demo seed script against production. Bootstrap the owner's real account separately, with verified email and an owner-controlled password.
 
-`scripts/bootstrap-owner.ts --create-first-owner` accepts `OWNER_EMAIL`, `OWNER_NAME` and the direct production connection. It locks and checks the account directory is empty, creates only the studio and first owner in a transaction, and refuses to overwrite existing accounts. The initial password is random and discarded; email remains unverified until the owner completes Better Auth verification. Use the normal password-reset flow to choose a password. Owner creation requires approval of the recipient and privileged role.
+## Owner bootstrap
+
+`npm run admin:check` reports whether an active `super_admin` exists (email, enabled, email verified) without changing anything. `npm run admin:bootstrap` creates the first owner only when no active super admin exists; it is idempotent, so a second run reports the existing account and creates nothing. Inputs come from `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_NAME` (or `--email=` / `--name=`), never from source, plus the direct `DATABASE_URL_UNPOOLED`. A missing or invalid email fails before touching the database. The script refuses to promote an existing account with that email.
+
+The owner is created with `mustChangePassword` set and a 30-character random temporary password that is hashed with Better Auth's scrypt, printed exactly once to the terminal, and never stored or logged again. The first sign-in is forced to the profile page until the password is replaced; both the in-app change and the "Forgot password" flow clear the flag. Prefer the reset flow if you would rather not handle the temporary credential at all. Scenario tests (none exists, exists, run twice, missing email, credential handling) live in `scripts/admin-bootstrap.integration.test.ts` and run with `npm run test:integration` against a local PostgreSQL.
 
 ## Release gates
 

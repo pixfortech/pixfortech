@@ -22,7 +22,7 @@ export default function NotFound() {
             </h1>
             <Rise delay={0.35}>
               <p className="lead mt-8 max-w-[34rem]">
-                This page was either never forged, wandered off, or is hiding exceptionally well. Pip has been looking. Pip has not been successful.
+                This page was either never forged, wandered off, or is hiding exceptionally well. PiP has been looking. PiP has not been successful.
               </p>
             </Rise>
             <Rise delay={0.45}>

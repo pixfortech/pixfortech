@@ -12,13 +12,14 @@ export const copy = {
   /** Public navigation and account entry points. */
   nav: {
     loginLabel: "Enter the Forge",
-    loginAria: "Sign in to Pixel Forge",
+    /** Accessible names keep the visible words first (label-in-name), then the literal meaning. */
+    loginAria: "Enter the Forge: sign in to Pixel Forge",
     loginHint: "Your projects are waiting behind this door.",
     loginMobile: "Enter the Forge",
     footerLogin: "Client portal",
     footerLoginHint: "Sign in to see your projects, requests and files.",
     accountLabel: "Your workshop",
-    accountAria: "Open your account menu",
+    accountAria: "open your account menu",
     accountMenu: { dashboard: "Dashboard", projects: "Projects", notifications: "Notifications", profile: "Profile", settings: "Settings", signOut: "Sign out", signOutHint: "The pixels will keep your seat warm." },
     startProject: "Start a project",
   },
@@ -140,7 +141,7 @@ export const copy = {
   /** Mascot chrome. */
   pip: {
     hide: "Hide PiP for this visit",
-    show: "Show PiP mascot",
+    show: "Missing PiP? Bring PiP back: show the PiP mascot",
     restoreLabel: "Missing PiP?",
     restoreHint: "Bring PiP back",
     poke: "PiP, the Pixel Forge mascot. Press for a reaction.",

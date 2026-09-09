@@ -8,6 +8,7 @@ import { Avatar } from "@/components/app/primitives";
 import { copy } from "@content/microcopy";
 import { cn } from "@/lib/utils";
 import { behaviour } from "@/pixel/behaviour/store";
+import { useHydrated } from "@/lib/useHydrated";
 
 type SessionUser = { id: string; name: string; email: string; image?: string | null; role?: string; displayName?: string | null };
 const STAFF = ["super_admin", "admin", "project_manager", "team_member"];
@@ -21,22 +22,24 @@ const roleLabel = (role?: string) => ({ super_admin: "Owner", admin: "Admin", pr
  */
 export function AccountControl({ variant = "desktop", onNavigate }: { variant?: "desktop" | "mobile" | "footer"; onNavigate?: () => void }) {
   const { data, isPending } = authClient.useSession();
+  const hydrated = useHydrated();
   const user = (data?.user as SessionUser | undefined) ?? null;
-  if (!user) return <SignInLink variant={variant} pending={isPending} onNavigate={onNavigate} />;
+  // The server always renders the signed-out control; the first client render must match it.
+  if (!hydrated || !user) return <SignInLink variant={variant} pending={isPending || !hydrated} onNavigate={onNavigate} />;
   return <AccountMenu user={user} variant={variant} onNavigate={onNavigate} />;
 }
 
 function SignInLink({ variant, pending, onNavigate }: { variant: "desktop" | "mobile" | "footer"; pending: boolean; onNavigate?: () => void }) {
   if (variant === "footer") {
     return (
-      <Link href="/login" className="link-line text-bone-200 hover:text-bone-50" aria-label={copy.nav.loginAria} title={copy.nav.footerLoginHint} onClick={onNavigate}>{copy.nav.footerLogin}</Link>
+      <Link href="/login" className="link-line text-bone-200 hover:text-bone-50" aria-label={`${copy.nav.footerLogin}: sign in to Pixel Forge`} title={copy.nav.footerLoginHint} onClick={onNavigate}>{copy.nav.footerLogin}</Link>
     );
   }
   if (variant === "mobile") {
     return (
-      <Link href="/login" onClick={onNavigate} aria-label={copy.nav.loginAria} className="flex items-center justify-between rounded-md border border-line-strong px-4 py-3.5 text-[1rem] font-medium text-bone-50 hover:border-bone-50">
+      <Link href="/login" onClick={onNavigate} aria-label={copy.nav.loginAria} className="group flex flex-col gap-1 rounded-md border border-line-strong px-4 py-3.5 text-[1rem] font-medium text-bone-50 hover:border-bone-50">
         <span className="flex items-center gap-3"><ForgeDoor /> {copy.nav.loginMobile}</span>
-        <span className="text-[0.8125rem] text-bone-400">{copy.nav.loginHint}</span>
+        <span className="pl-7 text-[0.8125rem] font-normal text-bone-400">{copy.nav.loginHint}</span>
       </Link>
     );
   }
@@ -129,7 +132,7 @@ function AccountMenu({ user, variant, onNavigate }: { user: SessionUser; variant
         aria-expanded={open}
         aria-haspopup="menu"
         aria-controls={id}
-        aria-label={`${copy.nav.accountAria}: ${label}`}
+        aria-label={`${label.split(" ")[0]}: ${copy.nav.accountAria}`}
         data-testid="account-button"
         className="flex h-10 items-center gap-2.5 rounded-pill border border-line-strong py-1 pr-3 pl-1 text-[0.9375rem] font-medium text-bone-50 transition-colors hover:border-bone-50 hover:bg-bone-50/5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forge-400"
       >

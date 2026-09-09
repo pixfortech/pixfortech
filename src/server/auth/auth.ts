@@ -76,7 +76,8 @@ function createAuth() {
     useSecureCookies: process.env.NODE_ENV === "production",
     database: { generateId: () => crypto.randomUUID() },
   },
-  rateLimit: { enabled: true, window: 60, max: 30, storage: "database" },
+  // Sign-in style endpoints stay tight; session reads are cheap and happen on every page.
+  rateLimit: { enabled: true, window: 60, max: 30, storage: "database", customRules: { "/get-session": { window: 60, max: 240 } } },
   hooks: {
     after: createAuthMiddleware(async (ctx) => {
       // A successful in-app password change also retires a temporary password.

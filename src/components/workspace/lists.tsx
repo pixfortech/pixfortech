@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { copy } from "@content/microcopy";
 import { Avatar, Badge, dueTone, fmtDate, humanise, priorityTone, Progress, ProjectMark, statusTone, Table, td, th, timeAgo, EmptyState } from "@/components/app/primitives";
 
 export type ProjectRow = { id: string; code: string; title: string; status: string; priority: string; health: string; progress: number; phase: string | null; targetDate: Date | null; updatedAt: Date; pixelTheme: string | null; organisationName: string; managerName: string | null };
@@ -55,7 +56,7 @@ export type RequestRow = { id: string; ref: string; title: string; type: string;
 const RLABEL: Record<string, string> = { submitted: "Submitted", acknowledged: "Acknowledged", under_review: "Under review", needs_clarification: "Needs clarification", estimated: "Estimated", approved: "Approved", scheduled: "Scheduled", in_progress: "In progress", ready_for_review: "Ready for review", changes_requested: "Changes requested", completed: "Completed", closed: "Closed", rejected: "Rejected", cancelled: "Cancelled" };
 const TLABEL: Record<string, string> = { edit: "Edit", bug: "Bug", feature: "Feature", design: "Design", content: "Content", integration: "Integration", performance: "Performance", other: "Other" };
 
-export function RequestList({ requests, area, emptyTitle = "No requests yet", emptyBody = "When something needs changing, submit a request and it will be tracked here from submission to completion." }: { requests: RequestRow[]; area: "portal" | "admin"; emptyTitle?: string; emptyBody?: string }) {
+export function RequestList({ requests, area, emptyTitle = copy.portal.requestsEmpty, emptyBody = copy.portal.requestsEmptyBody }: { requests: RequestRow[]; area: "portal" | "admin"; emptyTitle?: string; emptyBody?: string }) {
   if (!requests.length) return <EmptyState title={emptyTitle} body={emptyBody} />;
   return (
     <ul className="divide-y divide-line-faint rounded-lg border border-line">
@@ -80,7 +81,7 @@ export function RequestList({ requests, area, emptyTitle = "No requests yet", em
 }
 
 export type TaskRow = { id: string; key: string; title: string; status: string; priority: string; dueDate: Date | null; assigneeName: string | null; assigneeImage: string | null; projectCode: string; projectTitle: string; projectId: string; clientVisible: boolean };
-export function TaskList({ tasks, area, emptyTitle = "No tasks", emptyBody = "Nothing queued here." }: { tasks: TaskRow[]; area: "portal" | "admin"; emptyTitle?: string; emptyBody?: string }) {
+export function TaskList({ tasks, area, emptyTitle = copy.empty.tasks.title, emptyBody = copy.empty.tasks.body }: { tasks: TaskRow[]; area: "portal" | "admin"; emptyTitle?: string; emptyBody?: string }) {
   if (!tasks.length) return <EmptyState title={emptyTitle} body={emptyBody} />;
   return (
     <ul className="divide-y divide-line-faint rounded-lg border border-line">

@@ -5,7 +5,8 @@ import { BehaviourObserver } from "./behaviour/BehaviourObserver";
 import { behaviour } from "./behaviour/store";
 import type { GameId } from "./behaviour/messages";
 import { Mascot } from "./mascot/Mascot";
-import { GameHost } from "./game/GameHost";
+import dynamic from "next/dynamic";
+const GameHost = dynamic(() => import("./game/GameHost").then((m) => m.GameHost), { ssr: false });
 import { PixelCounterPill } from "./PixelCounter";
 import { PipAccountSync } from "./mascot/PipAccountSync";
 
@@ -18,6 +19,8 @@ export function PixelUi() {
 
   // Greeting once per session, after the visitor has settled in. Returning visitors get a different line.
   useEffect(() => {
+    if (process.env.NODE_ENV !== "production") (window as unknown as { __pfBehaviour?: typeof behaviour }).__pfBehaviour = behaviour;
+    behaviour.hydrate();
     const t = setTimeout(() => { if (!behaviour.say(behaviour.isReturningVisitor() ? "returning" : "greeting", { state: "curious", stateMs: 3000 })) behaviour.say("greeting", { state: "curious", stateMs: 3000 }); }, 6000);
     return () => clearTimeout(t);
   }, []);

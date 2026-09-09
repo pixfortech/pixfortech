@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useHydrated } from "@/lib/useHydrated";
 import { authClient } from "@/lib/auth/client";
 import { AppButton, Field, inputCls } from "@/components/app/primitives";
+import { copy } from "@content/microcopy";
 
 export function ForgotForm() {
   const hydrated = useHydrated();
@@ -16,7 +17,7 @@ export function ForgotForm() {
     await authClient.requestPasswordReset({ email, redirectTo: "/reset-password" }).catch(() => undefined);
     setBusy(false); setDone(true);
   }
-  if (done) return <p className="rounded-md border border-line bg-ink-900 px-4 py-3 text-[0.875rem] text-bone-200">If that address has an account, a reset link is in its inbox. It expires in an hour.</p>;
+  if (done) return <p className="rounded-md border border-line bg-ink-900 px-4 py-3 text-[0.875rem] text-bone-200">{copy.auth.forgotSent}</p>;
   return (
     <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
       <Field label="Email" htmlFor="email"><input id="email" type="email" required disabled={!hydrated} autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} /></Field>

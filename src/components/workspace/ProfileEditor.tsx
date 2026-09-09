@@ -90,13 +90,12 @@ export function ProfileEditor({ profile, canPublish, siteOrigin, editingOther }:
     toast({ title: "Address updated", body: "The old address now redirects here, so nothing breaks.", kind: "success" });
     router.refresh();
   });
-  const togglePublished = (next: boolean) => start(async () => {
+  const togglePublished = (next: boolean) => { setPublished(next); start(async () => {
     const res = await setProfilePublishedAction({ published: next, userId: targetId });
-    if (!res.ok) { setError(res.error); return; }
-    setPublished(next);
+    if (!res.ok) { setPublished(!next); setError(res.error); return; }
     toast({ title: next ? copy.profile.publishedTitle : copy.profile.unpublishedTitle, body: next ? copy.profile.publishedBody : copy.profile.unpublishedBody, kind: "success" });
     router.refresh();
-  });
+  }); };
   const copyUrl = async () => { try { await navigator.clipboard.writeText(publicUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { setError("Could not copy. Select the address and copy it by hand."); } };
 
   return (
