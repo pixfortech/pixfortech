@@ -1,9 +1,11 @@
 "use client";
 
+import { useTimeAgo } from "@/components/app/TimeProvider";
+
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteFileAction } from "@/server/actions/collab";
-import { Avatar, Badge, EmptyState, timeAgo } from "@/components/app/primitives";
+import { Avatar, Badge, EmptyState } from "@/components/app/primitives";
 import { formatBytes } from "./format";
 
 export type FileItem = { id: string; name: string; mime: string; size: number; version: number; createdAt: Date; clientVisible: boolean; uploader: { id: string; name: string; image: string | null } | null; projectCode?: string; projectTitle?: string };
@@ -11,6 +13,7 @@ export type FileItem = { id: string; name: string; mime: string; size: number; v
 const kind = (mime: string) => mime.startsWith("image/") ? "IMG" : mime === "application/pdf" ? "PDF" : mime.includes("zip") ? "ZIP" : mime.includes("sheet") || mime.includes("excel") ? "XLS" : mime.includes("word") ? "DOC" : "TXT";
 
 export function FileList({ files, staff, currentUserId, showProject }: { files: FileItem[]; staff: boolean; currentUserId: string; showProject?: boolean }) {
+  const timeAgo = useTimeAgo();
   const router = useRouter();
   const [pending, start] = useTransition();
   if (!files.length) return <EmptyState title="No files yet" body="Anything uploaded to this project will be listed here with who added it and when." />;

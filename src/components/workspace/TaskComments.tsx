@@ -1,12 +1,15 @@
 "use client";
 
+import { useTimeAgo } from "@/components/app/TimeProvider";
+
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addTaskCommentAction } from "@/server/actions/tasks";
-import { AppButton, Avatar, Badge, inputCls, timeAgo } from "@/components/app/primitives";
+import { AppButton, Avatar, Badge, inputCls } from "@/components/app/primitives";
 import { cn } from "@/lib/utils";
 
 export function TaskComments({ taskId, comments, clientVisibleTask }: { taskId: string; comments: { id: string; body: string; internal: boolean; createdAt: Date; authorName: string; authorImage: string | null }[]; clientVisibleTask: boolean }) {
+  const timeAgo = useTimeAgo();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [body, setBody] = useState("");

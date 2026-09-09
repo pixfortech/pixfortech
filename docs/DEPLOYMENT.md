@@ -44,6 +44,27 @@ Never run the demo seed script against production. Bootstrap the owner's real ac
 
 ## Release gates
 
+### Email DNS proposal — approval required before applying
+
+Resend currently lists the following records for `pixfortech.com` at Namecheap (Tokyo sending region). None have been applied by this deployment workflow. Check existing records before applying the approved changes; preserve unrelated mail configuration.
+
+| Type | Host | Value | TTL |
+| --- | --- | --- | --- |
+| TXT | `resend._domainkey` | Public DKIM key below | Auto |
+| CNAME | `rsend` | `rsend-apne1.forge.rmta.net` | Auto |
+| CNAME | `send` | `send.forge.rmta.net` | Auto |
+| TXT, optional | `_dmarc` | `v=DMARC1; p=none;` | Auto |
+
+Public DKIM TXT value (not a secret):
+
+```text
+p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrlYYh5UmI2chfmAQn4f5XrN1Y4w1AvFbmo29whRT/wZufrRpBPGPP8i+6cFBjO54bGOZScv0CH6rghtdptGpAdtDEbR9FsUEGCth/f8pdiIavM+HOuoSACVW7Rd4z8GSIbMZHpncp5OcDBIipLHhIyy1RWcGy4qkRaeKMhhuT/QIDAQAB
+```
+
+The two CNAMEs are the sending/SPF records requested by this Resend configuration. Website DNS will be proposed separately from Netlify's domain configuration after temporary-host QA passes.
+
+### Cutover sequence
+
 1. Run TypeScript, lint, unit tests, production build and all browser suites.
 2. Pass complete QA on the temporary Netlify hostname, including live email and private storage tests.
 3. Obtain approval for exact website and Resend DNS records; do not change domain DNS before temporary QA passes.
@@ -56,6 +77,8 @@ Current status: the temporary hostname is publicly deployed from the deployment 
 Temporary-host validation has passed core login/logout, role redirects, foreign project/request denial, live request status, private internal comments, chat, toasts and unread indicators. Private R2 boundary/ownership/download tests and chat/request attachment integration pass. Approval creation, client decisions and the audit trail pass. Project/task creation, authorized global search, internal-task exclusion and persisted profile/preferences pass. All 20 sitemap pages, the interactive 404 and observable reduced-motion/mobile public behavior pass. Production QA found and fixed delayed status publication, upload-size constraints, interaction readiness and an admin mobile grid overflow; final mobile/kanban regression checks are tracked separately. Live Resend invitation, verification, reset and magic-link delivery have not yet passed the production gate.
 
 ## Validation and rollback
+
+The latest validation includes 56 passing unit tests, type checking, lint and a successful production build. The display clock is supplied by the server for matching initial hydration, then advances on the client; its regression test covers a minute boundary. Calendar dates use UTC consistently. Phone-width checks confirmed the mobile grid corrections, and the final browser regression must also finish without hydration errors. The deployed kanban check passes both explicit save completion and exact-task persistence after reload.
 
 Local TypeScript, lint and 54 unit tests passed during implementation. The production Webpack build passed. `node scripts/flows-qa.mjs` passed 22/22 checks, including password reset and change, invitation plus email verification, unassigned staff isolation, uploads/downloads, executable rejection, approvals and kanban persistence. `node scripts/app-qa.mjs` passed with assertions for core role redirects, tenant isolation, toasts, unread counts, live request updates, internal-note privacy, realtime chat and logout. `node scripts/attachment-qa.mjs` passed chat and new-request attachment uploads with byte-identical authorized downloads. Email links in the local flow suite use the development transport; live Resend delivery remains a separate production gate. The public animation/behaviour suites have been exercised; full temporary-host production QA is still pending. `node scripts/storage-qa.mjs` passed with actual private R2 storage and Neon QA: exactly 25 MiB, rejection above the limit, chunk ownership, foreign-origin denial, byte-identical signed downloads, cross-tenant/anonymous denial and invalid magic-byte rejection. Keep individual results in local `artifacts/qa` and `data/deployment` logs; these may contain test tokens and must not be published.
 

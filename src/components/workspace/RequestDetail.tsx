@@ -1,12 +1,14 @@
 "use client";
 
+import { useTimeAgo } from "@/components/app/TimeProvider";
+
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { addRequestCommentAction, assignRequestAction, transitionRequestAction } from "@/server/actions/requests";
 import { createTaskAction } from "@/server/actions/tasks";
 import { requestApprovalAction } from "@/server/actions/collab";
-import { AppButton, Avatar, Badge, Card, CardHeader, fmtDate, Field, humanise, inputCls, priorityTone, selectCls, statusTone, timeAgo } from "@/components/app/primitives";
+import { AppButton, Avatar, Badge, Card, CardHeader, fmtDate, Field, humanise, inputCls, priorityTone, selectCls, statusTone } from "@/components/app/primitives";
 import { Uploader } from "./Uploader";
 import { FileList, type FileItem } from "./FileList";
 import { cn } from "@/lib/utils";
@@ -27,6 +29,7 @@ const TYPE: Record<string, string> = { edit: "Edit", bug: "Bug", feature: "New f
 const PIPELINE = ["submitted", "under_review", "approved", "in_progress", "ready_for_review", "completed"];
 
 export function RequestDetail({ r, area, staff, currentUserId, assignees }: { r: RequestView; area: "portal" | "admin"; staff: boolean; currentUserId: string; assignees: { id: string; name: string }[] }) {
+  const timeAgo = useTimeAgo();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [note, setNote] = useState("");

@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { AppShell, type NavItem } from "./AppShell";
 import { RealtimeProvider } from "./RealtimeProvider";
+import { TimeProvider } from "./TimeProvider";
+import { getServerTime } from "@/server/services/clock";
 import { getSessionUser, type SessionUser } from "@/server/auth/session";
 import { isStaff, homeFor } from "@/server/auth/permissions";
 import { listNotifications, unreadCount } from "@/server/services/notifications";
@@ -51,11 +53,12 @@ export async function AreaShell({ area, user, children }: { area: "portal" | "ad
         { href: "/portal/profile", label: "Profile", icon: "profile" },
         { href: "/portal/settings", label: "Settings", icon: "settings" },
       ];
+  const renderedAt = await getServerTime();
   return (
-    <RealtimeProvider initialUnread={unread} area={area} userId={user.id}>
+    <TimeProvider renderedAt={renderedAt}><RealtimeProvider initialUnread={unread} area={area} userId={user.id}>
       <AppShell area={area} nav={nav} user={{ name: user.name, email: user.email, image: user.image, role: user.role, organisationName: org?.name ?? null }} notifications={notifications} searchLinks={nav.map((n) => ({ label: n.label, href: n.href }))}>
         {children}
       </AppShell>
-    </RealtimeProvider>
+    </RealtimeProvider></TimeProvider>
   );
 }

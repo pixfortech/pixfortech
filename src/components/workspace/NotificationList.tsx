@@ -1,14 +1,17 @@
 "use client";
 
+import { useTimeAgo } from "@/components/app/TimeProvider";
+
 import Link from "next/link";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { markAllNotificationsReadAction, markNotificationReadAction } from "@/server/actions/collab";
 import { useRealtime } from "@/components/app/RealtimeProvider";
-import { AppButton, Badge, EmptyState, timeAgo, humanise } from "@/components/app/primitives";
+import { AppButton, Badge, EmptyState, humanise } from "@/components/app/primitives";
 import { cn } from "@/lib/utils";
 
 export function NotificationList({ items, area }: { items: { id: string; category: string; title: string; body: string | null; href: string | null; readAt: Date | null; createdAt: Date; projectTitle: string | null; actorName: string | null }[]; area: "portal" | "admin" }) {
+  const timeAgo = useTimeAgo();
   const router = useRouter();
   const { setUnread } = useRealtime();
   const [pending, start] = useTransition();

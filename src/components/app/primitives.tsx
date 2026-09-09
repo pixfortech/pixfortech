@@ -172,10 +172,10 @@ export function Table({ children, className }: { children: ReactNode; className?
 export const th = "px-4 py-2.5 text-left text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-bone-400 border-b border-line bg-ink-850/80";
 export const td = "px-4 py-3 align-middle border-b border-line-faint text-bone-200";
 
-export function timeAgo(d: Date | number | null | undefined): string {
+export function timeAgo(d: Date | number | null | undefined, now = Date.now()): string {
   if (!d) return "";
   const t = typeof d === "number" ? d : d.getTime();
-  const diff = Date.now() - t;
+  const diff = now - t;
   const m = Math.round(diff / 60000);
   if (m < 1) return "just now";
   if (m < 60) return `${m}m ago`;
@@ -183,11 +183,11 @@ export function timeAgo(d: Date | number | null | undefined): string {
   if (h < 24) return `${h}h ago`;
   const days = Math.round(h / 24);
   if (days < 7) return `${days}d ago`;
-  return new Date(t).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  return new Date(t).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 }
 export function fmtDate(d: Date | number | null | undefined, withYear = false): string {
   if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", ...(withYear ? { year: "numeric" } : {}) });
+  return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC", ...(withYear ? { year: "numeric" } : {}) });
 }
 export function dueTone(d: Date | null | undefined, done = false): "muted" | "warn" | "bad" | "neutral" {
   if (!d || done) return "muted";

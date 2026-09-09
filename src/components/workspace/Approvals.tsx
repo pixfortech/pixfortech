@@ -1,15 +1,18 @@
 "use client";
 
+import { useTimeAgo } from "@/components/app/TimeProvider";
+
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { decideApprovalAction, requestApprovalAction } from "@/server/actions/collab";
-import { AppButton, Avatar, Badge, Card, CardHeader, Field, fmtDate, humanise, inputCls, selectCls, statusTone, timeAgo } from "@/components/app/primitives";
+import { AppButton, Avatar, Badge, Card, CardHeader, Field, fmtDate, humanise, inputCls, selectCls, statusTone } from "@/components/app/primitives";
 import { Modal } from "./Modal";
 import { cn } from "@/lib/utils";
 
 export type ApprovalItem = { id: string; type: string; title: string; description: string | null; status: string; versionLabel: string | null; dueDate: Date | null; createdAt: Date; decidedAt: Date | null; requestedBy: { name: string; image: string | null } | null; projectId: string; projectCode?: string; projectTitle?: string; decisions?: { id: string; decision: string; comment: string | null; createdAt: Date; userName: string; userImage: string | null }[] };
 
 export function ApprovalList({ items, staff, canDecide, projectId, milestones, requests, showProject }: { items: ApprovalItem[]; staff: boolean; canDecide: boolean; projectId?: string; milestones?: { id: string; title: string }[]; requests?: { id: string; ref: string; title: string }[]; showProject?: boolean }) {
+  const timeAgo = useTimeAgo();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [deciding, setDeciding] = useState<{ id: string; decision: "approved" | "changes_requested" | "comment" } | null>(null);

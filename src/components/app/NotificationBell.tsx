@@ -1,15 +1,18 @@
 "use client";
 
+import { useTimeAgo } from "@/components/app/TimeProvider";
+
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRealtime } from "./RealtimeProvider";
 import { markAllNotificationsReadAction, markNotificationReadAction } from "@/server/actions/collab";
-import { timeAgo } from "./primitives";
+
 import { cn } from "@/lib/utils";
 
 export type NotificationItem = { id: string; category: string; title: string; body: string | null; href: string | null; readAt: Date | null; createdAt: Date; actorName: string | null; projectTitle: string | null };
 
 export function NotificationBell({ items, area }: { items: NotificationItem[]; area: "portal" | "admin" }) {
+  const timeAgo = useTimeAgo();
   const { unread, setUnread } = useRealtime();
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();

@@ -1,12 +1,14 @@
 "use client";
 
+import { useTimeAgo } from "@/components/app/TimeProvider";
+
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useHydrated } from "@/lib/useHydrated";
 import { uploadPrivateFile } from "@/lib/uploadPrivateFile";
 import { useRouter } from "next/navigation";
 import { markConversationReadAction, sendMessageAction, typingAction } from "@/server/actions/collab";
 import { useRealtime } from "@/components/app/RealtimeProvider";
-import { Avatar, Badge, timeAgo } from "@/components/app/primitives";
+import { Avatar, Badge } from "@/components/app/primitives";
 import { cn } from "@/lib/utils";
 import { formatBytes } from "./format";
 
@@ -16,6 +18,7 @@ export type Reader = { id: string; name: string; lastReadAt: Date | null };
 const STAFF = ["super_admin", "admin", "project_manager", "team_member"];
 
 export function Chat({ conversationId, projectId, messages, readers, currentUserId, internal, participants, compact }: { conversationId: string; projectId: string; messages: ChatMessage[]; readers: Reader[]; currentUserId: string; internal?: boolean; participants: { id: string; name: string }[]; compact?: boolean }) {
+  const timeAgo = useTimeAgo();
   const router = useRouter();
   const { subscribe, toast } = useRealtime();
   const hydrated = useHydrated();

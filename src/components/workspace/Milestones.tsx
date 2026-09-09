@@ -6,11 +6,11 @@ import { createMilestoneAction, updateMilestoneAction } from "@/server/actions/p
 import { AppButton, Avatar, Badge, dueTone, Field, fmtDate, humanise, inputCls, Progress, selectCls, statusTone } from "@/components/app/primitives";
 import { Modal } from "./Modal";
 import { cn } from "@/lib/utils";
+import { useDisplayTime } from "@/components/app/TimeProvider";
 
 export type MilestoneItem = { id: string; title: string; description: string | null; status: string; progress: number; startDate: Date | null; dueDate: Date | null; clientVisible: boolean; requiresApproval: boolean; owner: { id: string; name: string; image: string | null } | null; dependsOnId: string | null };
 
-function bounds(items: MilestoneItem[]) {
-  const today = Date.now();
+function bounds(items: MilestoneItem[], today: number) {
   const all = items.filter((m) => m.startDate || m.dueDate);
   const min = Math.min(...all.map((m) => (m.startDate ?? m.dueDate)!.getTime()), today);
   const max = Math.max(...all.map((m) => (m.dueDate ?? m.startDate)!.getTime()), today);
@@ -18,13 +18,14 @@ function bounds(items: MilestoneItem[]) {
 }
 
 export function Milestones({ items, projectId, staff, people }: { items: MilestoneItem[]; projectId: string; staff: boolean; people: { id: string; name: string }[] }) {
+  const displayTime = useDisplayTime();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [editing, setEditing] = useState<MilestoneItem | null | "new">(null);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<"timeline" | "list">("timeline");
 
-  const { min, max, today } = bounds(items);
+  const { min, max, today } = bounds(items, displayTime);
   const span = Math.max(1, max - min);
   const pct = (t: number) => ((t - min) / span) * 100;
 
