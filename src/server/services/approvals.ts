@@ -1,5 +1,6 @@
 import "server-only";
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
+import { clientFileConditions } from "./file-visibility";
 import { db, schema } from "../db";
 import { canDecideApprovals, isStaff, type Actor } from "../auth/permissions";
 import { AuthError } from "../auth/session";
@@ -32,7 +33,7 @@ export async function getApproval(actor: Actor, id: string) {
   if (!project) return null;
   const decisions = (await db.select({ id: schema.approvalDecisions.id, decision: schema.approvalDecisions.decision, comment: schema.approvalDecisions.comment, versionLabel: schema.approvalDecisions.versionLabel, createdAt: schema.approvalDecisions.createdAt, userName: schema.users.name, userImage: schema.users.image })
     .from(schema.approvalDecisions).innerJoin(schema.users, eq(schema.users.id, schema.approvalDecisions.userId)).where(eq(schema.approvalDecisions.approvalId, id)).orderBy(asc(schema.approvalDecisions.createdAt)));
-  const files = (await db.select().from(schema.files).where(eq(schema.files.approvalId, id)));
+  const files = (await db.select().from(schema.files).where(and(eq(schema.files.approvalId, id), isNull(schema.files.deletedAt), ...(!isStaff(actor) ? clientFileConditions() : []))));
   return { ...a, project, decisions, files, requestedBy: (await usersByIds([a.requestedById]))[0] ?? null };
 }
 

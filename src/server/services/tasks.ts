@@ -9,6 +9,7 @@ import { notify } from "./notifications";
 import { nextNumber, uid } from "./ids";
 import { publish } from "../realtime/bus";
 import { TASK_STATUSES } from "../db/schema";
+import { clientFileConditions } from "./file-visibility";
 
 export const TASK_STATUS_LABELS: Record<string, string> = { backlog: "Backlog", todo: "To do", in_progress: "In progress", in_review: "In review", blocked: "Blocked", done: "Done" };
 
@@ -48,7 +49,7 @@ export async function getTask(actor: Actor, id: string) {
     .from(schema.taskComments).innerJoin(schema.users, eq(schema.users.id, schema.taskComments.authorId))
     .where(isStaff(actor) ? eq(schema.taskComments.taskId, id) : and(eq(schema.taskComments.taskId, id), eq(schema.taskComments.internal, false))).orderBy(asc(schema.taskComments.createdAt)));
   const collaborators = (await usersByIds((await db.select({ userId: schema.taskCollaborators.userId }).from(schema.taskCollaborators).where(eq(schema.taskCollaborators.taskId, id))).map((c) => c.userId)));
-  const files = (await db.select().from(schema.files).where(and(eq(schema.files.taskId, id), isNull(schema.files.deletedAt))));
+  const files = (await db.select().from(schema.files).where(and(eq(schema.files.taskId, id), isNull(schema.files.deletedAt), ...(!isStaff(actor) ? clientFileConditions() : []))));
   return { ...t, project, comments, collaborators, files };
 }
 

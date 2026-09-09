@@ -176,11 +176,13 @@ export function PasswordForm() {
 }
 
 export function PreferencesForm({ prefs, browserOptIn, categories }: { prefs: Record<string, { inApp: boolean; email: boolean; browser: boolean }>; browserOptIn: boolean; categories: { key: string; label: string; hint: string }[] }) {
+  const hydrated = useHydrated();
   const { toast } = useRealtime();
   const [state, setState] = useState(prefs);
   const [browser, setBrowser] = useState(browserOptIn);
   const [pending, start] = useTransition();
-  const [permission, setPermission] = useState<string>(typeof Notification !== "undefined" ? Notification.permission : "unsupported");
+  const [permissionOverride, setPermission] = useState<string | null>(null);
+  const permission = hydrated ? (permissionOverride ?? (typeof Notification !== "undefined" ? Notification.permission : "unsupported")) : "pending";
   const toggle = (k: string, f: "inApp" | "email" | "browser") => setState((s) => ({ ...s, [k]: { ...s[k], [f]: !s[k][f] } }));
   const enableBrowser = async () => {
     if (typeof Notification === "undefined") return;

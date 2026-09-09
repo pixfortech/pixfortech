@@ -9,6 +9,7 @@ import { notify } from "./notifications";
 import { nextNumber, requestCode, uid } from "./ids";
 import { publish } from "../realtime/bus";
 import type { RequestStatus } from "../db/schema";
+import { clientFileConditions } from "./file-visibility";
 
 export const REQUEST_STATUS_LABELS: Record<string, string> = {
   submitted: "Submitted", acknowledged: "Acknowledged", under_review: "Under review", needs_clarification: "Needs clarification", estimated: "Estimated",
@@ -52,7 +53,7 @@ export async function getRequest(actor: Actor, id: string) {
     .where(staff ? eq(schema.requestComments.requestId, id) : and(eq(schema.requestComments.requestId, id), eq(schema.requestComments.internal, false)))
     .orderBy(asc(schema.requestComments.createdAt)));
   const fileConds = [eq(schema.files.requestId, id), isNull(schema.files.deletedAt)];
-  if (!staff) fileConds.push(eq(schema.files.clientVisible, true));
+  if (!staff) fileConds.push(...clientFileConditions());
   const files = (await db.select().from(schema.files).where(and(...fileConds)));
   const taskConds = [eq(schema.tasks.requestId, id)];
   if (!staff) taskConds.push(eq(schema.tasks.clientVisible, true));

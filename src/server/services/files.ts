@@ -1,5 +1,6 @@
 import "server-only";
-import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { clientFileConditions } from "./file-visibility";
 import { db, schema } from "../db";
 import { isStaff, type Actor } from "../auth/permissions";
 import { AuthError } from "../auth/session";
@@ -78,9 +79,7 @@ export async function listFiles(actor: Actor, filter: { projectId?: string; requ
   const ids = filter.projectId ? [(await requireProject(actor, filter.projectId)).id] : await accessibleProjectIds(actor);
   if (!ids.length) return [];
   const conds = [inArray(schema.files.projectId, ids), isNull(schema.files.deletedAt)];
-  if (!isStaff(actor)) conds.push(eq(schema.files.clientVisible, true),
-    sql`(${schema.files.taskId} is null or exists (select 1 from tasks t where t.id = ${schema.files.taskId} and t.project_id = ${schema.files.projectId} and t.client_visible = true))`,
-    sql`(${schema.files.messageId} is null or exists (select 1 from messages m join conversations c on c.id = m.conversation_id where m.id = ${schema.files.messageId} and c.project_id = ${schema.files.projectId} and c.internal = false))`);
+  if (!isStaff(actor)) conds.push(...clientFileConditions());
   if (filter.requestId) conds.push(eq(schema.files.requestId, filter.requestId));
   if (filter.taskId) conds.push(eq(schema.files.taskId, filter.taskId));
   const rows = (await db.select({

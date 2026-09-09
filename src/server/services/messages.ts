@@ -7,6 +7,7 @@ import { accessibleProjectIds, projectClientIds, projectStaffIds, requireProject
 import { notify } from "./notifications";
 import { uid } from "./ids";
 import { publish } from "../realtime/bus";
+import { clientFileConditions } from "./file-visibility";
 
 export async function listConversations(actor: Actor, projectId?: string) {
   const ids = projectId ? [(await requireProject(actor, projectId)).id] : await accessibleProjectIds(actor);
@@ -44,7 +45,7 @@ export async function listMessages(actor: Actor, conversationId: string, opts: {
     id: schema.messages.id, body: schema.messages.body, replyToId: schema.messages.replyToId, mentions: schema.messages.mentions, createdAt: schema.messages.createdAt, editedAt: schema.messages.editedAt,
     authorId: schema.messages.authorId, authorName: schema.users.name, authorImage: schema.users.image, authorRole: schema.users.role,
   }).from(schema.messages).innerJoin(schema.users, eq(schema.users.id, schema.messages.authorId)).where(and(...conds)).orderBy(asc(schema.messages.createdAt)).limit(opts.limit ?? 200));
-  const files = rows.length ? (await db.select().from(schema.files).where(and(inArray(schema.files.messageId, rows.map((r) => r.id)), isNull(schema.files.deletedAt)))) : [];
+  const files = rows.length ? (await db.select().from(schema.files).where(and(inArray(schema.files.messageId, rows.map((r) => r.id)), isNull(schema.files.deletedAt), ...(!isStaff(actor) ? clientFileConditions() : [])))) : [];
   // Read receipts: who has read up to when
   const members = (await db.select().from(schema.conversationMembers).where(eq(schema.conversationMembers.conversationId, conversationId)));
   const readers = (await usersByIds(members.map((m) => m.userId))).map((u) => ({ ...u, lastReadAt: members.find((m) => m.userId === u.id)?.lastReadAt ?? null }));

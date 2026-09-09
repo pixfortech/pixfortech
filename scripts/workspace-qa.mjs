@@ -11,7 +11,7 @@ async function login(email, area) {
   const page = await ctx.newPage();
   pages.push(page);
   page.setDefaultTimeout(30000);
-  page.on("pageerror", e => errors.push(e.message));
+  page.on("pageerror", e => errors.push(`${new URL(page.url()).pathname}: ${e.message}`));
   await page.goto(`${base}/login`);
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(qaPassword());

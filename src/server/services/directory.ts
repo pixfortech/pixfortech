@@ -8,6 +8,7 @@ import { recordAudit } from "./activity";
 import { uid } from "./ids";
 import { STAFF_ROLES, type Role } from "../db/schema";
 import { accessibleProjectIds } from "./access";
+import { clientFileConditions } from "./file-visibility";
 
 export async function studioOrg() {
   return (await db.select().from(schema.organisations).where(eq(schema.organisations.kind, "studio")).limit(1))[0] ?? null;
@@ -123,7 +124,7 @@ export async function search(actor: Actor, q: string) {
   const tasks = (await db.select({ id: schema.tasks.id, key: schema.tasks.key, title: schema.tasks.title, status: schema.tasks.status }).from(schema.tasks).where(and(...taskConds)).limit(6));
   const requests = (await db.select({ id: schema.requests.id, number: schema.requests.number, title: schema.requests.title, status: schema.requests.status }).from(schema.requests).where(and(sql`${schema.requests.projectId} in ${within}`, or(ilike(schema.requests.title, term), sql`('PF-REQ-' || lpad(${schema.requests.number}::text, greatest(4, length(${schema.requests.number}::text)), '0')) ilike ${term}`))).limit(6));
   const fileConds = [sql`${schema.files.projectId} in ${within}`, isNull(schema.files.deletedAt), ilike(schema.files.name, term)];
-  if (!isStaff(actor)) fileConds.push(eq(schema.files.clientVisible, true));
+  if (!isStaff(actor)) fileConds.push(...clientFileConditions());
   const files = (await db.select({ id: schema.files.id, name: schema.files.name, projectId: schema.files.projectId }).from(schema.files).where(and(...fileConds)).limit(6));
   const clients = isStaff(actor) ? (await db.select({ id: schema.organisations.id, name: schema.organisations.name }).from(schema.organisations).where(and(eq(schema.organisations.kind, "client"), ilike(schema.organisations.name, term))).limit(5)) : [];
   const convConds = [sql`${schema.conversations.projectId} in ${within}`];
