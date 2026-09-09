@@ -90,6 +90,7 @@ const logSize = () => readFileSync(log, "utf8").length;
     await tom.page.goto(base + "/portal/profile", { waitUntil: "load" });
     await tom.page.getByLabel("Current password").fill(tmp);
     await tom.page.getByLabel("New password").fill(PASSWORD);
+    await tom.page.getByLabel("Confirm password").fill(PASSWORD);
     await tom.page.getByRole("button", { name: "Change password" }).click();
     await tom.page.waitForTimeout(2000);
     const changedMsg = (await tom.page.textContent("body")) ?? "";

@@ -7,11 +7,13 @@ import { AppButton, Field, inputCls, selectCls } from "@/components/app/primitiv
 import { FileDropzone } from "./FileDropzone";
 import { useRealtime } from "@/components/app/RealtimeProvider";
 import { uploadPrivateFile } from "@/lib/uploadPrivateFile";
+import { useHydrated } from "@/lib/useHydrated";
 
 const TYPES = [["edit", "Edit"], ["bug", "Bug"], ["feature", "New feature"], ["design", "Design change"], ["content", "Content change"], ["integration", "Integration"], ["performance", "Performance"], ["other", "Other"]];
 
 export function RequestForm({ projects, area, defaultProjectId }: { projects: { id: string; title: string; code: string }[]; area: "portal" | "admin"; defaultProjectId?: string }) {
   const router = useRouter();
+  const hydrated = useHydrated();
   const { toast } = useRealtime();
   const [pending, start] = useTransition();
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -42,6 +44,7 @@ export function RequestForm({ projects, area, defaultProjectId }: { projects: { 
 
   return (
     <form onSubmit={submit} className="grid gap-5" noValidate>
+      <fieldset disabled={!hydrated} className="grid min-w-0 gap-5 border-0 p-0">
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Project" htmlFor="projectId" error={errors.projectId}>
           <select id="projectId" name="projectId" value={projectId} onChange={(e) => setProjectId(e.target.value)} className={selectCls}>
@@ -71,6 +74,7 @@ export function RequestForm({ projects, area, defaultProjectId }: { projects: { 
         <AppButton variant="ghost" onClick={() => router.back()}>Cancel</AppButton>
         <AppButton type="submit" disabled={pending || !projectId}>{pending ? "Submitting…" : "Submit request"}</AppButton>
       </div>
+      </fieldset>
     </form>
   );
 }
