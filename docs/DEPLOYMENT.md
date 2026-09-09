@@ -1,5 +1,7 @@
 # Production deployment
 
+For the current experience upgrade, follow [TEMPORARY-UPGRADE.md](TEMPORARY-UPGRADE.md). Its temporary-only scope supersedes the DNS cutover instructions below; no DNS changes or main merge are authorized in this task.
+
 Deployment branch: `codex/production-deployment`. The tested source branch remains unchanged.
 
 ## Infrastructure
@@ -50,7 +52,7 @@ Never run the demo seed script against production. Bootstrap the owner's real ac
 
 `npm run admin:check` reports whether an active `super_admin` exists (email, enabled, email verified) without changing anything. `npm run admin:bootstrap` creates the first owner only when no active super admin exists; it is idempotent, so a second run reports the existing account and creates nothing. Inputs come from `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_NAME` (or `--email=` / `--name=`), never from source, plus the direct `DATABASE_URL_UNPOOLED`. A missing or invalid email fails before touching the database. The script refuses to promote an existing account with that email.
 
-The owner is created with `mustChangePassword` set and a 30-character random temporary password that is hashed with Better Auth's scrypt, printed exactly once to the terminal, and never stored or logged again. The first sign-in is forced to the profile page until the password is replaced; both the in-app change and the "Forgot password" flow clear the flag. Prefer the reset flow if you would rather not handle the temporary credential at all. Scenario tests (none exists, exists, run twice, missing email, credential handling, verification required) live in `scripts/admin-bootstrap.integration.test.ts` and run with `npm run test:integration` against a local PostgreSQL.
+The owner is created with `mustChangePassword` set and a 30-character random temporary password that is hashed with Better Auth's scrypt, printed exactly once to the terminal, and never stored or logged again. The first sign-in is forced to the profile page until the password is replaced; both the in-app change and the "Forgot password" flow clear the flag. Prefer the reset flow if you would rather not handle the temporary credential at all. Scenario tests (none exists, exists, run twice, missing email, credential handling, disabled owner, email-link onboarding) live in `scripts/admin-bootstrap.integration.test.ts` and run with `npm run test:integration` against a local PostgreSQL.
 
 ### Owner account runbook (production)
 
@@ -60,15 +62,15 @@ Run from a machine that holds the production secrets; nothing below is committed
 export DATABASE_URL_UNPOOLED='<direct Neon production URL>'
 npm run admin:check                                   # 1. inspect: lists any super admin, changes nothing
 export BOOTSTRAP_ADMIN_EMAIL='<owner address>' BOOTSTRAP_ADMIN_NAME='<owner name>'
-npm run admin:bootstrap -- --require-verification --app='https://<temporary-netlify-host>'
-                                                      # 2. create once; prints the temporary password exactly once
-                                                      #    and asks the deployed app to email the verification link
+npm run admin:bootstrap -- --email-link --app='https://<temporary-netlify-host>'
+                                                      # 2. create once, unverified, no temporary password shown;
+                                                      #    asks the deployed app to email the verification link
 export RESEND_API_KEY='<sending key>' EMAIL_FROM='<sender>'
 npm run email:check -- --status='<id from the deployment log line "[email] resend accepted id=…">'
                                                       # 3. delivery event: delivered / bounced / …
 ```
 
-`--require-verification` (or `BOOTSTRAP_ADMIN_REQUIRE_VERIFICATION=true`) creates the owner unverified, so with `REQUIRE_EMAIL_VERIFICATION=true` the sign-in form refuses the account until the emailed link is opened. The link is requested from the deployed application through Better Auth's `send-verification-email` endpoint, which answers 200 for unknown or already verified addresses as well (no account enumeration); the deployment's server log carries the Resend message id, and `npm run email:check -- --status=<id>` reports the delivery event. If the account already exists the script refuses and creates nothing; if a super admin already exists it reports that account and creates nothing.
+`--email-link` (or `BOOTSTRAP_ADMIN_EMAIL_LINK=true`) creates the owner unverified and discards the random temporary password, so with `REQUIRE_EMAIL_VERIFICATION=true` the sign-in form refuses the account until the emailed link is opened, and the password is then set through "Forgot password". A correct-password sign-in attempt by an unverified account also triggers a fresh verification email. The link is requested from the deployed application through Better Auth's `send-verification-email` endpoint, which answers 200 for unknown or already verified addresses as well (no account enumeration); the deployment's server log carries the Resend message id, and `npm run email:check -- --status=<id>` reports the delivery event. If the account already exists the script refuses and creates nothing; if a super admin already exists it reports that account and creates nothing.
 
 **Why a verification email may never arrive.** Until the sending domain is verified in Resend (which needs the DNS records listed above), `EMAIL_FROM` falls back to Resend's sandbox sender. The sandbox sender delivers only to the Resend account owner's own address and refuses every other recipient with `403 validation_error: You can only send testing emails to your own email address`. The application used to log that as a bare `Email API responded 403`; it now logs Resend's message and the recipient (masked) as `[email] resend rejected …`, and `npm run email:check -- --to=<address>` reproduces the refusal on demand with a one-line explanation. Two ways out that do not touch DNS: make the target inbox the Resend account's own address, or use a Resend account owned by that inbox. The third is the domain verification that waits on the approved DNS change.
 
@@ -143,7 +145,7 @@ Run against an isolated local PostgreSQL 16 with the demo fixture import, never 
 | --- | --- |
 | `npm run typecheck`, `npm run lint` | clean |
 | `npm test` (unit, 9 files) | 75 passed |
-| `npm run test:integration` with `DATABASE_URL` pointing at the local cluster (profile slugs, owner bootstrap A–F) | 15 passed; `scripts/file-metadata-qa.test.ts` additionally needs `QA_DISPOSABLE_DATABASE=true` and `.env.neon-production`, as before |
+| `npm run test:integration` with `DATABASE_URL` pointing at the local cluster (profile slugs, owner bootstrap scenarios) | passed; `scripts/file-metadata-qa.test.ts` additionally needs `QA_DISPOSABLE_DATABASE=true` and the QA/production identity files, as before |
 | `npm run admin:check`, `npm run admin:bootstrap` (existing owner), `npm run email:check` (no key, usage), `--verify` against the local dev server | CLI paths exercised; the app emitted its verification email for a temporarily unverified fixture user |
 | `node scripts/experience-qa.mjs` (login entry, account menu, profile identity, slug redirect 308, avatar, password, hero mouse/touch/keyboard/secret, PiP hide/restore/non-repetition/offline, five games and rotation, two-session realtime, mobile 320–768) | 64 of 64 passed |
 | `node scripts/workspace-qa.mjs`, `node scripts/public-production-qa.mjs` (existing production suites) | all passed |

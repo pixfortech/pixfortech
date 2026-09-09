@@ -10,12 +10,12 @@ import type { Pool } from "pg";
  * text or logged by this module.
  */
 /**
- * `requireVerification` creates the owner unverified so the first sign-in is
- * gated on the verification link the application emails (production runs
- * with REQUIRE_EMAIL_VERIFICATION=true). Without it the address is trusted
- * because it came from the operator's own environment.
+ * `emailLink` creates the owner unverified so the first sign-in is gated on
+ * the verification link the application emails (production runs with
+ * REQUIRE_EMAIL_VERIFICATION=true) and the password is set through the
+ * reset flow; the temporary password is never shown in that mode.
  */
-export type BootstrapInput = { email?: string | null; name?: string | null; check?: boolean; requireVerification?: boolean };
+export type BootstrapInput = { email?: string | null; name?: string | null; check?: boolean; emailLink?: boolean };
 export type SuperAdminSummary = { email: string; enabled: boolean; emailVerified: boolean; createdAt: string };
 export type BootstrapResult =
   | { action: "exists"; admins: SuperAdminSummary[] }
@@ -39,7 +39,7 @@ export async function listSuperAdmins(pool: Pool): Promise<SuperAdminSummary[]> 
 export async function runBootstrap(pool: Pool, input: BootstrapInput): Promise<BootstrapResult> {
   const existing = await listSuperAdmins(pool);
   if (input.check) return existing.length ? { action: "exists", admins: existing } : { action: "none" };
-  if (existing.some((a) => a.enabled)) return { action: "exists", admins: existing };
+  if (existing.length) return { action: "exists", admins: existing };
 
   const email = input.email?.trim().toLowerCase();
   const name = input.name?.trim();
@@ -51,7 +51,7 @@ export async function runBootstrap(pool: Pool, input: BootstrapInput): Promise<B
     await client.query("BEGIN");
     // Serialise concurrent runs: the second one sees the first one's owner and exits.
     await client.query('LOCK TABLE "user" IN EXCLUSIVE MODE');
-    const again = await client.query(`SELECT 1 FROM "user" WHERE role = 'super_admin' AND disabled = false LIMIT 1`);
+    const again = await client.query(`SELECT 1 FROM "user" WHERE role = 'super_admin' LIMIT 1`);
     if (again.rowCount) { await client.query("ROLLBACK"); return { action: "exists", admins: await listSuperAdmins(pool) }; }
     const taken = await client.query(`SELECT id, role FROM "user" WHERE email = $1`, [email]);
     if (taken.rowCount) { await client.query("ROLLBACK"); throw new Error(`An account already exists for ${email} with role ${taken.rows[0].role}. Refusing to escalate it automatically; promote it deliberately through the team screen or a reviewed migration.`); }
@@ -64,17 +64,16 @@ export async function runBootstrap(pool: Pool, input: BootstrapInput): Promise<B
     const userId = randomUUID();
     const temporaryPassword = generateTemporaryPassword();
     const hash = await hashPassword(temporaryPassword);
-    // The temporary password must be replaced before anything else can be used. The address is trusted
-    // unless the operator asked for the verification link to gate the first sign-in.
-    const emailVerified = !input.requireVerification;
+    // Email-link onboarding requires inbox verification. The legacy temporary-password
+    // mode trusts the operator-provided address; both modes require password setup.
     await client.query(
       `INSERT INTO "user" (id, name, email, email_verified, role, organisation_id, must_change_password) VALUES ($1, $2, $3, $5, 'super_admin', $4, true)`,
-      [userId, name, email, orgId, emailVerified],
+      [userId, name, email, orgId, !input.emailLink],
     );
     await client.query(`INSERT INTO account (id, account_id, provider_id, user_id, password) VALUES ($1, $2, 'credential', $2, $3)`, [randomUUID(), userId, hash]);
-    await client.query(`INSERT INTO audit_events (id, actor_id, action, target_type, target_id, metadata) VALUES ($1, NULL, 'admin.bootstrap', 'user', $2, $3)`, [randomUUID(), userId, JSON.stringify({ email, method: "temporary-password", verification: emailVerified ? "trusted" : "pending" })]);
+    await client.query(`INSERT INTO audit_events (id, actor_id, action, target_type, target_id, metadata) VALUES ($1, NULL, 'admin.bootstrap', 'user', $2, $3)`, [randomUUID(), userId, JSON.stringify({ email, method: input.emailLink ? "email-link" : "temporary-password" })]);
     await client.query("COMMIT");
-    return { action: "created", email, temporaryPassword, emailVerified };
+    return { action: "created", email, temporaryPassword, emailVerified: !input.emailLink };
   } catch (error) {
     await client.query("ROLLBACK").catch(() => undefined);
     throw error;

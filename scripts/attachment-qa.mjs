@@ -7,6 +7,18 @@ let page;
 try {
   const context = await browser.newContext();
   page = await context.newPage();
+  page.on("response", async (response) => {
+    const path = new URL(response.url()).pathname;
+    if (path === "/api/upload/chunks" && response.status() >= 400) {
+      const result = await response.json().catch(() => ({}));
+      console.log("Upload rejected:", response.status(), typeof result.error === "string" ? result.error : "No error detail");
+      const headers = await response.request().allHeaders();
+      console.log("Upload origin:", headers.origin ?? "missing", "destination:", new URL(response.url()).origin);
+    }
+  });
+  page.on("requestfailed", (request) => {
+    if (new URL(request.url()).pathname === "/api/upload/chunks") console.log("Upload transport failed:", request.failure()?.errorText);
+  });
   page.setDefaultTimeout(60000);
   await page.goto(`${base}/login`);
   await page.getByLabel("Email").fill("maya@northbank.test");
@@ -22,6 +34,7 @@ try {
   const chatInput = page.locator('input[aria-label="Attach files"]:enabled');
   await chatInput.waitFor({ state: "attached" });
   await chatInput.setInputFiles({ name: chatName, mimeType: "text/plain", buffer: bytes });
+  await page.getByText(chatName, { exact: false }).waitFor();
   await page.getByRole("button", { name: "Send", exact: true }).click();
   const chatLink = page.locator("a[href^='/api/files/']").filter({ hasText: chatName });
   await chatLink.waitFor({ state: "visible", timeout: 60000 });

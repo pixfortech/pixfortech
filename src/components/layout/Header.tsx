@@ -10,9 +10,11 @@ import { cn } from "@/lib/utils";
 import { nav } from "@/lib/navigation";
 import { behaviour } from "@/pixel/behaviour/store";
 import { AccountControl } from "./AccountMenu";
+import { useHydrated } from "@/lib/useHydrated";
 
 export function Header() {
   const pathname = usePathname();
+  const hydrated = useHydrated();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const menuId = useId();
@@ -95,6 +97,7 @@ export function Header() {
                 type="button"
                 className="flex h-10 w-10 items-center justify-center rounded-md text-bone-50 hover:bg-bone-50/5 lg:hidden"
                 aria-expanded={open}
+                disabled={!hydrated}
                 aria-controls={menuId}
                 aria-label={open ? "Close menu" : "Open menu"}
                 onClick={() => setOpen((v) => !v)}

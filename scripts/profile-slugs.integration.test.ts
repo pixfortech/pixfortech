@@ -1,5 +1,5 @@
 // Runs only against an isolated local/QA PostgreSQL. Fixtures are created and removed here.
-import assert from "node:assert/strict";
+import { requireIsolatedQaDatabase } from "./lib/qa-database";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import { eq, inArray } from "drizzle-orm";
@@ -7,8 +7,7 @@ import { db, schema } from "../src/server/db";
 import { checkSlug, checkUsername, getPublicProfile, isSlugAvailable, listPublicProfiles, resolveSlugRedirect, setPublicSlug, setPublished, setUsername, updateProfile } from "../src/server/services/profile";
 import type { Actor } from "../src/server/auth/permissions";
 
-const url = process.env.DATABASE_URL ?? "";
-assert.ok(["localhost", "127.0.0.1"].includes(new URL(url).hostname) || process.env.QA_DISPOSABLE_DATABASE === "true", "Never run this suite against production");
+requireIsolatedQaDatabase();
 
 const tag = randomUUID().slice(0, 8);
 const studioId = randomUUID(), clientOrgId = randomUUID();

@@ -15,7 +15,7 @@ const m = page.getByTestId("mascot");
 const clip = async (name) => { const b = await m.boundingBox(); await page.screenshot({ path: `${out}/${name}.png`, clip: { x: b.x - 260, y: b.y - 120, width: b.width + 280, height: b.height + 140 } }); };
 await clip("idle");
 await page.mouse.move(1000, 600); await page.waitForTimeout(300); await clip("curious-look");
-await m.getByRole("button", { name: /Pip, the Pixel Forge mascot/ }).click({ force: true }); await page.waitForTimeout(400); await clip("poked-celebrating");
+await m.getByRole("button", { name: /PiP, the Pixel Forge mascot/i }).click({ force: true }); await page.waitForTimeout(400); await clip("poked-celebrating");
 await page.waitForTimeout(6500); await clip("greeting-or-idle");
 // counter pill
 const pill = page.getByTestId("pixel-counter");

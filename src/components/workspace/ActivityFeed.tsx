@@ -1,9 +1,13 @@
+"use client";
+
 import Link from "next/link";
-import { Avatar, Badge, timeAgo } from "@/components/app/primitives";
+import { Avatar, Badge } from "@/components/app/primitives";
+import { useTimeAgo } from "@/components/app/TimeProvider";
 
 export type ActivityItem = { id: string; kind: string; summary: string; href: string | null; createdAt: Date; internal: boolean; actorName: string | null; actorImage: string | null; projectTitle?: string | null; projectCode?: string | null };
 
 export function ActivityFeed({ items, area, showProject, compact }: { items: ActivityItem[]; area: "portal" | "admin"; showProject?: boolean; compact?: boolean }) {
+  const timeAgo = useTimeAgo();
   if (!items.length) return <p className="rounded-lg border border-dashed border-line-strong px-4 py-8 text-center text-[0.8125rem] text-bone-400">Nothing has happened yet. It will.</p>;
   return (
     <ol className="relative ml-3 border-l border-line">

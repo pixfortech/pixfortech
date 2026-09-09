@@ -61,7 +61,7 @@ export function RealtimeProvider({ children, initialUnread, area, userId }: { ch
         const result = await response.json() as { events: { type: string; data: Record<string, unknown> }[]; cursor: number; unread: number; resync: boolean };
         if (stopped) return;
         for (const { type, data } of result.events) {
-          const id = String(data.id);
+          const id = String(data.eventId ?? data.id);
           if (seen.has(id)) continue;
           seen.set(id, Number(data.at));
           for (const listener of listeners.current) listener(type, data);
