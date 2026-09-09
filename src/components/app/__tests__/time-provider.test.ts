@@ -3,10 +3,22 @@ import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TimeProvider, useTimeAgo } from "../TimeProvider";
 import { fmtDate } from "../primitives";
+import { ActivityFeed } from "../../workspace/ActivityFeed";
 
 afterEach(() => vi.useRealTimers());
 
 describe("server and browser display time", () => {
+  it("keeps the live activity feed stable when hydration crosses a minute boundary", () => {
+    vi.useFakeTimers();
+    const renderedAt = Date.UTC(2026, 8, 9, 10);
+    const item = { id: "activity-1", kind: "request.created", summary: "Submitted a request", href: null, createdAt: new Date(renderedAt - 89000), internal: false, actorName: "QA user", actorImage: null };
+    const tree = () => createElement(TimeProvider, { renderedAt }, createElement(ActivityFeed, { items: [item], area: "admin" }));
+    vi.setSystemTime(renderedAt);
+    const server = renderToString(tree());
+    vi.setSystemTime(renderedAt + 45000);
+    expect(renderToString(tree())).toBe(server);
+    expect(server).toContain("1m ago");
+  });
   it("keeps the first render identical even when hydration crosses a minute boundary", () => {
     vi.useFakeTimers();
     const renderedAt = Date.UTC(2026, 8, 9, 10);
