@@ -137,6 +137,19 @@ Local TypeScript, lint and 54 unit tests passed during implementation. The produ
 
 Use Netlify's previous successful deploy to roll back application code. Preserve database compatibility and take a Neon branch/restore checkpoint before further schema changes. Do not restore old database state over new customer data. Keep the original SQLite source and backup until final migration acceptance.
 
+## PiP's bench QA record (branch `codex/pip-precision-builder`)
+
+A contained addition to the home page's first section; no auth, database, admin, realtime, storage, DNS or scroll-forge change. Run locally against the dev server with the demo fixtures.
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck`, `npm run lint` | clean |
+| `npm test` (bench rotation, pieces, full cycles, misplacement corrected before placement, speech limits, poke, phone pool, pointer behaviour) | passing, 10 new tests |
+| `node scripts/experience-qa.mjs` bench section: live on desktop, no heading overlap, ten cycles at 8x with every phase seen, no back-to-back repeat and a full cycle of distinct pieces, unique line ids, hover, pointer leave, click, keyboard Enter, pause when scrolled away, resume, reduced motion static frame, phone arrangement, touch tap, bench clear of the heading at 320/360/375/390/430/768 | 85 of 85 checks; the only console error across the run is a 429 from the sign-in rate limit that the suite's repeated logins trigger, unrelated to the bench |
+| Lighthouse 13 mobile, home, production builds of both branches served side by side on the same machine, three alternating samples each | baseline 85 / 83 / 75 (median 83, TBT 340–400 ms, LCP 3.2–3.9 s); with the bench 69 / 82 / 86 (median 82, TBT 330–580 ms, LCP 3.0–4.1 s); accessibility, best practices and SEO 100 on both. The spread is machine noise: the bench code loads only within half a viewport of its section and starts only after the page has settled, so it is not part of the audited window |
+
+Creative review: PiP reads as PiP at every size, the ruler and dashed snap lines make the check legible without words, the slot grid appears only while placing, finished pieces shelve at half size top right, and the phone layout is a separate 26 by 14 arrangement with the smaller pieces only.
+
 ## Experience upgrade QA record (branch `codex/final-experience-upgrade`)
 
 Run against an isolated local PostgreSQL 16 with the demo fixture import, never against production. Production credentials (Neon, R2, Resend, Netlify) were not available in the build environment, so the Netlify deploy, live email, R2 and production-database checks are still owner steps; the code paths involved (better-auth email hooks, S3 driver, Neon HTTP driver) are unchanged by this branch except where noted.

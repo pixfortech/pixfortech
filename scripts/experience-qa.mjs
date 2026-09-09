@@ -14,7 +14,7 @@ const results = [];
 const errors = [];
 const expectedErrors = new WeakMap();
 const ok = (name, pass, detail = "") => { results.push([name, pass]); console.log(`${pass ? "✓" : "✗"} ${name}${detail ? " — " + detail : ""}`); };
-const watch = (page, tag) => { page.on("pageerror", (e) => errors.push(`[${tag}] ${e.message}`)); page.on("console", (m) => { if (m.type() !== "error") return; const expected = expectedErrors.get(page); if (expected && m.text().includes(String(expected.status)) && new URL(m.location().url || base).pathname === expected.path) return; errors.push(`[${tag}] ${m.text().slice(0, 160)}`); }); };
+const watch = (page, tag) => { page.on("pageerror", (e) => errors.push(`[${tag}] ${e.message}`)); page.on("console", (m) => { if (m.type() !== "error") return; const expected = expectedErrors.get(page); const path = new URL(m.location().url || base).pathname; if (expected && m.text().includes(String(expected.status)) && path === expected.path) return; if (m.text().includes("429") && path.startsWith("/api/auth/")) return; /* sign-in rate limit; login() waits and retries */ errors.push(`[${tag}] ${m.text().slice(0, 160)}`); }); };
 const T = { timeout: 120000 };
 async function login(page, email, password = PASSWORD) {
   for (let i = 0; i < 4; i++) {
@@ -170,6 +170,68 @@ let slugOld = null, slugNew = null;
   await m.close();
 }
 
+// 4b. PiP's bench: live phases, ten cycles without an immediate repeat, unique lines, hover, click, keyboard, pause off-screen, reduced motion, touch
+{
+  const PH = ["idea", "gather", "build", "check", "place", "react", "rest"];
+  const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } }); const page = await ctx.newPage(); watch(page, "bench");
+  await page.goto(base + "/", { waitUntil: "load", ...T });
+  const fig = page.getByTestId("pip-bench");
+  await fig.scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => document.querySelector('[data-testid="pip-bench"]')?.dataset.running === "true", null, { timeout: 20000 }).catch(() => undefined);
+  ok("bench is live on desktop", (await fig.getAttribute("data-mode")) === "live" && (await fig.getAttribute("data-running")) === "true", `${await fig.getAttribute("data-mode")}/${await fig.getAttribute("data-running")}/${await fig.getAttribute("data-gate")}`);
+  const head = await page.locator("#work-title").boundingBox(); const fb = await fig.boundingBox();
+  ok("bench sits beside the heading without overlapping it", !!head && !!fb && (fb.x >= head.x + head.width - 1 || fb.y >= head.y + head.height - 1));
+  if (!production) {
+    await page.evaluate(() => { window.__pfBench.speed = 8; });
+    const phases = new Set(); const lines = []; let lastLine = null, history = [];
+    const started = Date.now();
+    while (Date.now() - started < 150000) {
+      const st = await fig.evaluate((el) => ({ cycles: Number(el.dataset.cycles), phase: el.dataset.phase, history: el.dataset.history ?? "", line: document.querySelector('[data-testid="bench-bubble"]')?.getAttribute("data-line") ?? null }));
+      phases.add(st.phase);
+      if (st.line && st.line !== lastLine) lines.push(st.line);
+      if (st.line) lastLine = st.line;
+      if (st.cycles >= 10 && (lines.length > 0 || st.cycles >= 16)) { history = st.history.split(","); break; }
+      await page.waitForTimeout(60);
+    }
+    ok("ten build cycles complete and every phase was observed", history.length >= 10 && PH.every((p) => phases.has(p)), [...phases].join(","));
+    const pool = await page.evaluate(() => window.__pfBench.poolSize);
+    ok("pieces never repeat back to back and a full cycle is all different", history.every((h, i) => i === 0 || h !== history[i - 1]) && new Set(history.slice(0, pool)).size === Math.min(pool, history.length), `${pool} pieces: ${history.join(",")}`);
+    ok("bench lines never repeat", new Set(lines).size === lines.length && lines.every((l) => /^(precisionBuild|precisionInspect|precisionComplete|benchPoke)\./.test(l)), `${lines.length} lines: ${lines.join(",")}`);
+    await page.evaluate(() => { window.__pfBench.speed = 1; });
+    await page.mouse.move(fb.x + fb.width * 0.55, fb.y + fb.height * 0.15); await page.waitForTimeout(120);
+    const hovered = await page.evaluate(() => ({ pointer: window.__pfBench.pointer, look: window.__pfBench.frame().pip.look }));
+    ok("hover: the pointer is read and PiP looks toward it", hovered.pointer !== null && hovered.look[1] < 0, JSON.stringify(hovered));
+    await page.mouse.move(fb.x + fb.width + 40, fb.y); await page.waitForTimeout(80);
+    ok("pointer leaving the bench clears it", (await page.evaluate(() => window.__pfBench.pointer)) === null);
+  }
+  const objBefore = await fig.getAttribute("data-object"), phaseBefore = await fig.getAttribute("data-phase");
+  await page.getByTestId("bench-pip").click(); await page.waitForTimeout(250);
+  ok("click on PiP: a reaction without restarting the piece", (await fig.getAttribute("data-pokes")) === "1" && (await fig.getAttribute("data-object")) === objBefore && (await fig.getAttribute("data-phase")) === phaseBefore);
+  await page.waitForTimeout(1100);
+  await page.getByTestId("bench-pip").focus(); await page.keyboard.press("Enter"); await page.waitForTimeout(150);
+  ok("keyboard: Enter on PiP pokes him", (await fig.getAttribute("data-pokes")) === "2");
+  await page.screenshot({ path: `${out}/bench-desktop.png`, clip: { x: fb.x - 8, y: fb.y - 8, width: fb.width + 16, height: fb.height + 16 } });
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight)); await page.waitForTimeout(500);
+  ok("bench pauses when scrolled well out of view", (await fig.getAttribute("data-running")) === "false");
+  await fig.scrollIntoViewIfNeeded(); await page.waitForTimeout(600);
+  ok("bench resumes when scrolled back", (await fig.getAttribute("data-running")) === "true");
+  await ctx.close();
+  const r = await browser.newContext({ viewport: { width: 1366, height: 900 }, reducedMotion: "reduce" }); const rp = await r.newPage(); watch(rp, "bench-reduced");
+  await rp.goto(base + "/", { waitUntil: "load", ...T }); const rf = rp.getByTestId("pip-bench"); await rf.scrollIntoViewIfNeeded();
+  await rp.waitForFunction(() => document.querySelector('[data-testid="pip-bench"]')?.dataset.mode === "static", null, { timeout: 15000 }).catch(() => undefined); await rp.waitForTimeout(300);
+  ok("reduced motion shows the static composition and no bubble", (await rf.getAttribute("data-mode")) === "static" && (await rf.getAttribute("data-running")) === "false" && (await rp.getByTestId("bench-bubble").count()) === 0);
+  await r.close();
+  const m = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }); const mp = await m.newPage(); watch(mp, "bench-touch");
+  await mp.goto(base + "/", { waitUntil: "load", ...T }); const mf = mp.getByTestId("pip-bench"); await mf.scrollIntoViewIfNeeded();
+  await mp.waitForFunction(() => document.querySelector('[data-testid="pip-bench"]')?.dataset.running === "true", null, { timeout: 20000 }).catch(() => undefined);
+  const mh = await mp.locator("#work-title").boundingBox(); const mb = await mf.boundingBox();
+  ok("phone: dedicated arrangement below the heading, no overlap", (await mf.getAttribute("data-mode")) === "mobile" && !!mh && !!mb && mb.y >= mh.y + mh.height - 1 && mb.x + mb.width <= 390);
+  await mp.getByTestId("bench-pip").tap(); await mp.waitForTimeout(200);
+  ok("touch: a tap on PiP pokes him", (await mf.getAttribute("data-pokes")) === "1");
+  await mp.screenshot({ path: `${out}/bench-mobile-390.png`, clip: { x: mb.x - 4, y: mb.y - 4, width: mb.width + 8, height: mb.height + 8 } });
+  await m.close();
+}
+
 // 5. PiP: hide, restore, non-repetition, offline line, games
 if (!production) {
   const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } }); const page = await ctx.newPage(); watch(page, "pip");
@@ -264,7 +326,13 @@ if (!production) {
       await p.goto(base + path, { waitUntil: "load", ...T }); await p.waitForTimeout(600);
       if (await p.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)) overflow.push(path);
       if (path === "/portal/profile") await p.screenshot({ path: `${out}/profile-${w}.png`, fullPage: true });
-      if (path === "/") await p.screenshot({ path: `${out}/home-${w}.png` });
+      if (path === "/") {
+        const bench = p.getByTestId("pip-bench"); await bench.scrollIntoViewIfNeeded();
+        await p.waitForFunction(() => { const m = document.querySelector('[data-testid="pip-bench"]')?.dataset.mode; return m && m !== "loading"; }, null, { timeout: 15000 }).catch(() => undefined); await p.waitForTimeout(300);
+        const hb = await p.locator("#work-title").boundingBox(), bb = await bench.boundingBox();
+        ok(`bench readable and clear of the heading at ${w}px`, !!hb && !!bb && bb.width >= Math.min(300, w - 40) && bb.x >= 0 && bb.x + bb.width <= w + 1 && (bb.y >= hb.y + hb.height - 1 || bb.x >= hb.x + hb.width - 1), JSON.stringify(bb));
+        await p.screenshot({ path: `${out}/home-${w}.png` });
+      }
     }
     ok(`no horizontal overflow at ${w}px`, overflow.length === 0, overflow.join(","));
     await m.close();

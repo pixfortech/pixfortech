@@ -138,6 +138,15 @@ export const copy = {
     escHint: "Escape closes at any time.",
   },
 
+  /** Home page: PiP's bench beside the first section heading. */
+  home: {
+    benchEyebrow: "PiP's bench",
+    benchLine: "Ideas arrive as loose pixels. They leave with coordinates.",
+    benchCaption: "PiP gathers a few loose pixels, builds something small, checks it against the grid, corrects the one pixel that is out, and places the finished piece exactly where it belongs.",
+    benchCaptionStatic: "PiP beside a finished pixel piece, placed exactly on its grid.",
+    benchPoke: "PiP at the bench. Press for a reaction.",
+  },
+
   /** Mascot chrome. */
   pip: {
     hide: "Hide PiP for this visit",

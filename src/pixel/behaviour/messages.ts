@@ -14,6 +14,52 @@ export type PipLine = { id: string; text: string };
 const lines = <K extends string>(category: K, texts: readonly string[]): readonly PipLine[] =>
   texts.map((text, i) => ({ id: `${category}.${i + 1}`, text }));
 
+/**
+ * PiP's bench on the home page: a very short line during a build, at the
+ * precision check, after the placement, and when a visitor pokes him. Spoken
+ * rarely (most cycles are silent) and never repeated within a history cycle.
+ */
+const benchLibrary = {
+  precisionBuild: lines("precisionBuild", [
+    "This one goes here. Not near here. Here.",
+    "Pixel by pixel. Slower, yes. Also correct.",
+    "Row three. Rows one and two were practice.",
+    "Nobody will look this closely. I will.",
+    "One at a time. Pixels hate crowds.",
+    "That corner deserves my full attention. It's getting it.",
+    "I've built this before. Never this well.",
+    "Alignment first. Charm second. Charm's winning anyway.",
+  ]),
+  precisionInspect: lines("precisionInspect", [
+    "One pixel off. I can hear it from here.",
+    "A cell to the left. Some would call that fine. I am not some.",
+    "Measure twice. Forge once. Measure again, quietly.",
+    "Nearly right is a very specific kind of wrong.",
+    "Straight? Straight. Straighter? Now.",
+    "It's aligned. I'm checking anyway. Habit.",
+    "That edge is a whisker out. Whiskers count.",
+    "The grid agrees with me. The grid usually does.",
+  ]),
+  precisionComplete: lines("precisionComplete", [
+    "There. Exactly where I meant it.",
+    "Placed. Not put down. Placed.",
+    "Every pixel has an address. This one just moved in.",
+    "Done. And by done I mean measured.",
+    "Snapped to the grid. The grid said thank you.",
+    "It fits because it was always going to fit.",
+    "Right place, right size, first time. Well, second.",
+    "Finished. I'd frame it, but it's already square.",
+  ]),
+  benchPoke: lines("benchPoke", [
+    "I was concentrating. Was.",
+    "Caught it. Barely. Don't do that again. Do it again.",
+    "A distraction. Noted, and forgiven.",
+    "Careful. That pixel nearly met the floor.",
+    "Yes? I'm mid-pixel.",
+    "You've cost me a whole second. I'll rebuild it.",
+  ]),
+};
+
 export const pipLibrary = {
   greeting: lines("greeting", [
     "Hello. I'm PiP. I keep the pixels in order around here.",
@@ -300,9 +346,11 @@ export const pipLibrary = {
     "Understood. I'll finish it myself. Slowly.",
     "Closed. No hard feelings. Several soft ones.",
   ]),
+  ...benchLibrary,
 } as const;
 
 /** Per-game speech. Every game has its own invite, start, win, lose and exit lines. */
+
 export const gameLibrary = {
   forge: {
     name: "Forge the Pixels",
