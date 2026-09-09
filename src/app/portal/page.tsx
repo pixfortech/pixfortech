@@ -50,7 +50,7 @@ export default async function PortalHome() {
 
       <section className="mt-8"><h2 className="mb-3 text-[0.9375rem] font-semibold">Your projects</h2><ProjectCards projects={active.length ? active : projects} area="portal" /></section>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-3">
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card><CardHeader title="Upcoming milestones" />
           <ul className="px-5 pb-5">{upcoming.length === 0 && <li className="text-[0.8125rem] text-bone-400">Nothing scheduled yet.</li>}{upcoming.map((m) => <li key={m.id} className="flex items-center justify-between gap-3 border-b border-line-faint py-2 text-[0.8125rem] last:border-0"><span className="min-w-0"><span className="block truncate text-bone-50">{m.title}</span><span className="block text-[0.6875rem] text-bone-400">{m.project.code}</span></span><span className="num shrink-0 text-bone-400">{fmtDate(m.dueDate)}</span></li>)}</ul>
         </Card>
@@ -60,7 +60,7 @@ export default async function PortalHome() {
         <Card><CardHeader title="Latest activity" action={<Link href="/portal/notifications" className="text-[0.75rem] text-forge-300">Notifications</Link>} /><div className="px-5 pb-5"><ActivityFeed items={activity} area="portal" showProject compact /></div></Card>
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section><div className="mb-3 flex items-center justify-between"><h2 className="text-[0.9375rem] font-semibold">Open requests</h2><Link href="/portal/requests" className="text-[0.75rem] text-forge-300">All requests</Link></div><RequestList requests={requests.slice(0, 5)} area="portal" /></section>
         <section><div className="mb-3 flex items-center justify-between"><h2 className="text-[0.9375rem] font-semibold">Latest files</h2><Link href="/portal/files" className="text-[0.75rem] text-forge-300">All files</Link></div><FileList files={files.slice(0, 5)} staff={false} currentUserId={user.id} showProject /></section>
       </div>

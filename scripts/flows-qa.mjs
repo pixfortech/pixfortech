@@ -233,7 +233,7 @@ let northbankProject = null;
   const saved = pm.page.waitForResponse(r => r.request().method() === "POST" && Boolean(r.request().headers()["next-action"]), { timeout: 30000 });
   await card.dragTo(inProgress, { sourcePosition: { x: 10, y: 10 }, targetPosition: { x: 20, y: 20 } });
   const response = await saved;
-  await response.finished();
+  await pm.page.locator('div[aria-busy="false"]').filter({ has: pm.page.getByRole("region", { name: targetLabel, exact: true }) }).waitFor({ timeout: 30000 });
   ok("kanban save completes successfully", response.ok() && (await pm.page.getByRole("alert").allTextContents()).every(text => !text.trim()));
   await pm.page.reload({ waitUntil: "load" });
   const after = await inProgress.locator("li[draggable]").count();
