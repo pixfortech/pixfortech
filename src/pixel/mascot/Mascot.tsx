@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { behaviour, useBehaviour } from "../behaviour/store";
-import { usePixel } from "../PixelProvider";
+import { usePixel } from "../context";
 import { cellsFor, MASCOT_GRID } from "./sprites";
 import { gameLibrary, type GameId } from "../behaviour/messages";
 import { copy } from "@content/microcopy";

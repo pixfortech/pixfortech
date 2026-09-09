@@ -3,7 +3,7 @@
 import { useId, useMemo } from "react";
 import { cellsFor, MASCOT_GRID } from "../mascot/sprites";
 import type { MascotState } from "../behaviour/store";
-import { usePixel } from "../PixelProvider";
+import { usePixel } from "../context";
 import { mulberry } from "../behaviours";
 import { cn } from "@/lib/utils";
 

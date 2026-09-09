@@ -73,7 +73,7 @@ let slugOld = null, slugNew = null;
   await page.getByLabel("Display name").fill(`Rahul M ${tag}`);
   await page.getByLabel("Short bio").fill("Frontend engineer. Argues about spacing, wins about half the time.");
   await page.getByLabel("LinkedIn").fill("linkedin.com/in/rahul-example");
-  await page.getByRole("button", { name: "Save details" }).click(); await page.waitForTimeout(1500);
+  await page.getByRole("button", { name: "Save profile" }).click(); await page.waitForTimeout(1500);
   ok("display name saved", /Profile saved/.test((await page.textContent("body")) ?? ""));
   const uname = page.getByTestId("username-input");
   await uname.fill(`rahul_${tag}`); await page.waitForTimeout(900);

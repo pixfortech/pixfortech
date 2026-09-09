@@ -99,14 +99,14 @@ export function ProfileEditor({ profile, canPublish, siteOrigin, editingOther }:
   const copyUrl = async () => { try { await navigator.clipboard.writeText(publicUrl); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { setError("Could not copy. Select the address and copy it by hand."); } };
 
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 gap-6 [&>*]:min-w-0">
       {error && <p role="alert" className="rounded-md border border-forge-500/40 bg-forge-500/10 px-3 py-2 text-[0.8125rem] text-forge-300">{error}</p>}
 
       <Card>
         <CardHeader title={copy.profile.identityTitle} description={copy.profile.identityBody} />
-        <div className="grid gap-6 px-5 pb-5 lg:grid-cols-[auto_1fr]">
+        <div className="grid min-w-0 gap-6 px-5 pb-5 lg:grid-cols-[auto_1fr] [&>*]:min-w-0">
           <AvatarUploader profile={profile} targetId={targetId} />
-          <form onSubmit={saveDetails} className="grid gap-4" noValidate>
+          <form onSubmit={saveDetails} className="grid min-w-0 gap-4 [&>*]:min-w-0" noValidate>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Full name" htmlFor="pr-name" error={fieldErrors.name}><input id="pr-name" name="name" defaultValue={profile.name} className={inputCls} disabled={!hydrated} /></Field>
               <Field label="Display name" htmlFor="pr-display" optional hint="Shown on your public page if it differs." error={fieldErrors.displayName}><input id="pr-display" name="displayName" defaultValue={profile.displayName ?? ""} className={inputCls} disabled={!hydrated} /></Field>
@@ -120,14 +120,14 @@ export function ProfileEditor({ profile, canPublish, siteOrigin, editingOther }:
               <Field label="LinkedIn" htmlFor="pr-li" optional error={fieldErrors.linkedinUrl}><input id="pr-li" name="linkedinUrl" defaultValue={profile.linkedinUrl ?? ""} placeholder="linkedin.com/in/…" className={inputCls} disabled={!hydrated} inputMode="url" /></Field>
               <Field label="GitHub" htmlFor="pr-gh" optional error={fieldErrors.githubUrl}><input id="pr-gh" name="githubUrl" defaultValue={profile.githubUrl ?? ""} placeholder="github.com/…" className={inputCls} disabled={!hydrated} inputMode="url" /></Field>
             </div>
-            <div className="flex justify-end"><AppButton type="submit" disabled={pending || !hydrated}>{pending ? "Saving…" : "Save details"}</AppButton></div>
+            <div className="flex justify-end"><AppButton type="submit" disabled={pending || !hydrated}>{pending ? "Saving…" : "Save profile"}</AppButton></div>
           </form>
         </div>
       </Card>
 
       <Card>
         <CardHeader title={copy.profile.usernameTitle} description={copy.profile.usernameBody} />
-        <div className="grid gap-3 px-5 pb-5 sm:grid-cols-[1fr_auto] sm:items-start">
+        <div className="grid min-w-0 gap-3 px-5 pb-5 sm:grid-cols-[1fr_auto] sm:items-start [&>*]:min-w-0">
           <div>
             <Field label="Username" htmlFor="pr-username" hint={`3 to ${USERNAME_MAX} characters. Letters, numbers, dots or underscores.`}>
               <div className="flex items-center rounded-md border border-line bg-ink-900 focus-within:border-forge-400">
@@ -144,8 +144,8 @@ export function ProfileEditor({ profile, canPublish, siteOrigin, editingOther }:
       {canPublish && (
         <Card>
           <CardHeader title={copy.profile.addressTitle} description={copy.profile.addressBody} action={<Badge tone={published ? "good" : "muted"} dot>{published ? "Published" : "Private"}</Badge>} />
-          <div className="grid gap-4 px-5 pb-5">
-            <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-start">
+          <div className="grid min-w-0 gap-4 px-5 pb-5 [&>*]:min-w-0">
+            <div className="grid min-w-0 gap-3 sm:grid-cols-[1fr_auto] sm:items-start [&>*]:min-w-0">
               <div>
                 <Field label="Public address" htmlFor="pr-slug" hint="Lowercase letters, numbers and hyphens. Old addresses keep redirecting.">
                   <div className="flex items-center rounded-md border border-line bg-ink-900 focus-within:border-forge-400">

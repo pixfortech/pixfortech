@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePixel } from "@/pixel/PixelProvider";
+import { usePixel } from "@/pixel/context";
 import { Tag } from "@/components/ui/Tag";
 import { Arrow } from "@/components/ui/Button";
 import { technologyNames } from "@/lib/content";

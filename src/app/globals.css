@@ -514,8 +514,9 @@ body > header { z-index: 50; }
 
 .pip-dismiss {
   position: absolute;
-  top: -0.6rem;
-  left: -0.6rem;
+  /* Sits clear of the mascot so the two touch targets never overlap. */
+  top: -2rem;
+  left: 0;
   width: 1.75rem;
   height: 1.75rem;
   border-radius: 999px;

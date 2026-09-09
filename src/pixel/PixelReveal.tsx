@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
-import { usePixel } from "./PixelProvider";
+import { usePixel } from "./context";
 import type { RevealStyle } from "./types";
 
 type Props = {

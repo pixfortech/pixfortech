@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { usePixel } from "./PixelProvider";
+import { usePixel } from "./context";
 
 /** Marks where the "converge" behaviour should lean toward, e.g. the enquiry form. */
 export function FocalPoint() {

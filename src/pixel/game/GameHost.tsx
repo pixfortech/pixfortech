@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { behaviour } from "../behaviour/store";
 import { gameLibrary, type GameId } from "../behaviour/messages";
-import { usePixel } from "../PixelProvider";
+import { usePixel } from "../context";
 import { copy } from "@content/microcopy";
 import { cn } from "@/lib/utils";
 import { ForgePixels } from "./ForgePixels";

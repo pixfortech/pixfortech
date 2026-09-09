@@ -1,33 +1,15 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { PixelEngine } from "./engine";
 import { themeForPath } from "./theme-resolver";
-import { forgeTheme } from "./themes";
 import { behaviour } from "./behaviour/store";
-import type { PixelTheme, RevealOptions } from "./types";
-
-type PixelApi = {
-  /** Current theme (route or project). */
-  theme: PixelTheme;
-  /** Temporarily preview a theme, e.g. hovering a project card. Pass null to restore. */
-  preview: (theme: PixelTheme | null) => void;
-  registerReveal: (el: HTMLElement, opts: RevealOptions) => () => void;
-  burst: (x: number, y: number, count?: number, colour?: string) => void;
-  setFocal: (nx: number, ny: number) => void;
-  tier: "high" | "medium" | "low" | "static";
-  ready: boolean;
-};
+import type { PixelTheme } from "./types";
+import { PixelContext, type PixelApi } from "./context";
 
 const noop = () => undefined;
-const PixelContext = createContext<PixelApi>({
-  theme: forgeTheme, preview: noop, registerReveal: () => noop, burst: noop, setFocal: noop, tier: "high", ready: false,
-});
-
-export function usePixel() {
-  return useContext(PixelContext);
-}
+export { usePixel } from "./context";
 
 /**
  * Mounts the two shared canvases, owns the engine for the life of the app,
