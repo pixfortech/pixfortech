@@ -42,6 +42,8 @@ The inspected original SQLite database contained zero rows in all tables. It was
 
 Never run the demo seed script against production. Bootstrap the owner's real account separately, with verified email and an owner-controlled password.
 
+`scripts/bootstrap-owner.ts --create-first-owner` accepts `OWNER_EMAIL`, `OWNER_NAME` and the direct production connection. It locks and checks the account directory is empty, creates only the studio and first owner in a transaction, and refuses to overwrite existing accounts. The initial password is random and discarded; email remains unverified until the owner completes Better Auth verification. Use the normal password-reset flow to choose a password. Owner creation requires approval of the recipient and privileged role.
+
 ## Release gates
 
 ### Email DNS proposal — approval required before applying
@@ -61,7 +63,18 @@ Public DKIM TXT value (not a secret):
 p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrlYYh5UmI2chfmAQn4f5XrN1Y4w1AvFbmo29whRT/wZufrRpBPGPP8i+6cFBjO54bGOZScv0CH6rghtdptGpAdtDEbR9FsUEGCth/f8pdiIavM+HOuoSACVW7Rd4z8GSIbMZHpncp5OcDBIipLHhIyy1RWcGy4qkRaeKMhhuT/QIDAQAB
 ```
 
-The two CNAMEs are the sending/SPF records requested by this Resend configuration. Website DNS will be proposed separately from Netlify's domain configuration after temporary-host QA passes.
+The two CNAMEs are the sending/SPF records requested by this Resend configuration. Preserve the existing Namecheap email-forwarding SPF record at `@` (`v=spf1 include:spf.efwd.registrar-servers.com ~all`). The optional DMARC record is not part of the proposed cutover.
+
+### Website DNS proposal — approval required before applying
+
+Temporary-host QA has passed. Namecheap currently has `www` CNAME `parkingpage.namecheap.com.` (30 minutes) and `@` URL Redirect to `http://www.pixfortech.com/` (unmasked). Replace only those website records:
+
+| Type | Host | Value | TTL |
+| --- | --- | --- | --- |
+| A | `@` | `75.2.60.5` | Automatic |
+| CNAME | `www` | `pixfortech-production.netlify.app` | Automatic |
+
+These values follow [Netlify's external DNS configuration](https://docs.netlify.com/manage/domains/configure-domains/configure-external-dns/). Attach both hostnames to the Netlify project, keep the apex canonical, and redirect `www` to it. Do not change registrar nameservers or unrelated mail records.
 
 ### Cutover sequence
 
