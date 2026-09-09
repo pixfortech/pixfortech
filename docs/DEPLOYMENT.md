@@ -1,5 +1,7 @@
 # Production deployment
 
+For the current experience upgrade, follow [TEMPORARY-UPGRADE.md](TEMPORARY-UPGRADE.md). Its temporary-only scope supersedes the DNS cutover instructions below; no DNS changes or main merge are authorized in this task.
+
 Deployment branch: `codex/production-deployment`. The tested source branch remains unchanged.
 
 ## Infrastructure
