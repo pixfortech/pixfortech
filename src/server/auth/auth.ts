@@ -61,6 +61,7 @@ function createAuth() {
   },
   emailVerification: {
     sendOnSignUp: true,
+    sendOnSignIn: true,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
       await sendEmail({ to: user.email, subject: "Verify your Pixel Forge email", text: `Hello ${user.name},\n\nConfirm this address to finish setting up your Pixel Forge account:\n\n${url}` });
