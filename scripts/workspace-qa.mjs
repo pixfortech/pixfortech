@@ -23,6 +23,8 @@ try {
   const admin = await login("admin@pixelforge.test", "admin");
   const client = await login("maya@northbank.test", "portal");
   const p = admin.page;
+  const c = client.page;
+  if (!process.env.QA_MOBILE_ONLY) {
   const marker = `Production QA ${Date.now()}`;
   await p.goto(`${base}/admin/projects`);
   await p.getByRole("link", { name: "New project", exact: true }).click();
@@ -52,7 +54,6 @@ try {
   const results = await foreign.json();
   assert.equal(results.tasks.length, 0, "Internal task must be absent from client search");
   console.log("PASS: global search finds authorized records and excludes internal tasks");
-  const c = client.page;
   await c.goto(`${base}/portal/profile`);
   const originalTitle = await c.getByLabel(/^Job title/).inputValue();
   await c.getByLabel(/^Job title/).fill(marker);
@@ -75,6 +76,7 @@ try {
   await c.getByRole("button", { name: "Save preferences", exact: true }).click();
   await c.getByRole("status").filter({ hasText: "Preferences saved" }).waitFor();
   console.log("PASS: profile and notification preferences persist and are restored");
+  }
   for (const [page, area] of [[p, "admin"], [c, "portal"]]) {
     await page.setViewportSize({ width: 375, height: 812 });
     for (const path of ["", "/projects", "/requests", "/settings", "/profile"]) {

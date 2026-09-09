@@ -38,7 +38,7 @@ Production fails closed when required storage/authentication secrets are absent.
 
 `npm run db:migrate` applies `drizzle/postgres` migrations using the direct connection. Set `DATABASE_PATH` to the intended SQLite source and run `npm run db:import-sqlite`. The import refuses a nonempty target, takes a consistent SQLite backup, checks integrity and foreign keys, imports in relationship order inside a PostgreSQL transaction, and compares every imported row before commit.
 
-The inspected original SQLite database contained zero rows in all tables. It was preserved. A separate SQLite fixture database was imported into the QA branch and its rows verified. All QA password hashes were randomized before any remote QA use.
+The inspected original SQLite database contained zero rows in all tables. It was preserved. A separate SQLite fixture database was imported into the QA branch and its rows verified. All QA password hashes were randomized before any remote QA use. The separate production branch now has all PostgreSQL migrations applied; the original SQLite import completed with a consistent backup and verified equality across all 24 original tables. No QA fixtures were imported into production, and the temporary app still points to the QA branch.
 
 Never run the demo seed script against production. Bootstrap the owner's real account separately, with verified email and an owner-controlled password.
 

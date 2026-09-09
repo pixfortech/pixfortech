@@ -7,9 +7,9 @@ const STATUS: Record<string, string> = { lead: "Lead", discovery: "Discovery", p
 export function ProjectCards({ projects, area }: { projects: ProjectRow[]; area: "portal" | "admin" }) {
   if (!projects.length) return <EmptyState title="Nothing on the anvil yet" body={area === "admin" ? "Create the first project to start tracking work." : "Your projects will appear here as soon as the team sets them up."} />;
   return (
-    <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+    <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
       {projects.map((p) => (
-        <li key={p.id}>
+        <li key={p.id} className="min-w-0">
           <Link href={`/${area}/projects/${p.id}`} className="flex h-full flex-col rounded-lg border border-line bg-ink-850/60 p-4 transition-colors hover:border-line-strong hover:bg-ink-850">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2.5"><ProjectMark theme={p.pixelTheme} size={22} /><div className="min-w-0"><p className="truncate font-medium text-bone-50">{p.title}</p><p className="num text-[0.75rem] text-bone-400">{p.code}{area === "admin" ? ` · ${p.organisationName}` : ""}</p></div></div>

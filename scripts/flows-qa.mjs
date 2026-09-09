@@ -17,6 +17,7 @@ const ok = (name, pass, detail = "") => { results.push([name, pass, detail]); co
 async function fresh(email, password = PASSWORD) {
   const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } });
   const page = await ctx.newPage();
+  page.setDefaultTimeout(30000);
   page.on("console", (m) => {
     if (m.type() !== "error") return;
     const url = m.location().url ?? "";
@@ -30,7 +31,7 @@ async function fresh(email, password = PASSWORD) {
       await page.getByLabel("Email").fill(email);
       await page.getByLabel("Password").fill(password);
       await page.getByRole("button", { name: "Sign in" }).click();
-      const done = await page.waitForURL((u) => /\/(portal|admin)/.test(u.pathname), { timeout: 15000 }).then(() => true).catch(() => false);
+      const done = await page.waitForURL((u) => /\/(portal|admin)/.test(u.pathname), { waitUntil: "commit", timeout: 30000 }).then(() => true).catch(() => false);
       if (done) break;
       // The auth API rate-limits sign-in per IP (30 requests a minute); this script logs in a lot. Back off and retry.
       console.log(`  (sign-in for ${email} did not complete, waiting for the rate-limit window)`);
@@ -228,8 +229,9 @@ let northbankProject = null;
   const card = todo.locator('li[draggable="true"]').first();
   const href = await card.getByRole("link").getAttribute("href");
   const beforeCount = await inProgress.locator("li[draggable]").count();
+  console.log(`  kanban: ${sourceLabel} → ${targetLabel}`);
   const saved = pm.page.waitForResponse(r => r.request().method() === "POST" && Boolean(r.request().headers()["next-action"]), { timeout: 30000 });
-  await card.dragTo(inProgress);
+  await card.dragTo(inProgress, { sourcePosition: { x: 10, y: 10 }, targetPosition: { x: 20, y: 20 } });
   const response = await saved;
   await response.finished();
   ok("kanban save completes successfully", response.ok() && (await pm.page.getByRole("alert").allTextContents()).every(text => !text.trim()));
