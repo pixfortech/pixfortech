@@ -33,7 +33,7 @@ export function LiveActivity({ items, area }: { items: ActivityItem[]; area: "po
   const provisional = incoming.filter((c) => c.createdAt.getTime() > newest);
 
   return (
-    <div>
+    <div data-testid="live-activity">
       <div className="mb-3 flex items-center justify-between">
         <p className="flex items-center gap-2 text-[0.75rem] text-bone-400">
           <span className={cn("h-2 w-2 rounded-pill", connected ? "bg-[#7ed0a2]" : "bg-[#f0b35a]")} aria-hidden="true" />

@@ -2,17 +2,19 @@
 // slug redirects, avatar, password change, hero interaction, PiP hide/restore and message
 // uniqueness, all five games, realtime notifications across two sessions, mobile navigation.
 // Runs against a dev server (window.__pfBehaviour is exposed there) with the demo fixtures.
-import { chromium } from "playwright";
+import { launchBrowser, qaOutput, qaPassword } from "./qa-runtime.mjs";
 import { mkdirSync } from "node:fs";
 const base = process.argv[2] ?? "http://localhost:3000";
-const out = process.env.QA_OUTPUT_DIR ?? "/tmp/claude-0/-home-user-pixfortech/b9fe4a5d-cca4-5894-8a93-ccba0580142b/scratchpad/shots/experience";
+const production = process.argv.includes("--production");
+const out = qaOutput("experience");
 mkdirSync(out, { recursive: true });
-const PASSWORD = process.env.QA_PASSWORD ?? "forge-demo-2026!";
-const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH ?? "/opt/pw-browsers/chromium-1194/chrome-linux/chrome", args: ["--no-sandbox"] });
+const PASSWORD = qaPassword();
+const browser = await launchBrowser();
 const results = [];
 const errors = [];
+const expectedErrors = new WeakMap();
 const ok = (name, pass, detail = "") => { results.push([name, pass]); console.log(`${pass ? "✓" : "✗"} ${name}${detail ? " — " + detail : ""}`); };
-const watch = (page, tag) => { page.on("pageerror", (e) => errors.push(`[${tag}] ${e.message}`)); page.on("console", (m) => { if (m.type() === "error" && !/404|hydrat|favicon/.test(m.text())) errors.push(`[${tag}] ${m.text().slice(0, 160)}`); }); };
+const watch = (page, tag) => { page.on("pageerror", (e) => errors.push(`[${tag}] ${e.message}`)); page.on("console", (m) => { if (m.type() !== "error") return; const expected = expectedErrors.get(page); if (expected && m.text().includes(String(expected.status)) && new URL(m.location().url || base).pathname === expected.path) return; errors.push(`[${tag}] ${m.text().slice(0, 160)}`); }); };
 const T = { timeout: 120000 };
 async function login(page, email, password = PASSWORD) {
   for (let i = 0; i < 4; i++) {
@@ -37,7 +39,7 @@ async function login(page, email, password = PASSWORD) {
   await ctx.close();
   const m = await browser.newContext({ viewport: { width: 375, height: 740 }, isMobile: true, hasTouch: true }); const mp = await m.newPage(); watch(mp, "mobile");
   await mp.goto(base + "/", { waitUntil: "load", ...T });
-  await mp.getByRole("button", { name: "Open menu" }).click(); await mp.waitForTimeout(500);
+  await mp.getByRole("button", { name: "Open menu" }).click(); await mp.getByRole("dialog", { name: "Site menu" }).getByRole("link", { name: /sign in to Pixel Forge/i }).waitFor();
   ok("mobile menu login link", (await mp.getByRole("dialog", { name: "Site menu" }).getByRole("link", { name: /sign in to Pixel Forge/i }).count()) === 1);
   await mp.screenshot({ path: `${out}/mobile-menu-375.png` });
   await m.close();
@@ -82,17 +84,22 @@ let slugOld = null, slugNew = null;
   await uname.fill("admin"); await page.waitForTimeout(500);
   ok("reserved username rejected", /taken|reserved/i.test((await page.textContent("#pr-username-status")) ?? ""));
   slugOld = await page.getByTestId("slug-input").inputValue();
-  slugNew = `${slugOld}-${tag}`;
+  slugNew = `rahul-qa-${Date.now().toString(36)}`;
   await page.getByTestId("slug-input").fill(slugNew); await page.waitForTimeout(900);
-  await page.getByTestId("save-slug").click(); await page.waitForTimeout(1500);
+  await page.getByTestId("save-slug").click(); await page.getByTestId("public-url").filter({ hasText: new RegExp(`${slugNew}$`) }).waitFor({ timeout: 60000 });
   ok("slug updated", (await page.getByTestId("public-url").textContent())?.endsWith(slugNew));
   await page.getByTestId("publish-toggle").check(); await page.waitForTimeout(1500);
   ok("profile published", /Published/.test((await page.textContent("body")) ?? ""));
-  const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(200, 7)]);
-  await page.getByLabel("Choose a profile picture").setInputFiles({ name: "me.png", mimeType: "image/png", buffer: png }); await page.waitForTimeout(2000);
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aM1sAAAAASUVORK5CYII=", "base64");
+  await page.getByLabel("Choose a profile picture").setInputFiles({ name: "me.png", mimeType: "image/png", buffer: png }); await page.getByText("Picture updated", { exact: true }).waitFor({ timeout: 60000 });
   ok("avatar uploaded", /Picture updated/.test((await page.textContent("body")) ?? ""));
-  await page.getByLabel("Choose a profile picture").setInputFiles({ name: "evil.svg", mimeType: "image/svg+xml", buffer: Buffer.from("<svg onload=alert(1)></svg>") }); await page.waitForTimeout(1500);
-  ok("non-image avatar rejected", /PNG, JPEG or WebP/.test((await page.textContent("body")) ?? ""));
+  expectedErrors.set(page, { status: 422, path: "/api/avatar" });
+  const invalidAvatar = page.waitForResponse((r) => new URL(r.url()).pathname === "/api/avatar" && r.request().method() === "POST");
+  await page.getByLabel("Choose a profile picture").setInputFiles({ name: "evil.svg", mimeType: "image/svg+xml", buffer: Buffer.from("<svg onload=alert(1)></svg>") });
+  const invalidAvatarStatus = (await invalidAvatar).status();
+  await page.getByRole("alert").filter({ hasText: /PNG, JPEG or WebP/ }).waitFor();
+  ok("non-image avatar rejected", invalidAvatarStatus === 422);
+  expectedErrors.delete(page);
   await page.screenshot({ path: `${out}/profile-editor.png`, fullPage: true });
   // password change with confirmation and strength
   await page.getByLabel("Current password").fill(PASSWORD);
@@ -162,7 +169,7 @@ let slugOld = null, slugNew = null;
 }
 
 // 5. PiP: hide, restore, non-repetition, offline line, games
-{
+if (!production) {
   const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } }); const page = await ctx.newPage(); watch(page, "pip");
   await page.goto(base + "/services", { waitUntil: "load", ...T }); await page.waitForTimeout(1000);
   await page.getByTestId("pip-body").hover({ force: true });
@@ -170,7 +177,7 @@ let slugOld = null, slugNew = null;
   ok("PiP hides on request", (await page.getByTestId("mascot").getAttribute("class"))?.includes("pip--hidden") && (await page.getByTestId("pip-corner-restore").count()) === 1);
   await page.reload({ waitUntil: "load", ...T }); await page.waitForTimeout(800);
   ok("hidden state persists across reload", (await page.getByTestId("mascot").getAttribute("class"))?.includes("pip--hidden"));
-  await page.getByTestId("pip-corner-restore").click({ force: true }); await page.waitForTimeout(600);
+  await page.getByTestId("pip-corner-restore").focus(); await page.keyboard.press("Enter"); await page.waitForTimeout(600);
   const bubble = await page.getByTestId("mascot-bubble").getAttribute("data-line");
   ok("restore brings PiP back with a restore line", !(await page.getByTestId("mascot").getAttribute("class"))?.includes("pip--hidden") && bubble?.startsWith("restore."));
   ok("footer restore control disappears once restored", (await page.getByTestId("pip-restore").count()) === 0);
@@ -225,6 +232,7 @@ let slugOld = null, slugNew = null;
   const title = `Live QA request ${Date.now()}`;
   await client.getByLabel("Title").fill(title);
   await client.getByLabel("Description").fill("Raised by the experience QA script to check the live dashboard.");
+  await client.getByLabel("Priority", { exact: true }).selectOption("urgent");
   const toast = admin.waitForSelector(`[role=status]:has-text("${title.slice(0, 20)}")`, { timeout: 20000 }).then(() => true).catch(() => false);
   await client.getByRole("button", { name: "Submit request" }).click();
   await client.waitForURL(/\/portal\/requests\/[a-f0-9-]+$/, { timeout: 30000 });
@@ -232,8 +240,10 @@ let slugOld = null, slugNew = null;
   await admin.waitForTimeout(3500);
   const unreadAfter = Number((await admin.getByTestId("unread-count").textContent().catch(() => "0")) || 0);
   ok("bell count increases live", unreadAfter > unreadBefore, `${unreadBefore} → ${unreadAfter}`);
-  ok("live activity shows the new request without refresh", (await admin.textContent("body"))?.includes(title.slice(0, 24)));
-  ok("attention queue lists the new request", (await admin.getByTestId("attention-queue").textContent())?.includes(title.slice(0, 24)));
+  await admin.getByTestId("live-activity").getByText(new RegExp(title)).waitFor({ timeout: 15000 });
+  ok("live activity shows the new request without refresh", (await admin.getByTestId("live-activity").textContent())?.includes(title));
+  await admin.getByTestId("attention-queue").getByRole("link").filter({ hasText: title }).waitFor({ timeout: 15000 });
+  ok("attention queue lists the new urgent request", (await admin.getByTestId("attention-queue").textContent())?.includes(title));
   await admin.getByTestId("bell").click(); await admin.waitForTimeout(400);
   ok("popover shows actor and category", /Maya Fernandes/.test((await admin.getByTestId("notification-list").textContent()) ?? "") && /REQUEST/i.test((await admin.getByTestId("notification-list").textContent()) ?? ""));
   await admin.screenshot({ path: `${out}/notification-popover.png` });
@@ -262,4 +272,4 @@ await browser.close();
 const passed = results.filter((r) => r[1]).length;
 console.log(`\n${passed}/${results.length} passed`);
 if (errors.length) { console.log("ERRORS:"); for (const e of [...new Set(errors)]) console.log(e); }
-process.exit(passed === results.length ? 0 : 1);
+process.exit(passed === results.length && errors.length === 0 ? 0 : 1);

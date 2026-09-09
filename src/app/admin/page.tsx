@@ -95,9 +95,9 @@ export default async function AdminHome() {
             {pulse.length === 0 ? (
               <p className="rounded-lg border border-dashed border-line-strong px-4 py-8 text-center text-[0.8125rem] text-bone-400">{copy.empty.projects.title}. {copy.empty.projects.body}</p>
             ) : (
-              <ul className="grid gap-3 md:grid-cols-2" data-testid="project-pulse">
+              <ul className="grid grid-cols-1 gap-3 md:grid-cols-2" data-testid="project-pulse">
                 {pulse.map((p) => (
-                  <li key={p.id}>
+                  <li key={p.id} className="min-w-0">
                     <Link href={`/admin/projects/${p.id}`} className="block h-full rounded-lg border border-line bg-ink-850/70 p-4 transition-colors hover:border-line-strong">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex min-w-0 items-center gap-2"><ProjectMark theme={p.pixelTheme} size={18} /><span className="truncate text-[0.875rem] font-medium text-bone-50">{p.title}</span></div>

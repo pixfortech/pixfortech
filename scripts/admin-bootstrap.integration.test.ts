@@ -1,14 +1,13 @@
 // Owner bootstrap scenarios A–E against an isolated local PostgreSQL. Never run against production.
-import assert from "node:assert/strict";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { Pool } from "pg";
+import { createPool, directUrl } from "./lib/pool";
+import { requireIsolatedQaDatabase } from "./lib/qa-database";
 import { generateTemporaryPassword, listSuperAdmins, runBootstrap } from "./lib/bootstrap";
 import { verifyPassword } from "better-auth/crypto";
 
-const url = process.env.DATABASE_URL ?? "";
-assert.ok(["localhost", "127.0.0.1"].includes(new URL(url).hostname), "Never run this suite against production");
+requireIsolatedQaDatabase();
 
-const pool = new Pool({ connectionString: url, max: 2 });
+const pool = createPool(directUrl());
 const tag = Date.now().toString(36);
 const email = `owner-${tag}@example.test`;
 let parked: { id: string; email: string }[] = [];
@@ -64,5 +63,23 @@ describe("admin bootstrap", () => {
     const a = generateTemporaryPassword(), b = generateTemporaryPassword();
     expect(a).not.toBe(b);
     expect(a.length).toBeGreaterThanOrEqual(20);
+  });
+  it("does not create another owner when the existing owner is disabled", async () => {
+    await pool.query('UPDATE "user" SET disabled = true WHERE email = $1', [email]);
+    try {
+      const result = await runBootstrap(pool, { email: `owner-${tag}-disabled@example.test`, name: "Another Owner" });
+      expect(result.action).toBe("exists");
+      expect(await listSuperAdmins(pool)).toHaveLength(1);
+    } finally { await pool.query('UPDATE "user" SET disabled = false WHERE email = $1', [email]); }
+  });
+  it("email-link onboarding requires verification and records no password in the audit", async () => {
+    await pool.query('UPDATE "user" SET role = \'admin\' WHERE email = $1', [email]);
+    const address = `owner-${tag}-email@example.test`;
+    const result = await runBootstrap(pool, { email: address, name: "Email Owner", emailLink: true });
+    expect(result.action).toBe("created");
+    const rows = await pool.query('SELECT email_verified,must_change_password FROM "user" WHERE email = $1', [address]);
+    expect(rows.rows[0]).toMatchObject({ email_verified: false, must_change_password: true });
+    const audit = await pool.query("SELECT metadata FROM audit_events WHERE action = 'admin.bootstrap'");
+    if (result.action === "created") expect(JSON.stringify(audit.rows)).not.toContain(result.temporaryPassword);
   });
 });

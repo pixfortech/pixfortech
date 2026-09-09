@@ -17,17 +17,21 @@ if (existsSync(".env.local") && !process.env.DATABASE_URL_UNPOOLED && !process.e
 
 const arg = (name: string) => process.argv.find((a) => a.startsWith(`--${name}=`))?.split("=").slice(1).join("=");
 const check = process.argv.includes("--check");
+const emailLink = process.argv.includes("--email-link");
 const email = arg("email") ?? process.env.BOOTSTRAP_ADMIN_EMAIL;
 const name = arg("name") ?? process.env.BOOTSTRAP_ADMIN_NAME;
 
+async function main() {
 const pool = createPool(directUrl());
 try {
-  const result = await runBootstrap(pool, { email, name, check });
+  const result = await runBootstrap(pool, { email, name, check, emailLink });
   if (result.action === "none") {
     console.log("No super admin exists. Run `npm run admin:bootstrap` with BOOTSTRAP_ADMIN_EMAIL and BOOTSTRAP_ADMIN_NAME set to create one.");
   } else if (result.action === "exists") {
     console.log(`Super admin present (${result.admins.length}); nothing created.`);
     for (const a of result.admins) console.log(`  ${a.email}  enabled=${a.enabled}  emailVerified=${a.emailVerified}  since=${a.createdAt.slice(0, 10)}`);
+  } else if (emailLink) {
+    console.log("Super admin created with unverified email. The temporary password has been discarded. Complete email verification and Forgot password on the deployed application.");
   } else {
     console.log("");
     console.log("Super admin created. Sign in once with this temporary password; you will be asked to choose your own immediately.");
@@ -44,3 +48,8 @@ try {
 } finally {
   await pool.end();
 }
+}
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+});
