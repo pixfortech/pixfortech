@@ -10,13 +10,19 @@ mkdirSync(out, { recursive: true });
 const PASSWORD = qaPassword();
 const browser = await launchBrowser();
 const errors = [];
+const expectedErrors = new WeakMap();
 const results = [];
 const ok = (name, pass, detail = "") => { results.push([name, pass, detail]); console.log(`${pass ? "✓" : "✗"} ${name}${detail ? " — " + detail : ""}`); };
 
 async function fresh(email, password = PASSWORD) {
   const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } });
   const page = await ctx.newPage();
-  page.on("console", (m) => { if (m.type() === "error" && !/404|hydrated/.test(m.text())) errors.push(`[${email}] ${m.text().slice(0, 300)}`); });
+  page.on("console", (m) => {
+    if (m.type() !== "error") return;
+    const url = m.location().url ?? "";
+    const expected = (expectedErrors.get(page) ?? []).some(({ status, path }) => m.text().includes(String(status)) && url.includes(path));
+    if (!expected && !/404 \(Not Found\)|429 \(Too Many Requests\)/.test(m.text())) errors.push(`[${email}] ${m.text().slice(0, 300)}`);
+  });
   page.on("pageerror", (e) => errors.push(`[${email}] pageerror: ${e.message}`));
   if (email) {
     for (let attempt = 0; attempt < 4; attempt++) {
@@ -50,8 +56,10 @@ const logSize = () => readFileSync(log, "utf8").length;
   const { ctx, page } = await fresh(null);
   await page.goto(base + "/forgot-password", { waitUntil: "load" });
   await page.getByLabel("Email").fill("tom@northbank.test");
-  await page.getByRole("button", { name: "Send reset link" }).click();
-  await page.waitForTimeout(1500);
+  await Promise.all([
+    page.waitForResponse((response) => response.url().includes("/api/auth/request-password-reset") && response.request().method() === "POST"),
+    page.getByRole("button", { name: "Send reset link" }).click(),
+  ]);
   const link = lastEmailLink("tom@northbank.test", /Reset your Pixel Forge password/, since);
   ok("reset email logged with link", !!link, link ? "link received (redacted)" : "no link found");
   if (link) {
@@ -68,6 +76,7 @@ const logSize = () => readFileSync(log, "utf8").length;
     const reused = /invalid or has expired/i.test((await page.textContent("body")) ?? "");
     ok("reset link is single-use", reused, `${again?.status()} ${new URL(page.url()).pathname}`);
     const oldLogin = await fresh(null);
+    expectedErrors.set(oldLogin.page, [{ status: 401, path: "/api/auth/sign-in/email" }]);
     await oldLogin.page.goto(base + "/login", { waitUntil: "load" });
     await oldLogin.page.getByLabel("Email").fill("tom@northbank.test");
     await oldLogin.page.getByLabel("Password").fill(PASSWORD);
@@ -143,11 +152,13 @@ let northbankProject = null;
   northbankProject = (await maya.page.$$eval("a[href^='/portal/projects/']", (as) => as.map((a) => a.getAttribute("href"))))[0]?.split("/")[3] ?? null;
   await maya.page.goto(base + `/portal/projects/${northbankProject}/files`, { waitUntil: "load" });
   const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(64, 1)]);
-  await maya.page.getByLabel("Choose files").setInputFiles({ name: `qa-shot-${Date.now()}.png`, mimeType: "image/png", buffer: png });
+  await maya.page.locator('input[aria-label="Choose files"]:enabled').waitFor({ state: "attached" });
+  const filename = `qa-shot-${Date.now()}.png`;
+  await maya.page.getByLabel("Choose files").setInputFiles({ name: filename, mimeType: "image/png", buffer: png });
   await maya.page.getByRole("button", { name: /^Upload/ }).click();
-  await maya.page.waitForTimeout(3000);
-  const hrefs = await maya.page.$$eval("a[href^='/api/files/']", (as) => as.map((a) => a.getAttribute("href")));
-  const mine = hrefs.find(Boolean);
+  const uploadedLink = maya.page.getByRole("link", { name: filename, exact: true });
+  await uploadedLink.waitFor({ state: "visible", timeout: 60000 });
+  const mine = await uploadedLink.getAttribute("href");
   ok("client upload appears in file list", !!mine && (await maya.page.textContent("body"))?.includes("qa-shot-"));
   await shot(maya.page, "files-uploaded");
   if (mine) {
@@ -162,9 +173,13 @@ let northbankProject = null;
     ok("anonymous download refused", [401, 302, 307].includes(r3.status()), String(r3.status()));
     await anon.close();
   }
+  expectedErrors.set(maya.page, [{ status: 422, path: "/api/upload/chunks" }]);
   await maya.page.getByLabel("Choose files").setInputFiles({ name: "payload.exe", mimeType: "application/octet-stream", buffer: Buffer.from("MZ....") });
   const rejectedEarly = !((await maya.page.textContent("body"))?.includes("payload.exe"));
-  if (!rejectedEarly) { await maya.page.getByRole("button", { name: /^Upload/ }).click(); await maya.page.waitForTimeout(2000); }
+  if (!rejectedEarly) {
+    await maya.page.getByRole("button", { name: /^Upload/ }).click();
+    await maya.page.getByRole("alert").filter({ hasText: /not accepted|not allowed|rejected/i }).waitFor({ timeout: 60000 });
+  }
   const bodyText = (await maya.page.textContent("body")) ?? "";
   ok("executable rejected", rejectedEarly || /not accepted|not allowed|rejected/i.test(bodyText), rejectedEarly ? "filtered client-side" : bodyText.match(/[^.]*not accepted[^.]*/i)?.[0] ?? "");
   await maya.ctx.close();
@@ -179,7 +194,7 @@ let northbankProject = null;
   await pm.page.getByLabel("Title").fill(title);
   await pm.page.getByLabel("What should the client review?").fill("Please review the revised hero and confirm the headline.");
   await pm.page.getByRole("button", { name: "Send for approval" }).click();
-  await pm.page.waitForTimeout(2500);
+  await pm.page.locator("li").filter({ hasText: title }).first().waitFor({ state: "visible", timeout: 30000 });
   ok("approval created", (await pm.page.textContent("body"))?.includes(title));
   const maya = await fresh("maya@northbank.test");
   await maya.page.goto(base + "/portal/approvals", { waitUntil: "load" });
@@ -188,13 +203,13 @@ let northbankProject = null;
   await card.getByRole("button", { name: "Approve" }).first().click();
   await maya.page.getByLabel(/Comment/).fill("Looks great. Go ahead.");
   await maya.page.getByRole("button", { name: "Approve" }).last().click();
-  await maya.page.waitForTimeout(2500);
+  await card.getByRole("button", { name: "Approve", exact: true }).waitFor({ state: "hidden", timeout: 30000 });
   await shot(maya.page, "approval-decided");
   const decided = (await maya.page.textContent("body")) ?? "";
   ok("approval shows as approved for the client", /Approved/.test(decided) && !(await card.getByRole("button", { name: "Approve" }).count()));
   await pm.page.waitForTimeout(1500);
   await pm.page.reload({ waitUntil: "load" });
-  ok("PM sees approval decision", /Approved/.test((await pm.page.textContent("body")) ?? ""));
+  ok("PM sees approval decision", /Approved/.test((await pm.page.locator("li").filter({ hasText: title }).first().textContent()) ?? ""));
   await pm.page.goto(base + `/admin/projects/${northbankProject}/activity`, { waitUntil: "load" });
   ok("decision in activity log", /approv/i.test((await pm.page.textContent("body")) ?? ""));
   await maya.ctx.close();
@@ -223,4 +238,4 @@ let northbankProject = null;
 await browser.close();
 console.log(`\n${results.filter((r) => r[1]).length}/${results.length} passed`);
 if (errors.length) { console.log("ERRORS:"); for (const e of errors) console.log(e); }
-process.exit(results.every((r) => r[1]) ? 0 : 1);
+process.exit(results.every((r) => r[1]) && errors.length === 0 ? 0 : 1);

@@ -7,6 +7,7 @@ import { createProjectAction, updateProjectAction, setProjectMembersAction } fro
 import { createClientAction, updateClientAction, inviteUserAction, updateUserAction, updateProfileAction, savePreferencesAction } from "@/server/actions/collab";
 import { AppButton, Field, humanise, inputCls, selectCls } from "@/components/app/primitives";
 import { useRealtime } from "@/components/app/RealtimeProvider";
+import { useHydrated } from "@/lib/useHydrated";
 
 type Opt = { id: string; name: string };
 const STATUSES = ["lead", "discovery", "planning", "design", "development", "internal_qa", "client_review", "changes_requested", "final_qa", "deployment", "maintenance", "completed", "on_hold"];
@@ -162,11 +163,12 @@ export function ProfileForm({ user }: { user: { name: string; title: string | nu
 }
 
 export function PasswordForm() {
+  const hydrated = useHydrated();
   const [current, setCurrent] = useState(""); const [next, setNext] = useState(""); const [msg, setMsg] = useState<string | null>(null); const [busy, setBusy] = useState(false);
   return (
     <form onSubmit={async (e) => { e.preventDefault(); setBusy(true); setMsg(null); const { authClient } = await import("@/lib/auth/client"); const res = await authClient.changePassword({ currentPassword: current, newPassword: next, revokeOtherSessions: true }); setBusy(false); setMsg(res.error ? "The current password is wrong or the new one is too short (10+ characters)." : "Password changed. Other sessions were signed out."); if (!res.error) { setCurrent(""); setNext(""); } }} className="grid gap-4" noValidate>
-      <Field label="Current password" htmlFor="pw-cur"><input id="pw-cur" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} className={inputCls} /></Field>
-      <Field label="New password" htmlFor="pw-new" hint="At least ten characters."><input id="pw-new" type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} className={inputCls} /></Field>
+      <Field label="Current password" htmlFor="pw-cur"><input id="pw-cur" type="password" autoComplete="current-password" disabled={!hydrated} value={current} onChange={(e) => setCurrent(e.target.value)} className={inputCls} /></Field>
+      <Field label="New password" htmlFor="pw-new" hint="At least ten characters."><input id="pw-new" type="password" autoComplete="new-password" disabled={!hydrated} value={next} onChange={(e) => setNext(e.target.value)} className={inputCls} /></Field>
       {msg && <p className="text-[0.8125rem] text-bone-200">{msg}</p>}
       <div className="flex justify-end"><AppButton type="submit" variant="secondary" disabled={busy || !current || next.length < 10}>{busy ? "Saving…" : "Change password"}</AppButton></div>
     </form>

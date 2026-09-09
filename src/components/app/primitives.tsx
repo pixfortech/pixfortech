@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { ComponentProps, ReactNode } from "react";
+import { ReadyButton } from "./ReadyButton";
 
 /* ------------------------------------------------------------------
    Product UI primitives. Restrained, dense, Space Grotesk, one accent.
@@ -142,7 +143,7 @@ export function AppButton({ children, variant = "primary", size = "md", classNam
     className,
   );
   if (href) return <Link href={href} className={cls}>{children}</Link>;
-  return <button type="button" className={cls} {...rest}>{children}</button>;
+  return <ReadyButton type="button" className={cls} {...rest}>{children}</ReadyButton>;
 }
 
 export function Field({ label, htmlFor, error, hint, children, optional }: { label: string; htmlFor: string; error?: string; hint?: string; children: ReactNode; optional?: boolean }) {
