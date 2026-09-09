@@ -106,3 +106,19 @@ Attachment metadata uses the same current visibility rules across search, file l
 Local TypeScript, lint and 54 unit tests passed during implementation. The production Webpack build passed. `node scripts/flows-qa.mjs` passed 22/22 checks, including password reset and change, invitation plus email verification, unassigned staff isolation, uploads/downloads, executable rejection, approvals and kanban persistence. `node scripts/app-qa.mjs` passed with assertions for core role redirects, tenant isolation, toasts, unread counts, live request updates, internal-note privacy, realtime chat and logout. `node scripts/attachment-qa.mjs` passed chat and new-request attachment uploads with byte-identical authorized downloads. Email links in the local flow suite use the development transport; live Resend delivery was subsequently verified on the temporary hostname with the approved owner inbox. The public animation/behaviour suites have been exercised; the temporary-host production gate has passed; canonical-host QA remains required after DNS and SSL activation. `node scripts/storage-qa.mjs` passed with actual private R2 storage and Neon QA: exactly 25 MiB, rejection above the limit, chunk ownership, foreign-origin denial, byte-identical signed downloads, cross-tenant/anonymous denial and invalid magic-byte rejection. Keep individual results in local `artifacts/qa` and `data/deployment` logs; these may contain test tokens and must not be published.
 
 Use Netlify's previous successful deploy to roll back application code. Preserve database compatibility and take a Neon branch/restore checkpoint before further schema changes. Do not restore old database state over new customer data. Keep the original SQLite source and backup until final migration acceptance.
+
+## Experience upgrade QA record (branch `codex/final-experience-upgrade`)
+
+Run against an isolated local PostgreSQL 16 with the demo fixture import, never against production. Production credentials (Neon, R2, Resend, Netlify) were not available in the build environment, so the Netlify deploy, live email, R2 and production-database checks are still owner steps; the code paths involved (better-auth email hooks, S3 driver, Neon HTTP driver) are unchanged by this branch except where noted.
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck`, `npm run lint` | clean |
+| `npm test` (unit, 9 files) | 75 passed |
+| `npm run test:integration` (profile slugs, owner bootstrap A–E) | 14 passed |
+| `node scripts/experience-qa.mjs` (login entry, account menu, profile identity, slug redirect 308, avatar, password, hero mouse/touch/keyboard/secret, PiP hide/restore/non-repetition/offline, five games and rotation, two-session realtime, mobile 320–768) | 64 of 64 passed |
+| `node scripts/workspace-qa.mjs`, `node scripts/public-production-qa.mjs` (existing production suites) | all passed |
+| Lighthouse, production build, mobile emulation | home 88 / 100 / 100 / 100 (baseline 88); work 92 / 100 / 100 / 100 (baseline 98); login 88 / 100 / 100 (noindex by design); admin, warm, 81 / 100 / 96 (baseline 81), TBT 280 ms (baseline 350 ms) |
+
+Notes: the work page lost a few performance points to the header scene (LCP 2.9 s vs 2.3 s) and the login page's SEO score reflects its intentional `noindex`. The admin dashboard's first hit after a cold start audits lower (72) because the route compiles on demand; the warm figure above is the representative one.
+
