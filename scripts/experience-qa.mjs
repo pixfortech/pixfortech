@@ -121,16 +121,18 @@ let slugOld = null, slugNew = null;
   const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } }); const page = await ctx.newPage(); watch(page, "people");
   const r = await page.goto(base + `/people/${slugOld}`, { waitUntil: "load", ...T });
   ok("old slug redirects permanently to new", page.url().endsWith(`/people/${slugNew}`) && r?.status() === 200);
-  const chain = await ctx.request.get(base + `/people/${slugOld}`, { maxRedirects: 0 });
+  // Retry only Playwright's ECONNRESET transport failure for these read-only probes.
+  // HTTP errors are not retried; the status/privacy assertions remain authoritative.
+  const chain = await ctx.request.get(base + `/people/${slugOld}`, { maxRedirects: 0, maxRetries: 2 });
   ok("redirect status is 308", chain.status() === 308);
   ok("public page shows name and avatar", /Rahul/.test((await page.textContent("h1")) ?? "") && (await page.locator("img[alt^='Portrait']").count()) === 1);
   const robots = await page.locator("meta[name=robots]").getAttribute("content").catch(() => null);
   ok("published page is indexable", !robots || !/noindex/.test(robots));
-  const missing = await ctx.request.get(base + "/people/tom-okafor");
+  const missing = await ctx.request.get(base + "/people/tom-okafor", { maxRetries: 2 });
   ok("client accounts are never public", missing.status() === 404);
-  const enumerate = await ctx.request.get(base + "/api/avatar/00000000-0000-0000-0000-000000000000");
+  const enumerate = await ctx.request.get(base + "/api/avatar/00000000-0000-0000-0000-000000000000", { maxRetries: 2 });
   ok("unknown avatar id is 404", enumerate.status() === 404);
-  const sitemap = await (await ctx.request.get(base + "/sitemap.xml")).text();
+  const sitemap = await (await ctx.request.get(base + "/sitemap.xml", { maxRetries: 2 })).text();
   ok("published profile in sitemap", sitemap.includes(`/people/${slugNew}`) && !sitemap.includes("/people/tom"));
   await page.screenshot({ path: `${out}/public-profile.png` });
   await ctx.close();
