@@ -7,7 +7,7 @@ import { ApprovalList } from "@/components/workspace/Approvals";
 export default async function Page() {
   const user = await requirePageUser("/portal/approvals");
   const list = await listApprovals(user);
-  const full = (await Promise.all(list.map((a) => getApproval(user, a.id)))).filter((a): a is NonNullable<typeof a> => Boolean(a)).map((a) => ({ ...a, projectCode: a.project.code, projectTitle: a.project.title }));
+  const full = (await Promise.all(list.map(async (a) => (await getApproval(user, a.id))))).filter((a): a is NonNullable<typeof a> => Boolean(a)).map((a) => ({ ...a, projectCode: a.project.code, projectTitle: a.project.title }));
   const pending = full.filter((a) => a.status === "pending");
   return (
     <div>

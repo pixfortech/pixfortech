@@ -1,12 +1,20 @@
 // Authenticated product QA: login, portal, admin, isolation, request flow with realtime.
-import { chromium } from "playwright";
+import { launchBrowser, qaOutput, qaPassword } from "./qa-runtime.mjs";
 import { mkdirSync } from "node:fs";
+import assert from "node:assert/strict";
 const base = process.argv[2] ?? "http://localhost:3000";
-const out = "/tmp/claude-0/-home-user-pixfortech/b9fe4a5d-cca4-5894-8a93-ccba0580142b/scratchpad/shots/app";
+const out = qaOutput("app");
 mkdirSync(out, { recursive: true });
-const PASSWORD = "forge-demo-2026!";
-const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome", args: ["--no-sandbox"] });
+const PASSWORD = qaPassword();
+const browser = await launchBrowser();
 const errors = [];
+const failures = [];
+const report = console.log;
+console.log = (...args) => {
+  const message = args.join(" ");
+  if (/✗|LEAK/.test(message)) failures.push(message);
+  report(...args);
+};
 const W = Number(process.env.W ?? 1366);
 async function login(email, vw = W) {
   const ctx = await browser.newContext({ viewport: { width: vw, height: vw < 800 ? 812 : 900 } });
@@ -49,11 +57,13 @@ await pm.page.goto(base + "/admin/tasks", { waitUntil: "load" }); await shot(pm.
 await pm.page.goto(base + "/admin/requests", { waitUntil: "load" }); await shot(pm.page, "admin-requests");
 // Role gate: client cannot open admin; PM redirected away from portal
 await a.page.goto(base + "/admin", { waitUntil: "load" }); console.log("client -> /admin lands on", a.page.url().replace(base, ""));
+assert.equal(new URL(a.page.url()).pathname, "/portal");
 await pm.page.goto(base + "/portal", { waitUntil: "load" }); console.log("pm -> /portal lands on", pm.page.url().replace(base, ""));
+assert.equal(new URL(pm.page.url()).pathname, "/admin");
 // Isolation: client A must not see client B's project (find B's project id via admin)
 await pm.page.goto(base + "/admin/projects", { waitUntil: "load" });
 const links = await pm.page.locator("a[href^='/admin/projects/']").evaluateAll((as) => as.map((x) => x.getAttribute("href")));
-const ids = [...new Set(links.map((h) => h.split("/")[3]).filter(Boolean))];
+const ids = [...new Set(links.map((h) => h.split("/")[3]).filter((id) => id && id !== "new"))];
 const aId = projA.split("/")[3];
 let isolation = "n/a";
 for (const id of ids) {
@@ -65,6 +75,7 @@ for (const id of ids) {
   if (isolation.startsWith("LEAK")) break;
 }
 console.log("client A -> other projects:", isolation, "| checked", ids.length - 1);
+assert.notEqual(isolation, "n/a", "Must exercise a foreign project");
 // API isolation: file download and request detail for foreign ids
 const foreignReq = await pm.page.evaluate(async () => { const r = await fetch("/api/search?q=CSV"); const j = await r.json(); return j.requests?.[0]?.id; });
 if (foreignReq) { const r = await a.page.goto(base + `/portal/requests/${foreignReq}`, { waitUntil: "load" }); console.log("client A -> client B request:", r?.status(), /misplaced|not found/i.test((await a.page.textContent("body")) ?? "") ? "404 ✓" : "VISIBLE ✗"); }
@@ -83,6 +94,7 @@ await toastWait;
 await shot(a.page, "portal-request");
 const unread = await pm.page.getByTestId("unread-count").textContent().catch(() => "0");
 console.log("PM unread badge:", unread);
+assert.ok(Number(unread) > 0, "New request must update unread count");
 // PM opens the request (via toast link) and moves it to Under review; client sees live update
 const reqUrl = a.page.url().replace(base, "").replace("/portal", "/admin");
 await pm.page.goto(base + reqUrl, { waitUntil: "load" });
@@ -110,3 +122,5 @@ await pm.page.getByRole("button", { name: "Sign out" }).click();
 await pm.page.waitForURL(/\/login/, { timeout: 10000 }).then(() => console.log("sign out ✓"));
 await a.ctx.close(); await pm.ctx.close(); await browser.close();
 if (errors.length) console.log("ERRORS:\n" + [...new Set(errors)].slice(0, 12).join("\n"));
+assert.deepEqual(failures, [], "Product QA failures");
+assert.deepEqual(errors.filter((message) => !message.includes("404 (Not Found)")), [], "Unexpected browser errors");

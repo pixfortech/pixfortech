@@ -20,13 +20,15 @@ const google = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
  * in src/server/auth/session.ts and the services.
  */
 function createAuth() {
+  if (process.env.NODE_ENV === "production" && (!process.env.BETTER_AUTH_SECRET || process.env.BETTER_AUTH_SECRET.length < 32)) throw new Error("A strong BETTER_AUTH_SECRET is required in production.");
   return betterAuth({
   appName: "Pixel Forge",
   baseURL: appUrl,
+  trustedOrigins: [appUrl, ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",").map((s) => s.trim()).filter(Boolean) ?? [])],
   secret: process.env.BETTER_AUTH_SECRET ?? (process.env.NODE_ENV === "production" ? undefined : "development-only-secret-change-me-please"),
   database: drizzleAdapter(db, {
-    provider: "sqlite",
-    schema: { user: schema.users, session: schema.sessions, account: schema.accounts, verification: schema.verifications },
+    provider: "pg",
+    schema: { user: schema.users, session: schema.sessions, account: schema.accounts, verification: schema.verifications, rateLimit: schema.rateLimit },
   }),
   user: {
     additionalFields: {
@@ -39,8 +41,10 @@ function createAuth() {
   },
   emailAndPassword: {
     enabled: true,
+    autoSignIn: false,
     minPasswordLength: 10,
-    requireEmailVerification: process.env.REQUIRE_EMAIL_VERIFICATION === "true",
+    requireEmailVerification: process.env.REQUIRE_EMAIL_VERIFICATION !== "false",
+    revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
       await sendEmail({ to: user.email, subject: "Reset your Pixel Forge password", text: `Hello ${user.name},\n\nSomeone asked to reset the password for this account. If that was you, open the link below within the hour:\n\n${url}\n\nIf it was not you, ignore this email. The pixels are safe.` });
     },
@@ -56,13 +60,13 @@ function createAuth() {
   session: {
     expiresIn: 60 * 60 * 24 * 14,
     updateAge: 60 * 60 * 24,
-    cookieCache: { enabled: true, maxAge: 60 * 5 },
+    cookieCache: { enabled: false },
   },
   advanced: {
     useSecureCookies: process.env.NODE_ENV === "production",
-    database: { generateId: "uuid" },
+    database: { generateId: () => crypto.randomUUID() },
   },
-  rateLimit: { enabled: true, window: 60, max: 30 },
+  rateLimit: { enabled: true, window: 60, max: 30, storage: "database" },
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {

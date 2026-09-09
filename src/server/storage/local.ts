@@ -5,7 +5,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import type { StorageDriver } from "./index";
 
-const ROOT = path.resolve(process.env.STORAGE_DIR ?? path.join(process.cwd(), "storage"));
+const ROOT = path.resolve(/* turbopackIgnore: true */ process.env.STORAGE_DIR ?? path.join(process.cwd(), "storage"));
 
 function resolveSafe(key: string): string {
   const p = path.resolve(ROOT, key);
@@ -23,8 +23,8 @@ export class LocalStorage implements StorageDriver {
   async get(key: string) {
     const p = resolveSafe(key);
     try {
-      const s = await stat(p);
-      return { stream: Readable.toWeb(createReadStream(p)) as ReadableStream<Uint8Array>, size: s.size };
+      const s = await stat(/* turbopackIgnore: true */ p);
+      return { stream: Readable.toWeb(createReadStream(/* turbopackIgnore: true */ p)) as ReadableStream<Uint8Array>, size: s.size };
     } catch {
       return null;
     }

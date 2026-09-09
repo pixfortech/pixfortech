@@ -12,7 +12,7 @@ import { ClientForm, InviteForm, UserRow } from "@/components/workspace/forms";
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requirePageUser(`/admin/clients/${id}`);
-  const client = getClient(user, id);
+  const client = (await getClient(user, id));
   if (!client) notFound();
   const projects = await listProjects(user, { organisationId: id });
   return (

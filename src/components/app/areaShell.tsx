@@ -23,9 +23,9 @@ export async function areaUser(area: "portal" | "admin", next: string): Promise<
 
 export async function AreaShell({ area, user, children }: { area: "portal" | "admin"; user: SessionUser; children: ReactNode }) {
   const [notifications, unread, unreadMessages, reqStats, pendingApprovals] = await Promise.all([
-    listNotifications(user.id, 15), unreadCount(user.id), unreadMessageCount(user), requestStats(user), listApprovals(user, { status: "pending" }),
+    (await listNotifications(user.id, 15)), (await unreadCount(user.id)), unreadMessageCount(user), requestStats(user), (await listApprovals(user, { status: "pending" })),
   ]);
-  const org = user.organisationId ? db.select({ name: schema.organisations.name }).from(schema.organisations).where(eq(schema.organisations.id, user.organisationId)).get() : null;
+  const org = user.organisationId ? (await db.select({ name: schema.organisations.name }).from(schema.organisations).where(eq(schema.organisations.id, user.organisationId)).limit(1))[0] : null;
   const nav: NavItem[] = area === "admin"
     ? [
         { href: "/admin", label: "Overview", icon: "home" },

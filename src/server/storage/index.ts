@@ -20,6 +20,7 @@ export interface StorageDriver {
 let driver: StorageDriver | null = null;
 export function storage(): StorageDriver {
   if (driver) return driver;
+  if (process.env.NODE_ENV === "production" && process.env.STORAGE_DRIVER !== "s3") throw new Error("Production requires private S3-compatible storage.");
   driver = process.env.STORAGE_DRIVER === "s3" ? new S3Storage() : new LocalStorage();
   return driver;
 }
@@ -31,7 +32,11 @@ export function newStorageKey(ext: string): string {
   return `${d.getUTCFullYear()}/${String(d.getUTCMonth() + 1).padStart(2, "0")}/${randomBytes(16).toString("hex")}${safeExt ? "." + safeExt : ""}`;
 }
 
-const secret = () => process.env.FILE_URL_SECRET ?? process.env.BETTER_AUTH_SECRET ?? "development-only-secret-change-me-please";
+const secret = () => {
+  const value = process.env.FILE_URL_SECRET ?? process.env.BETTER_AUTH_SECRET;
+  if (!value && process.env.NODE_ENV === "production") throw new Error("FILE_URL_SECRET is required in production.");
+  return value ?? "development-only-secret-change-me-please";
+};
 
 /** Signed, expiring download token so links can be shared inside the app safely. */
 export function signDownload(fileId: string, userId: string, ttlSeconds = 600): string {

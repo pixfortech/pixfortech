@@ -9,7 +9,7 @@ const STATUSES = ["lead", "discovery", "planning", "design", "development", "int
 export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const user = await requirePageUser("/admin/projects");
   const sp = await searchParams;
-  const [projects, clients, team] = await Promise.all([listProjects(user, { status: sp.status, organisationId: sp.client, managerId: sp.manager }), listClients(user), listTeam(user)]);
+  const [projects, clients, team] = await Promise.all([(await listProjects(user, { status: sp.status, organisationId: sp.client, managerId: sp.manager })), (await listClients(user)), (await listTeam(user))]);
   return (
     <div>
       <PageTitle eyebrow="Admin" title="Projects" description={`${projects.length} project${projects.length === 1 ? "" : "s"}`} actions={<AppButton href="/admin/projects/new">New project</AppButton>} />

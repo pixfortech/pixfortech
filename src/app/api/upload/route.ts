@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       const stored = await storeFile(user, { ...parsed.data, clientVisible: parsed.data.clientVisible ? parsed.data.clientVisible === "true" : undefined }, f.name, f.type, buf);
       results.push(stored);
     }
-    recordAudit({ actorId: user.id, action: "file.upload", targetType: "project", targetId: parsed.data.projectId, metadata: { count: results.length }, ip: req.headers.get("x-forwarded-for") });
+    (await recordAudit({ actorId: user.id, action: "file.upload", targetType: "project", targetId: parsed.data.projectId, metadata: { count: results.length }, ip: req.headers.get("x-forwarded-for") }));
     return NextResponse.json({ ok: true, files: results });
   } catch (err) {
     if (err instanceof AuthError) return NextResponse.json({ ok: false, error: err.message }, { status: err.status });

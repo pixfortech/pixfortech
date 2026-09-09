@@ -12,7 +12,7 @@ const Ctx = createContext<Api | null>(null);
 export const useRealtime = () => { const c = useContext(Ctx); if (!c) throw new Error("useRealtime outside provider"); return c; };
 
 /**
- * One EventSource per tab. Events refresh server components, raise toasts
+ * One authenticated event subscription per tab. Events refresh server components, raise toasts
  * (batched, at most three visible), update the unread badge and, when the
  * user opted in, send a browser notification while the tab is hidden.
  */
@@ -46,38 +46,48 @@ export function RealtimeProvider({ children, initialUnread, area, userId }: { ch
   }, [router]);
 
   useEffect(() => {
-    let es: EventSource | null = null;
-    let retry = 1000;
     let stopped = false;
-    const connect = () => {
-      if (stopped) return;
-      es = new EventSource("/api/realtime");
-      es.addEventListener("ready", () => { retry = 1000; setState((s) => ({ ...s, connected: true })); });
-      es.onerror = () => {
-        setState((s) => ({ ...s, connected: false }));
-        es?.close();
-        if (!stopped) setTimeout(connect, Math.min(15000, (retry *= 1.8)));
-      };
-      const handle = (type: string) => (ev: MessageEvent) => {
-        let data: Record<string, unknown> = {};
-        try { data = JSON.parse(ev.data); } catch { return; }
-        setState((s) => ({ ...s, lastEventAt: Date.now() }));
-        for (const l of listeners.current) l(type, data);
-        if (type === "notification") {
-          setState((s) => ({ ...s, unread: s.unread + 1 }));
-          const href = typeof data.href === "string" ? `/${area}${data.href}` : undefined;
-          toast({ title: String(data.title ?? "Update"), body: data.body ? String(data.body) : undefined, href, kind: String(data.category ?? "info") });
-          if (data.browser && document.hidden && typeof Notification !== "undefined" && Notification.permission === "granted") {
-            try { new Notification(String(data.title), { body: data.body ? String(data.body) : undefined, tag: String(data.id) }); } catch { /* ignore */ }
+    let timer: ReturnType<typeof setTimeout>;
+    let cursor = Date.now();
+    let retry = 2000;
+    const seen = new Map<string, number>();
+    const controller = new AbortController();
+    const poll = async () => {
+      try {
+        const response = await fetch("/api/realtime?since=" + cursor, { cache: "no-store", signal: controller.signal });
+        if (response.status === 401) { router.refresh(); return; }
+        if (!response.ok) throw new Error("Realtime unavailable");
+        const result = await response.json() as { events: { type: string; data: Record<string, unknown> }[]; cursor: number; unread: number; resync: boolean };
+        if (stopped) return;
+        for (const { type, data } of result.events) {
+          const id = String(data.id);
+          if (seen.has(id)) continue;
+          seen.set(id, Number(data.at));
+          for (const listener of listeners.current) listener(type, data);
+          if (type === "notification") {
+            const href = typeof data.href === "string" ? `/${area}${data.href}` : undefined;
+            toast({ title: String(data.title ?? "Update"), body: data.body ? String(data.body) : undefined, href, kind: String(data.category ?? "info") });
+            if (data.browser && document.hidden && typeof Notification !== "undefined" && Notification.permission === "granted") {
+              try { new Notification(String(data.title), { body: data.body ? String(data.body) : undefined, tag: id }); } catch { /* unavailable */ }
+            }
           }
+          if (type !== "typing" && type !== "presence") scheduleRefresh();
         }
-        if (type !== "typing" && type !== "presence") scheduleRefresh();
-      };
-      for (const t of ["notification", "message", "request.created", "request.updated", "task.created", "task.updated", "project.updated", "approval.updated", "file.created", "typing", "presence"]) es.addEventListener(t, handle(t));
+        if (result.resync) scheduleRefresh();
+        cursor = result.cursor;
+        for (const [id, at] of seen) if (at < cursor - 900_000) seen.delete(id);
+        setState({ connected: true, unread: result.unread, lastEventAt: Date.now() });
+        retry = 2000;
+      } catch {
+        if (!stopped) setState((s) => ({ ...s, connected: false }));
+        retry = Math.min(15000, retry * 1.8);
+      } finally {
+        if (!stopped) timer = setTimeout(poll, document.hidden ? 15000 : retry);
+      }
     };
-    connect();
-    return () => { stopped = true; es?.close(); clearTimeout(refreshTimer.current); };
-  }, [area, userId, scheduleRefresh, toast]);
+    void poll();
+    return () => { stopped = true; controller.abort(); clearTimeout(timer); clearTimeout(refreshTimer.current); };
+  }, [area, userId, scheduleRefresh, toast, router]);
 
   const api: Api = {
     ...state,

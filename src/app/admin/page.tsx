@@ -15,9 +15,9 @@ import { ActivityFeed } from "@/components/workspace/ActivityFeed";
 export default async function AdminHome() {
   const user = await requirePageUser("/admin");
   const [pStats, rStats, tStats, projects, requests, tasks, approvals, conversations, ids, team] = await Promise.all([
-    projectStats(user), requestStats(user), taskStats(user), listProjects(user), listRequests(user, { open: true }), listTasks(user), listApprovals(user, { status: "pending" }), listConversations(user), accessibleProjectIds(user), listTeam(user),
+    projectStats(user), requestStats(user), taskStats(user), (await listProjects(user)), (await listRequests(user, { open: true })), (await listTasks(user)), (await listApprovals(user, { status: "pending" })), (await listConversations(user)), (await accessibleProjectIds(user)), (await listTeam(user)),
   ]);
-  const activity = listActivity(user, { projectIds: ids, limit: 12 });
+  const activity = (await listActivity(user, { projectIds: ids, limit: 12 }));
   const { myTasks, dueSoon } = deriveTasks(tasks, user.id);
   const unread = conversations.reduce((n, c) => n + c.unread, 0);
   const needsClient = requests.filter((r) => ["needs_clarification", "ready_for_review"].includes(r.status));

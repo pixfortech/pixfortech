@@ -1,13 +1,14 @@
 // End-to-end checks for the remaining product flows: password reset via emailed link,
 // password change, staff invitation, file upload + cross-tenant download, approvals, kanban drag.
-import { chromium } from "playwright";
+import { launchBrowser, qaOutput, qaPassword } from "./qa-runtime.mjs";
 import { mkdirSync, readFileSync } from "node:fs";
+import { randomBytes } from "node:crypto";
 const base = process.argv[2] ?? "http://localhost:3000";
-const log = process.env.DEV_LOG ?? "/tmp/claude-0/-home-user-pixfortech/b9fe4a5d-cca4-5894-8a93-ccba0580142b/scratchpad/dev.log";
-const out = "/tmp/claude-0/-home-user-pixfortech/b9fe4a5d-cca4-5894-8a93-ccba0580142b/scratchpad/shots/flows";
+const log = process.env.DEV_LOG ?? "data/deployment/dev.log";
+const out = qaOutput("flows");
 mkdirSync(out, { recursive: true });
-const PASSWORD = "forge-demo-2026!";
-const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome", args: ["--no-sandbox"] });
+const PASSWORD = qaPassword();
+const browser = await launchBrowser();
 const errors = [];
 const results = [];
 const ok = (name, pass, detail = "") => { results.push([name, pass, detail]); console.log(`${pass ? "✓" : "✗"} ${name}${detail ? " — " + detail : ""}`); };
@@ -52,11 +53,11 @@ const logSize = () => readFileSync(log, "utf8").length;
   await page.getByRole("button", { name: "Send reset link" }).click();
   await page.waitForTimeout(1500);
   const link = lastEmailLink("tom@northbank.test", /Reset your Pixel Forge password/, since);
-  ok("reset email logged with link", !!link, link ?? "no link found");
+  ok("reset email logged with link", !!link, link ? "link received (redacted)" : "no link found");
   if (link) {
     await page.goto(link, { waitUntil: "load" });
     await page.waitForURL(/reset-password/, { timeout: 15000 });
-    const tmp = "temporary-forge-pass-9!";
+    const tmp = randomBytes(24).toString("base64url");
     await page.getByLabel("New password").fill(tmp);
     await page.getByLabel("Confirm password").fill(tmp);
     await page.getByRole("button", { name: "Save password" }).click();
@@ -65,7 +66,7 @@ const logSize = () => readFileSync(log, "utf8").length;
     // reused link must fail
     const again = await page.goto(link, { waitUntil: "load" });
     const reused = /invalid or has expired/i.test((await page.textContent("body")) ?? "");
-    ok("reset link is single-use", reused, `${again?.status()} ${page.url().replace(base, "")}`);
+    ok("reset link is single-use", reused, `${again?.status()} ${new URL(page.url()).pathname}`);
     const oldLogin = await fresh(null);
     await oldLogin.page.goto(base + "/login", { waitUntil: "load" });
     await oldLogin.page.getByLabel("Email").fill("tom@northbank.test");
@@ -112,14 +113,18 @@ const logSize = () => readFileSync(log, "utf8").length;
   ok("invitation email logged with link", !!link);
   if (link) {
     const p = await fresh(null);
+    const verification = lastEmailLink(email, /Verify your Pixel Forge email/, since);
+    ok("invitation includes email verification", !!verification);
+    if (verification) await p.page.goto(verification, { waitUntil: "load" });
     await p.page.goto(link, { waitUntil: "load" });
     await p.page.waitForURL(/reset-password/, { timeout: 15000 });
-    await p.page.getByLabel("New password").fill("invited-person-pass-1!");
-    await p.page.getByLabel("Confirm password").fill("invited-person-pass-1!");
+    const invitedPassword = randomBytes(24).toString("base64url");
+    await p.page.getByLabel("New password").fill(invitedPassword);
+    await p.page.getByLabel("Confirm password").fill(invitedPassword);
     await p.page.getByRole("button", { name: "Save password" }).click();
     await p.page.waitForTimeout(2000);
     await p.ctx.close();
-    const inv = await fresh(email, "invited-person-pass-1!");
+    const inv = await fresh(email, invitedPassword);
     ok("invitee signs in and lands in admin", inv.page.url().includes("/admin"), inv.page.url().replace(base, ""));
     // team member without project membership sees no projects
     await inv.page.goto(base + "/admin/projects", { waitUntil: "load" });

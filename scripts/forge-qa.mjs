@@ -1,10 +1,10 @@
 // Scroll-forge QA: progress follows scroll, freezes on stop, reverses on scroll-up.
-import { chromium } from "playwright";
+import { launchBrowser, qaOutput } from "./qa-runtime.mjs";
 import { mkdirSync } from "node:fs";
 const base = process.argv[2] ?? "http://localhost:3000";
-const out = "/tmp/claude-0/-home-user-pixfortech/b9fe4a5d-cca4-5894-8a93-ccba0580142b/scratchpad/shots/forge";
+const out = qaOutput("forge");
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome", args: ["--no-sandbox"] });
+const browser = await launchBrowser();
 const errors = [];
 const W = Number(process.env.W ?? 1440);
 const ctx = await browser.newContext({ viewport: { width: W, height: W < 800 ? 812 : 900 }, hasTouch: W < 800 });

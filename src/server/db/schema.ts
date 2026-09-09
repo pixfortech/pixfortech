@@ -1,19 +1,18 @@
 /**
- * Relational schema for the Pixel Forge platform (Drizzle ORM, SQLite dialect).
+ * Relational schema for the Pixel Forge platform (Drizzle ORM, PostgreSQL dialect).
  *
  * Tenancy: every client-scoped row carries `organisationId`; staff rows use
  * the Pixel Forge organisation. All access goes through src/server/services
  * which enforce tenant isolation server-side.
  *
- * The same structure ports to PostgreSQL by swapping the column builders
- * (drizzle-orm/pg-core) and the driver; names, keys and indexes are identical.
+ * Original table names, keys and relationships are preserved from SQLite.
  */
+import { bigint, boolean, index, integer, jsonb, primaryKey, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
-const now = () => integer("created_at", { mode: "timestamp_ms" }).notNull().default(sql`(unixepoch('subsec') * 1000)`);
-const updated = () => integer("updated_at", { mode: "timestamp_ms" }).notNull().default(sql`(unixepoch('subsec') * 1000)`);
-const ts = (name: string) => integer(name, { mode: "timestamp_ms" });
+const now = () => timestamp("created_at", { withTimezone: true, mode: "date", precision: 3 }).notNull().defaultNow();
+const updated = () => timestamp("updated_at", { withTimezone: true, mode: "date", precision: 3 }).notNull().defaultNow();
+const ts = (name: string) => timestamp(name, { withTimezone: true, mode: "date", precision: 3 });
 
 export const ROLES = ["super_admin", "admin", "project_manager", "team_member", "client_admin", "client_member"] as const;
 export type Role = (typeof ROLES)[number];
@@ -21,7 +20,7 @@ export const STAFF_ROLES: Role[] = ["super_admin", "admin", "project_manager", "
 export const CLIENT_ROLES: Role[] = ["client_admin", "client_member"];
 
 // ---------------------------------------------------------------- organisations
-export const organisations = sqliteTable("organisations", {
+export const organisations = pgTable("organisations", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   slug: text("slug").notNull(),
@@ -38,24 +37,24 @@ export const organisations = sqliteTable("organisations", {
 }, (t) => [uniqueIndex("org_slug_idx").on(t.slug)]);
 
 // ---------------------------------------------------------------- auth (better-auth core tables)
-export const users = sqliteTable("user", {
+export const users = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull(),
-  emailVerified: integer("email_verified", { mode: "boolean" }).notNull().default(false),
+  emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
   role: text("role", { enum: ROLES }).notNull().default("client_member"),
   organisationId: text("organisation_id").references(() => organisations.id),
   title: text("title"),
   timezone: text("timezone"),
-  disabled: integer("disabled", { mode: "boolean" }).notNull().default(false),
+  disabled: boolean("disabled").notNull().default(false),
   createdAt: now(),
   updatedAt: updated(),
 }, (t) => [uniqueIndex("user_email_idx").on(t.email), index("user_org_idx").on(t.organisationId)]);
 
-export const sessions = sqliteTable("session", {
+export const sessions = pgTable("session", {
   id: text("id").primaryKey(),
-  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date", precision: 3 }).notNull(),
   token: text("token").notNull(),
   createdAt: now(),
   updatedAt: updated(),
@@ -64,7 +63,7 @@ export const sessions = sqliteTable("session", {
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
 }, (t) => [uniqueIndex("session_token_idx").on(t.token), index("session_user_idx").on(t.userId)]);
 
-export const accounts = sqliteTable("account", {
+export const accounts = pgTable("account", {
   id: text("id").primaryKey(),
   accountId: text("account_id").notNull(),
   providerId: text("provider_id").notNull(),
@@ -80,11 +79,11 @@ export const accounts = sqliteTable("account", {
   updatedAt: updated(),
 }, (t) => [index("account_user_idx").on(t.userId)]);
 
-export const verifications = sqliteTable("verification", {
+export const verifications = pgTable("verification", {
   id: text("id").primaryKey(),
   identifier: text("identifier").notNull(),
   value: text("value").notNull(),
-  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date", precision: 3 }).notNull(),
   createdAt: now(),
   updatedAt: updated(),
 }, (t) => [index("verification_identifier_idx").on(t.identifier)]);
@@ -98,7 +97,7 @@ export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 export const PRIORITIES = ["low", "medium", "high", "urgent"] as const;
 export const HEALTH = ["on_track", "at_risk", "delayed"] as const;
 
-export const projects = sqliteTable("projects", {
+export const projects = pgTable("projects", {
   id: text("id").primaryKey(),
   organisationId: text("organisation_id").notNull().references(() => organisations.id),
   code: text("code").notNull(), // PF-0042
@@ -122,7 +121,7 @@ export const projects = sqliteTable("projects", {
   deletedAt: ts("deleted_at"),
 }, (t) => [uniqueIndex("project_code_idx").on(t.code), index("project_org_idx").on(t.organisationId), index("project_status_idx").on(t.status), index("project_manager_idx").on(t.managerId)]);
 
-export const projectMembers = sqliteTable("project_members", {
+export const projectMembers = pgTable("project_members", {
   projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   role: text("role", { enum: ["manager", "member", "client"] }).notNull().default("member"),
@@ -130,7 +129,7 @@ export const projectMembers = sqliteTable("project_members", {
 }, (t) => [primaryKey({ columns: [t.projectId, t.userId] }), index("pm_user_idx").on(t.userId)]);
 
 export const MILESTONE_STATUSES = ["planned", "in_progress", "awaiting_approval", "completed", "blocked"] as const;
-export const milestones = sqliteTable("milestones", {
+export const milestones = pgTable("milestones", {
   id: text("id").primaryKey(),
   projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
@@ -142,14 +141,14 @@ export const milestones = sqliteTable("milestones", {
   dueDate: ts("due_date"),
   order: integer("sort_order").notNull().default(0),
   dependsOnId: text("depends_on_id"),
-  clientVisible: integer("client_visible", { mode: "boolean" }).notNull().default(true),
-  requiresApproval: integer("requires_approval", { mode: "boolean" }).notNull().default(false),
+  clientVisible: boolean("client_visible").notNull().default(true),
+  requiresApproval: boolean("requires_approval").notNull().default(false),
   createdAt: now(),
   updatedAt: updated(),
 }, (t) => [index("milestone_project_idx").on(t.projectId)]);
 
 export const TASK_STATUSES = ["backlog", "todo", "in_progress", "in_review", "blocked", "done"] as const;
-export const tasks = sqliteTable("tasks", {
+export const tasks = pgTable("tasks", {
   id: text("id").primaryKey(),
   projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
   milestoneId: text("milestone_id").references(() => milestones.id, { onDelete: "set null" }),
@@ -163,7 +162,7 @@ export const tasks = sqliteTable("tasks", {
   dueDate: ts("due_date"),
   labels: text("labels"), // JSON string[]
   checklist: text("checklist"), // JSON {text, done}[]
-  clientVisible: integer("client_visible", { mode: "boolean" }).notNull().default(false),
+  clientVisible: boolean("client_visible").notNull().default(false),
   order: integer("sort_order").notNull().default(0),
   createdById: text("created_by_id").references(() => users.id),
   completedAt: ts("completed_at"),
@@ -171,17 +170,17 @@ export const tasks = sqliteTable("tasks", {
   updatedAt: updated(),
 }, (t) => [uniqueIndex("task_key_idx").on(t.key), index("task_project_idx").on(t.projectId), index("task_assignee_idx").on(t.assigneeId), index("task_status_idx").on(t.status), index("task_due_idx").on(t.dueDate)]);
 
-export const taskCollaborators = sqliteTable("task_collaborators", {
+export const taskCollaborators = pgTable("task_collaborators", {
   taskId: text("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
 }, (t) => [primaryKey({ columns: [t.taskId, t.userId] })]);
 
-export const taskComments = sqliteTable("task_comments", {
+export const taskComments = pgTable("task_comments", {
   id: text("id").primaryKey(),
   taskId: text("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
   authorId: text("author_id").notNull().references(() => users.id),
   body: text("body").notNull(),
-  internal: integer("internal", { mode: "boolean" }).notNull().default(true),
+  internal: boolean("internal").notNull().default(true),
   createdAt: now(),
 }, (t) => [index("task_comment_task_idx").on(t.taskId)]);
 
@@ -193,7 +192,7 @@ export const REQUEST_STATUSES = [
 ] as const;
 export type RequestStatus = (typeof REQUEST_STATUSES)[number];
 
-export const requests = sqliteTable("requests", {
+export const requests = pgTable("requests", {
   id: text("id").primaryKey(),
   organisationId: text("organisation_id").notNull().references(() => organisations.id),
   projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
@@ -215,18 +214,18 @@ export const requests = sqliteTable("requests", {
   closedAt: ts("closed_at"),
 }, (t) => [uniqueIndex("request_number_idx").on(t.number), index("request_project_idx").on(t.projectId), index("request_org_idx").on(t.organisationId), index("request_status_idx").on(t.status), index("request_assignee_idx").on(t.assigneeId)]);
 
-export const requestComments = sqliteTable("request_comments", {
+export const requestComments = pgTable("request_comments", {
   id: text("id").primaryKey(),
   requestId: text("request_id").notNull().references(() => requests.id, { onDelete: "cascade" }),
   authorId: text("author_id").notNull().references(() => users.id),
   body: text("body").notNull(),
   /** Internal notes are never returned to client sessions. Enforced in services. */
-  internal: integer("internal", { mode: "boolean" }).notNull().default(false),
+  internal: boolean("internal").notNull().default(false),
   createdAt: now(),
 }, (t) => [index("request_comment_request_idx").on(t.requestId)]);
 
 // ---------------------------------------------------------------- files
-export const files = sqliteTable("files", {
+export const files = pgTable("files", {
   id: text("id").primaryKey(),
   organisationId: text("organisation_id").notNull().references(() => organisations.id),
   projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }),
@@ -243,14 +242,14 @@ export const files = sqliteTable("files", {
   version: integer("version").notNull().default(1),
   supersedesId: text("supersedes_id"),
   uploaderId: text("uploader_id").notNull().references(() => users.id),
-  clientVisible: integer("client_visible", { mode: "boolean" }).notNull().default(true),
+  clientVisible: boolean("client_visible").notNull().default(true),
   scanStatus: text("scan_status", { enum: ["pending", "clean", "flagged", "skipped"] }).notNull().default("skipped"),
   createdAt: now(),
   deletedAt: ts("deleted_at"),
 }, (t) => [index("file_project_idx").on(t.projectId), index("file_request_idx").on(t.requestId), index("file_task_idx").on(t.taskId), index("file_org_idx").on(t.organisationId)]);
 
 // ---------------------------------------------------------------- conversations & messages
-export const conversations = sqliteTable("conversations", {
+export const conversations = pgTable("conversations", {
   id: text("id").primaryKey(),
   organisationId: text("organisation_id").notNull().references(() => organisations.id),
   projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
@@ -258,18 +257,18 @@ export const conversations = sqliteTable("conversations", {
   requestId: text("request_id").references(() => requests.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   /** Internal conversations are staff-only. */
-  internal: integer("internal", { mode: "boolean" }).notNull().default(false),
+  internal: boolean("internal").notNull().default(false),
   createdAt: now(),
   lastMessageAt: ts("last_message_at"),
 }, (t) => [index("conversation_project_idx").on(t.projectId), index("conversation_request_idx").on(t.requestId)]);
 
-export const conversationMembers = sqliteTable("conversation_members", {
+export const conversationMembers = pgTable("conversation_members", {
   conversationId: text("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   lastReadAt: ts("last_read_at"),
 }, (t) => [primaryKey({ columns: [t.conversationId, t.userId] })]);
 
-export const messages = sqliteTable("messages", {
+export const messages = pgTable("messages", {
   id: text("id").primaryKey(),
   conversationId: text("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
   authorId: text("author_id").notNull().references(() => users.id),
@@ -284,7 +283,7 @@ export const messages = sqliteTable("messages", {
 
 // ---------------------------------------------------------------- approvals
 export const APPROVAL_TYPES = ["design", "milestone", "request", "content", "staging", "delivery"] as const;
-export const approvals = sqliteTable("approvals", {
+export const approvals = pgTable("approvals", {
   id: text("id").primaryKey(),
   organisationId: text("organisation_id").notNull().references(() => organisations.id),
   projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
@@ -301,7 +300,7 @@ export const approvals = sqliteTable("approvals", {
   decidedAt: ts("decided_at"),
 }, (t) => [index("approval_project_idx").on(t.projectId), index("approval_status_idx").on(t.status)]);
 
-export const approvalDecisions = sqliteTable("approval_decisions", {
+export const approvalDecisions = pgTable("approval_decisions", {
   id: text("id").primaryKey(),
   approvalId: text("approval_id").notNull().references(() => approvals.id, { onDelete: "cascade" }),
   userId: text("user_id").notNull().references(() => users.id),
@@ -312,7 +311,7 @@ export const approvalDecisions = sqliteTable("approval_decisions", {
 }, (t) => [index("decision_approval_idx").on(t.approvalId)]);
 
 // ---------------------------------------------------------------- notifications
-export const notifications = sqliteTable("notifications", {
+export const notifications = pgTable("notifications", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   category: text("category").notNull(), // message | request | task | approval | project | mention | file | milestone
@@ -325,16 +324,16 @@ export const notifications = sqliteTable("notifications", {
   createdAt: now(),
 }, (t) => [index("notification_user_idx").on(t.userId, t.readAt), index("notification_created_idx").on(t.createdAt)]);
 
-export const notificationPreferences = sqliteTable("notification_preferences", {
+export const notificationPreferences = pgTable("notification_preferences", {
   userId: text("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
   /** JSON: { [category]: { inApp: boolean, email: boolean, browser: boolean } } */
   settings: text("settings").notNull(),
-  browserOptIn: integer("browser_opt_in", { mode: "boolean" }).notNull().default(false),
+  browserOptIn: boolean("browser_opt_in").notNull().default(false),
   updatedAt: updated(),
 });
 
 // ---------------------------------------------------------------- activity & audit
-export const activityEvents = sqliteTable("activity_events", {
+export const activityEvents = pgTable("activity_events", {
   id: text("id").primaryKey(),
   organisationId: text("organisation_id").notNull().references(() => organisations.id),
   projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }),
@@ -345,11 +344,11 @@ export const activityEvents = sqliteTable("activity_events", {
   targetId: text("target_id"),
   href: text("href"),
   /** Staff-only events never reach client feeds. */
-  internal: integer("internal", { mode: "boolean" }).notNull().default(false),
+  internal: boolean("internal").notNull().default(false),
   createdAt: now(),
 }, (t) => [index("activity_project_idx").on(t.projectId, t.createdAt), index("activity_org_idx").on(t.organisationId)]);
 
-export const auditEvents = sqliteTable("audit_events", {
+export const auditEvents = pgTable("audit_events", {
   id: text("id").primaryKey(),
   actorId: text("actor_id").references(() => users.id),
   action: text("action").notNull(),
@@ -361,10 +360,39 @@ export const auditEvents = sqliteTable("audit_events", {
 }, (t) => [index("audit_created_idx").on(t.createdAt), index("audit_actor_idx").on(t.actorId)]);
 
 /** Monotonic counters for human-readable identifiers. */
-export const counters = sqliteTable("counters", {
+export const counters = pgTable("counters", {
   name: text("name").primaryKey(),
   value: integer("value").notNull().default(0),
 });
+
+/** Durable event log shared by all serverless instances; retained for 24 hours. */
+export const realtimeEvents = pgTable("realtime_events", {
+  id: text("id").primaryKey(),
+  type: text("type").notNull(),
+  audience: jsonb("audience").$type<{ userIds?: string[]; projectIds?: string[]; organisationIds?: string[]; staff?: boolean }>().notNull(),
+  payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
+  createdAt: now(),
+}, (t) => [index("realtime_created_idx").on(t.createdAt)]);
+
+export const rateLimit = pgTable("rate_limit", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()::text`),
+  key: text("key").notNull().unique(),
+  count: integer("count").notNull(),
+  lastRequest: bigint("last_request", { mode: "number" }).notNull(),
+});
+
+export const uploadSessions = pgTable("upload_sessions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  target: jsonb("target").$type<{ projectId: string; taskId?: string; requestId?: string; clientVisible?: boolean }>().notNull(),
+  name: text("name").notNull(),
+  mime: text("mime").notNull(),
+  size: integer("size").notNull(),
+  status: text("status", { enum: ["pending", "validating", "complete", "failed"] }).notNull().default("pending"),
+  createdAt: now(),
+  expiresAt: ts("expires_at").notNull(),
+}, (t) => [index("upload_session_expiry_idx").on(t.expiresAt)]);
 
 export type User = typeof users.$inferSelect;
 export type Organisation = typeof organisations.$inferSelect;

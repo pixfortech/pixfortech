@@ -7,7 +7,7 @@ import { ClientForm } from "@/components/workspace/forms";
 
 export default async function Page() {
   const user = await requirePageUser("/admin/clients");
-  const clients = listClients(user);
+  const clients = (await listClients(user));
   return (
     <div>
       <PageTitle eyebrow="Admin" title="Clients" description="Organisations you build for. Each one is isolated from the others." actions={<ModalButton label="Add client" title="Add client"><ClientForm /></ModalButton>} />

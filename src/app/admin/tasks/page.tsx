@@ -14,7 +14,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   const sp = await searchParams;
   const view = sp.view === "list" ? "list" : "board";
   const assignee = sp.assignee === "me" ? user.id : sp.assignee;
-  const [tasks, projects, team] = await Promise.all([listTasks(user, { projectId: sp.project, assigneeId: assignee, priority: sp.priority, status: sp.status, due: sp.due as "today" | "overdue" | "week" | undefined }), listProjects(user), listTeam(user)]);
+  const [tasks, projects, team] = await Promise.all([(await listTasks(user, { projectId: sp.project, assigneeId: assignee, priority: sp.priority, status: sp.status, due: sp.due as "today" | "overdue" | "week" | undefined })), (await listProjects(user)), (await listTeam(user))]);
   const q = new URLSearchParams(Object.entries(sp).filter(([k, v]) => v && k !== "view") as [string, string][]);
   return (
     <div>

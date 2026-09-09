@@ -1,10 +1,10 @@
 // Behaviour QA: scroll-loop egg, dwell egg + game, form quietness, 404, reduced motion, mobile.
-import { chromium } from "playwright";
+import { launchBrowser, qaOutput } from "./qa-runtime.mjs";
 import { mkdirSync } from "node:fs";
 const base = process.argv[2] ?? "http://localhost:3000";
-const out = "/tmp/claude-0/-home-user-pixfortech/b9fe4a5d-cca4-5894-8a93-ccba0580142b/scratchpad/shots/behaviour";
+const out = qaOutput("behaviour");
 mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome", args: ["--no-sandbox"] });
+const browser = await launchBrowser();
 const errors = [];
 const mk = async (opts = {}) => { const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, ...opts }); const page = await ctx.newPage(); page.on("console", (m) => { if (m.type() === "error") errors.push("console: " + m.text().slice(0, 160)); }); page.on("pageerror", (e) => errors.push("pageerror: " + e.message)); return { ctx, page }; };
 const bubble = (page) => page.getByTestId("mascot-bubble");

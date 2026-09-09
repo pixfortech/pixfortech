@@ -14,7 +14,7 @@ export class S3Storage implements StorageDriver {
     this.client = new S3Client({
       region: process.env.S3_REGION ?? "auto",
       endpoint: process.env.S3_ENDPOINT,
-      forcePathStyle: Boolean(process.env.S3_FORCE_PATH_STYLE),
+      forcePathStyle: process.env.S3_FORCE_PATH_STYLE === "true",
       credentials: process.env.S3_ACCESS_KEY_ID ? { accessKeyId: process.env.S3_ACCESS_KEY_ID, secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? "" } : undefined,
     });
   }
@@ -30,6 +30,6 @@ export class S3Storage implements StorageDriver {
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
   }
   async presign(key: string, filename: string, mime: string, ttlSeconds: number) {
-    return getSignedUrl(this.client, new GetObjectCommand({ Bucket: this.bucket, Key: key, ResponseContentDisposition: `attachment; filename="${filename.replace(/"/g, "")}"`, ResponseContentType: mime }), { expiresIn: ttlSeconds });
+    return getSignedUrl(this.client, new GetObjectCommand({ Bucket: this.bucket, Key: key, ResponseContentDisposition: `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`, ResponseContentType: mime === "image/svg+xml" ? "application/octet-stream" : mime }), { expiresIn: ttlSeconds });
   }
 }

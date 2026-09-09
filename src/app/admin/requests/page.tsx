@@ -8,7 +8,7 @@ const STATUSES = ["submitted", "acknowledged", "under_review", "needs_clarificat
 export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const user = await requirePageUser("/admin/requests");
   const sp = await searchParams;
-  const [requests, clients, team] = await Promise.all([listRequests(user, { status: sp.status, type: sp.type, priority: sp.priority, organisationId: sp.client, assigneeId: sp.assignee === "me" ? user.id : sp.assignee }), listClients(user), listTeam(user)]);
+  const [requests, clients, team] = await Promise.all([(await listRequests(user, { status: sp.status, type: sp.type, priority: sp.priority, organisationId: sp.client, assigneeId: sp.assignee === "me" ? user.id : sp.assignee })), (await listClients(user)), (await listTeam(user))]);
   const open = requests.filter((r) => !["completed", "closed", "rejected", "cancelled"].includes(r.status));
   return (
     <div>

@@ -1,35 +1,22 @@
 import "server-only";
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
-import { mkdirSync } from "node:fs";
-import path from "node:path";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "./schema";
 
-/**
- * Database client. SQLite via better-sqlite3 in this deployment; the schema
- * and services are written to port to PostgreSQL. Migrations are generated
- * with drizzle-kit into ./drizzle and applied on first use.
- */
-const DB_PATH = process.env.DATABASE_PATH ?? path.join(process.cwd(), "data", "pixelforge.sqlite");
-
-declare global {
-  var __pfDb: ReturnType<typeof create> | undefined;
-}
-
+// HTTP queries do not keep sockets alive in suspended serverless instances.
+// Static builds must never connect to, or migrate, a database.
 function create() {
-  mkdirSync(path.dirname(DB_PATH), { recursive: true });
-  const sqlite = new Database(DB_PATH);
-  sqlite.pragma("journal_mode = WAL");
-  sqlite.pragma("foreign_keys = ON");
-  sqlite.pragma("busy_timeout = 5000");
-  const db = drizzle(sqlite, { schema });
-  migrate(db, { migrationsFolder: path.join(process.cwd(), "drizzle") });
-  return db;
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is required.");
+  return drizzle(neon(url), { schema });
 }
-
-export const db = globalThis.__pfDb ?? create();
-if (process.env.NODE_ENV !== "production") globalThis.__pfDb = db;
-
+export type Db = ReturnType<typeof create>;
+let instance: Db | undefined;
+export const db: Db = new Proxy({} as Db, {
+  get(_, key) {
+    instance ??= create();
+    const value = Reflect.get(instance, key);
+    return typeof value === "function" ? value.bind(instance) : value;
+  },
+});
 export { schema };
-export type Db = typeof db;

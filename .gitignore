@@ -43,3 +43,6 @@ next-env.d.ts
 # runtime data (sqlite database, private uploads)
 /data
 /storage
+/.netlify
+/.neon
+/artifacts

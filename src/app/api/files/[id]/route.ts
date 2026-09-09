@@ -22,7 +22,12 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   if (token && !verifyDownload(id, user.id, token)) return new Response("Expired link", { status: 403 });
   const inline = url.searchParams.get("inline") === "1" && (file.mime.startsWith("image/") || file.mime === "application/pdf") && file.mime !== "image/svg+xml";
   const presigned = await storage().presign(file.storageKey, file.name, file.mime, 300);
-  if (presigned) return NextResponse.redirect(presigned, 302);
+  if (presigned) {
+    const response = NextResponse.redirect(presigned, 302);
+    response.headers.set("cache-control", "private, no-store");
+    response.headers.set("referrer-policy", "no-referrer");
+    return response;
+  }
   const obj = await storage().get(file.storageKey);
   if (!obj) return new Response("Missing object", { status: 404 });
   const disposition = `${inline ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(file.name)}`;

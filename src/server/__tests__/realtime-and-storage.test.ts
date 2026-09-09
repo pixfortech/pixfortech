@@ -24,6 +24,11 @@ describe("realtime audience matching", () => {
   it("drops events with an empty audience", () => {
     expect(matches(ev({}), scope())).toBe(false);
   });
+  it("does not let staff or direct-user audiences bypass project access", () => {
+    const event = { ...ev({ staff: true, userIds: ["u1"] }), payload: { projectId: "foreign" } };
+    expect(matches(event, scope({ staff: true }))).toBe(false);
+    expect(matches({ ...event, payload: { projectId: "p1" } }, scope({ staff: true }))).toBe(true);
+  });
   it("publishes to subscribers and stops after unsubscribe", () => {
     const seen: string[] = [];
     const off = subscribe((e) => seen.push(e.type));

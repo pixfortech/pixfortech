@@ -13,7 +13,7 @@ import { RequestDetail } from "./RequestDetail";
 import { cn } from "@/lib/utils";
 
 export async function NotificationsPage({ user, area }: { user: SessionUser; area: "portal" | "admin" }) {
-  const items = listNotifications(user.id, 100);
+  const items = (await listNotifications(user.id, 100));
   return (
     <div>
       <PageTitle eyebrow={area === "admin" ? "Admin" : "Portal"} title="Notifications" description="Everything that needed your attention, newest first." actions={<Link href={`/${area}/settings`} className="text-[0.8125rem] text-forge-300 hover:text-forge-400">Preferences →</Link>} />
@@ -67,7 +67,7 @@ export async function RequestPage({ user, id, area }: { user: SessionUser; id: s
   const r = await getRequest(user, id);
   if (!r) notFound();
   const staff = isStaff(user);
-  const assignees = staff ? assignableUsers(user).filter((u) => !u.organisationId || u.organisationId === r.project.organisationId).filter((u) => ["super_admin", "admin", "project_manager", "team_member"].includes(u.role)) : [];
+  const assignees = staff ? (await assignableUsers(user)).filter((u) => !u.organisationId || u.organisationId === r.project.organisationId).filter((u) => ["super_admin", "admin", "project_manager", "team_member"].includes(u.role)) : [];
   return (
     <div>
       <p className="mb-2 text-[0.75rem] text-bone-400"><Link href={`/${area}/requests`} className="hover:text-bone-50">Requests</Link> <span className="text-bone-600">/</span> <span className="num">{r.ref}</span></p>

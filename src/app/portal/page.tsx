@@ -16,9 +16,9 @@ import { FileList } from "@/components/workspace/FileList";
 export default async function PortalHome() {
   const user = await requirePageUser("/portal");
   const [projects, requests, approvals, files, conversations, ids] = await Promise.all([
-    listProjects(user), listRequests(user, { open: true }), listApprovals(user, { status: "pending" }), listFiles(user), listConversations(user), accessibleProjectIds(user),
+    (await listProjects(user)), (await listRequests(user, { open: true })), (await listApprovals(user, { status: "pending" })), (await listFiles(user)), (await listConversations(user)), (await accessibleProjectIds(user)),
   ]);
-  const activity = listActivity(user, { projectIds: ids, limit: 10 });
+  const activity = (await listActivity(user, { projectIds: ids, limit: 10 }));
   const active = projects.filter((p) => !["completed", "on_hold"].includes(p.status));
   const overall = active.length ? Math.round(active.reduce((s, p) => s + p.progress, 0) / active.length) : 0;
   const milestoneLists = await Promise.all(active.slice(0, 6).map((p) => listMilestones(user, p.id).then((ms) => ms.map((m) => ({ ...m, project: p })))));

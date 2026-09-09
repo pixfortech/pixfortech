@@ -15,8 +15,8 @@ export function ProfilePage({ user, area }: { user: SessionUser; area: "portal" 
   );
 }
 
-export function SettingsPage({ user, area }: { user: SessionUser; area: "portal" | "admin" }) {
-  const { prefs, browserOptIn } = getPrefs(user.id);
+export async function SettingsPage({ user, area }: { user: SessionUser; area: "portal" | "admin" }) {
+  const { prefs, browserOptIn } = (await getPrefs(user.id));
   return (
     <div className="max-w-3xl">
       <PageTitle eyebrow={area === "admin" ? "Admin" : "Portal"} title="Settings" description="Decide what reaches you, and where." />

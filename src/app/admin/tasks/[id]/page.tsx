@@ -16,7 +16,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const user = await requirePageUser(`/admin/tasks/${id}`);
   const t = await getTask(user, id).catch(() => null);
   if (!t) notFound();
-  const [milestones, team] = await Promise.all([listMilestones(user, t.projectId), Promise.resolve(listTeam(user))]);
+  const [milestones, team] = await Promise.all([(await listMilestones(user, t.projectId)), Promise.resolve((await listTeam(user)))]);
   const checklist: { text: string; done: boolean }[] = t.checklist ? JSON.parse(t.checklist) : [];
   return (
     <div>

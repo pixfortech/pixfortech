@@ -1,0 +1,14 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "24"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# Domains are attached only after temporary-host production QA passes.
+[[redirects]]
+  from = "https://www.pixfortech.com/*"
+  to = "https://pixfortech.com/:splat"
+  status = 301
+  force = true

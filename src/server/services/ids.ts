@@ -1,17 +1,15 @@
 import "server-only";
-import { eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { db, schema } from "../db";
 
 export const uid = () => crypto.randomUUID();
 
 /** Atomic monotonic counter for human identifiers (PF-0042, PF-REQ-0142, PF-0042-17). */
-export function nextNumber(name: string): number {
-  return db.transaction((tx) => {
-    tx.insert(schema.counters).values({ name, value: 0 }).onConflictDoNothing().run();
-    tx.update(schema.counters).set({ value: sql`${schema.counters.value} + 1` }).where(eq(schema.counters.name, name)).run();
-    const row = tx.select({ value: schema.counters.value }).from(schema.counters).where(eq(schema.counters.name, name)).get();
-    return row?.value ?? 1;
-  });
+export async function nextNumber(name: string): Promise<number> {
+  const [row] = await db.insert(schema.counters).values({ name, value: 1 })
+    .onConflictDoUpdate({ target: schema.counters.name, set: { value: sql`${schema.counters.value} + 1` } })
+    .returning({ value: schema.counters.value });
+  return row.value;
 }
 
 export const pad = (n: number, width = 4) => String(n).padStart(width, "0");

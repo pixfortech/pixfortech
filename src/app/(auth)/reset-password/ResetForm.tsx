@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useHydrated } from "@/lib/useHydrated";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 import { AppButton, Field, inputCls } from "@/components/app/primitives";
 
 export function ResetForm({ token }: { token: string }) {
+  const hydrated = useHydrated();
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -23,8 +25,8 @@ export function ResetForm({ token }: { token: string }) {
   }
   return (
     <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
-      <Field label="New password" htmlFor="password"><input id="password" type="password" autoComplete="new-password" required value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} /></Field>
-      <Field label="Confirm password" htmlFor="confirm"><input id="confirm" type="password" autoComplete="new-password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputCls} /></Field>
+      <Field label="New password" htmlFor="password"><input id="password" type="password" autoComplete="new-password" required disabled={!hydrated} value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} /></Field>
+      <Field label="Confirm password" htmlFor="confirm"><input id="confirm" type="password" autoComplete="new-password" required disabled={!hydrated} value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputCls} /></Field>
       {error && <p role="alert" className="text-[0.8125rem] text-forge-300">{error}</p>}
       <AppButton type="submit" disabled={busy}>{busy ? "Saving…" : "Save password"}</AppButton>
     </form>

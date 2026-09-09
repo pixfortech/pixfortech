@@ -28,7 +28,7 @@ export async function listProjects(actor: Actor, filter: { status?: string; orga
   if (filter.organisationId) conds.push(eq(schema.projects.organisationId, filter.organisationId));
   if (filter.managerId) conds.push(eq(schema.projects.managerId, filter.managerId));
   if (filter.q) conds.push(sql`(${schema.projects.title} like ${"%" + filter.q + "%"} or ${schema.projects.code} like ${"%" + filter.q + "%"})`);
-  return db.select({
+  return (await db.select({
     id: schema.projects.id, code: schema.projects.code, title: schema.projects.title, summary: schema.projects.summary, status: schema.projects.status,
     priority: schema.projects.priority, health: schema.projects.health, progress: schema.projects.progress, phase: schema.projects.phase,
     startDate: schema.projects.startDate, targetDate: schema.projects.targetDate, updatedAt: schema.projects.updatedAt, pixelTheme: schema.projects.pixelTheme,
@@ -36,15 +36,15 @@ export async function listProjects(actor: Actor, filter: { status?: string; orga
   }).from(schema.projects)
     .innerJoin(schema.organisations, eq(schema.organisations.id, schema.projects.organisationId))
     .leftJoin(schema.users, eq(schema.users.id, schema.projects.managerId))
-    .where(and(...conds)).orderBy(desc(schema.projects.updatedAt)).all();
+    .where(and(...conds)).orderBy(desc(schema.projects.updatedAt)));
 }
 
 export async function getProject(actor: Actor, id: string) {
   const project = await requireProject(actor, id);
-  const org = db.select().from(schema.organisations).where(eq(schema.organisations.id, project.organisationId)).get()!;
-  const manager = project.managerId ? usersByIds([project.managerId])[0] ?? null : null;
-  const memberRows = db.select({ userId: schema.projectMembers.userId, role: schema.projectMembers.role }).from(schema.projectMembers).where(eq(schema.projectMembers.projectId, id)).all();
-  const members = usersByIds(memberRows.map((m) => m.userId)).map((u) => ({ ...u, projectRole: memberRows.find((m) => m.userId === u.id)?.role ?? "member" }));
+  const org = (await db.select().from(schema.organisations).where(eq(schema.organisations.id, project.organisationId)).limit(1))[0]!;
+  const manager = project.managerId ? (await usersByIds([project.managerId]))[0] ?? null : null;
+  const memberRows = (await db.select({ userId: schema.projectMembers.userId, role: schema.projectMembers.role }).from(schema.projectMembers).where(eq(schema.projectMembers.projectId, id)));
+  const members = (await usersByIds(memberRows.map((m) => m.userId))).map((u) => ({ ...u, projectRole: memberRows.find((m) => m.userId === u.id)?.role ?? "member" }));
   return { ...project, organisation: org, manager, members, workflow: projectWorkflow(project) };
 }
 
@@ -56,17 +56,17 @@ export type ProjectInput = {
 export async function createProject(actor: Actor, input: ProjectInput) {
   if (!canManageProjects(actor)) throw new AuthError(403, "Only admins and project managers can create projects.");
   const id = uid();
-  const code = projectCode(nextNumber("project"));
-  db.insert(schema.projects).values({
+  const code = projectCode((await nextNumber("project")));
+  (await db.insert(schema.projects).values({
     id, code, organisationId: input.organisationId, title: input.title, summary: input.summary ?? null, status: input.status ?? "planning",
     priority: input.priority ?? "medium", managerId: input.managerId ?? actor.id, startDate: input.startDate ?? null, targetDate: input.targetDate ?? null,
     phase: input.phase ?? null, pixelTheme: input.pixelTheme ?? null, createdById: actor.id,
-  }).run();
+  }));
   // Project channel conversation
-  db.insert(schema.conversations).values({ id: uid(), organisationId: input.organisationId, projectId: id, title: "Project chat", internal: false }).run();
-  db.insert(schema.conversations).values({ id: uid(), organisationId: input.organisationId, projectId: id, title: "Internal", internal: true }).run();
-  recordActivity({ organisationId: input.organisationId, projectId: id, actorId: actor.id, kind: "project.created", summary: `created project ${code} “${input.title}”`, targetType: "project", targetId: id, href: `/projects/${id}` });
-  recordAudit({ actorId: actor.id, action: "project.create", targetType: "project", targetId: id, metadata: { code, organisationId: input.organisationId } });
+  (await db.insert(schema.conversations).values({ id: uid(), organisationId: input.organisationId, projectId: id, title: "Project chat", internal: false }));
+  (await db.insert(schema.conversations).values({ id: uid(), organisationId: input.organisationId, projectId: id, title: "Internal", internal: true }));
+  (await recordActivity({ organisationId: input.organisationId, projectId: id, actorId: actor.id, kind: "project.created", summary: `created project ${code} “${input.title}”`, targetType: "project", targetId: id, href: `/projects/${id}` }));
+  (await recordAudit({ actorId: actor.id, action: "project.create", targetType: "project", targetId: id, metadata: { code, organisationId: input.organisationId } }));
   return { id, code };
 }
 
@@ -87,23 +87,23 @@ export async function updateProject(actor: Actor, id: string, patch: Partial<Pro
   if (patch.workflow !== undefined) set.workflow = patch.workflow ? JSON.stringify(patch.workflow) : null;
   const statusChanged = patch.status !== undefined && patch.status !== project.status;
   if (statusChanged) set.status = patch.status as ProjectStatus;
-  db.update(schema.projects).set(set).where(eq(schema.projects.id, id)).run();
+  (await db.update(schema.projects).set(set).where(eq(schema.projects.id, id)));
   if (statusChanged) {
     const label = STATUS_LABELS[patch.status!] ?? patch.status!;
-    recordActivity({ organisationId: project.organisationId, projectId: id, actorId: actor.id, kind: "project.status", summary: `moved ${project.code} to ${label}`, targetType: "project", targetId: id, href: `/projects/${id}` });
-    await notify({ recipientIds: [...projectClientIds(id, project.organisationId), ...projectStaffIds(id, project.managerId)], category: "project", title: `${project.code} is now ${label}`, body: project.title, href: `/projects/${id}`, projectId: id, actorId: actor.id });
+    (await recordActivity({ organisationId: project.organisationId, projectId: id, actorId: actor.id, kind: "project.status", summary: `moved ${project.code} to ${label}`, targetType: "project", targetId: id, href: `/projects/${id}` }));
+    await notify({ recipientIds: [...(await projectClientIds(id, project.organisationId)), ...(await projectStaffIds(id, project.managerId))], category: "project", title: `${project.code} is now ${label}`, body: project.title, href: `/projects/${id}`, projectId: id, actorId: actor.id });
   } else {
-    recordActivity({ organisationId: project.organisationId, projectId: id, actorId: actor.id, kind: "project.updated", summary: `updated ${project.code}`, targetType: "project", targetId: id, href: `/projects/${id}`, internal: true });
+    (await recordActivity({ organisationId: project.organisationId, projectId: id, actorId: actor.id, kind: "project.updated", summary: `updated ${project.code}`, targetType: "project", targetId: id, href: `/projects/${id}`, internal: true }));
   }
-  recordAudit({ actorId: actor.id, action: "project.update", targetType: "project", targetId: id, metadata: patch as Record<string, unknown> });
+  (await recordAudit({ actorId: actor.id, action: "project.update", targetType: "project", targetId: id, metadata: patch as Record<string, unknown> }));
 }
 
 export async function setProjectMembers(actor: Actor, projectId: string, members: { userId: string; role: "manager" | "member" | "client" }[]) {
   if (!canManageProjects(actor)) throw new AuthError(403, "Only admins and project managers can change the team.");
   await requireProject(actor, projectId);
-  db.delete(schema.projectMembers).where(eq(schema.projectMembers.projectId, projectId)).run();
-  if (members.length) db.insert(schema.projectMembers).values(members.map((m) => ({ projectId, userId: m.userId, role: m.role }))).run();
-  recordAudit({ actorId: actor.id, action: "project.members", targetType: "project", targetId: projectId, metadata: { members } });
+  (await db.delete(schema.projectMembers).where(eq(schema.projectMembers.projectId, projectId)));
+  if (members.length) (await db.insert(schema.projectMembers).values(members.map((m) => ({ projectId, userId: m.userId, role: m.role }))));
+  (await recordAudit({ actorId: actor.id, action: "project.members", targetType: "project", targetId: projectId, metadata: { members } }));
 }
 
 /** Aggregate counts for the admin overview. */
@@ -122,8 +122,8 @@ export async function listMilestones(actor: Actor, projectId: string) {
   await requireProject(actor, projectId);
   const conds = [eq(schema.milestones.projectId, projectId)];
   if (!isStaff(actor)) conds.push(eq(schema.milestones.clientVisible, true));
-  const rows = db.select().from(schema.milestones).where(and(...conds)).orderBy(asc(schema.milestones.order), asc(schema.milestones.dueDate)).all();
-  const owners = usersByIds(rows.map((r) => r.ownerId).filter((x): x is string => Boolean(x)));
+  const rows = (await db.select().from(schema.milestones).where(and(...conds)).orderBy(asc(schema.milestones.order), asc(schema.milestones.dueDate)));
+  const owners = (await usersByIds(rows.map((r) => r.ownerId).filter((x): x is string => Boolean(x))));
   return rows.map((m) => ({ ...m, owner: owners.find((o) => o.id === m.ownerId) ?? null }));
 }
 
@@ -133,15 +133,15 @@ export async function createMilestone(actor: Actor, projectId: string, input: Mi
   if (!canManageProjects(actor)) throw new AuthError(403, "Only admins and project managers can add milestones.");
   const project = await requireProject(actor, projectId);
   const id = uid();
-  const count = db.select({ n: sql<number>`count(*)` }).from(schema.milestones).where(eq(schema.milestones.projectId, projectId)).get()?.n ?? 0;
-  db.insert(schema.milestones).values({ id, projectId, title: input.title, description: input.description ?? null, status: input.status ?? "planned", progress: input.progress ?? 0, ownerId: input.ownerId ?? null, startDate: input.startDate ?? null, dueDate: input.dueDate ?? null, order: count, clientVisible: input.clientVisible ?? true, requiresApproval: input.requiresApproval ?? false, dependsOnId: input.dependsOnId ?? null }).run();
-  recordActivity({ organisationId: project.organisationId, projectId, actorId: actor.id, kind: "milestone.created", summary: `added milestone “${input.title}”`, targetType: "milestone", targetId: id, href: `/projects/${projectId}/timeline`, internal: !(input.clientVisible ?? true) });
+  const count = (await db.select({ n: sql<number>`count(*)::int` }).from(schema.milestones).where(eq(schema.milestones.projectId, projectId)).limit(1))[0]?.n ?? 0;
+  (await db.insert(schema.milestones).values({ id, projectId, title: input.title, description: input.description ?? null, status: input.status ?? "planned", progress: input.progress ?? 0, ownerId: input.ownerId ?? null, startDate: input.startDate ?? null, dueDate: input.dueDate ?? null, order: count, clientVisible: input.clientVisible ?? true, requiresApproval: input.requiresApproval ?? false, dependsOnId: input.dependsOnId ?? null }));
+  (await recordActivity({ organisationId: project.organisationId, projectId, actorId: actor.id, kind: "milestone.created", summary: `added milestone “${input.title}”`, targetType: "milestone", targetId: id, href: `/projects/${projectId}/timeline`, internal: !(input.clientVisible ?? true) }));
   return id;
 }
 
 export async function updateMilestone(actor: Actor, id: string, patch: Partial<MilestoneInput>) {
   if (!canManageProjects(actor)) throw new AuthError(403, "Only admins and project managers can edit milestones.");
-  const m = db.select().from(schema.milestones).where(eq(schema.milestones.id, id)).get();
+  const m = (await db.select().from(schema.milestones).where(eq(schema.milestones.id, id)).limit(1))[0];
   if (!m) throw new AuthError(403, "Milestone not found.");
   const project = await requireProject(actor, m.projectId);
   const set: Partial<typeof schema.milestones.$inferInsert> = { updatedAt: new Date() };
@@ -149,12 +149,12 @@ export async function updateMilestone(actor: Actor, id: string, patch: Partial<M
     if (patch[k] !== undefined) (set as Record<string, unknown>)[k] = patch[k];
   }
   if (patch.status === "completed") set.progress = 100;
-  db.update(schema.milestones).set(set).where(eq(schema.milestones.id, id)).run();
+  (await db.update(schema.milestones).set(set).where(eq(schema.milestones.id, id)));
   if (patch.status && patch.status !== m.status) {
     const label = patch.status.replace("_", " ");
-    recordActivity({ organisationId: project.organisationId, projectId: m.projectId, actorId: actor.id, kind: "milestone.status", summary: `marked milestone “${m.title}” as ${label}`, targetType: "milestone", targetId: id, href: `/projects/${m.projectId}/timeline`, internal: !m.clientVisible });
+    (await recordActivity({ organisationId: project.organisationId, projectId: m.projectId, actorId: actor.id, kind: "milestone.status", summary: `marked milestone “${m.title}” as ${label}`, targetType: "milestone", targetId: id, href: `/projects/${m.projectId}/timeline`, internal: !m.clientVisible }));
     if (m.clientVisible && (patch.status === "completed" || patch.status === "awaiting_approval")) {
-      await notify({ recipientIds: projectClientIds(m.projectId, project.organisationId), category: "milestone", title: patch.status === "completed" ? `Milestone completed: ${m.title}` : `Milestone awaiting your approval: ${m.title}`, body: project.title, href: `/projects/${m.projectId}/timeline`, projectId: m.projectId, actorId: actor.id });
+      await notify({ recipientIds: (await projectClientIds(m.projectId, project.organisationId)), category: "milestone", title: patch.status === "completed" ? `Milestone completed: ${m.title}` : `Milestone awaiting your approval: ${m.title}`, body: project.title, href: `/projects/${m.projectId}/timeline`, projectId: m.projectId, actorId: actor.id });
     }
   }
 }

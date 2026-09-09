@@ -14,8 +14,8 @@ import { FileList } from "./FileList";
 
 export async function ProjectOverview({ user, project, area }: { user: SessionUser; project: Awaited<ReturnType<typeof getProject>>; area: "portal" | "admin" }) {
   const staff = isStaff(user);
-  const [milestones, requests, tasks, approvals, files] = await Promise.all([listMilestones(user, project.id), listRequests(user, { projectId: project.id, open: true }), listTasks(user, { projectId: project.id }), listApprovals(user, { projectId: project.id, status: "pending" }), listFiles(user, { projectId: project.id })]);
-  const activity = listActivity(user, { projectIds: [project.id], limit: 8 });
+  const [milestones, requests, tasks, approvals, files] = await Promise.all([(await listMilestones(user, project.id)), (await listRequests(user, { projectId: project.id, open: true })), (await listTasks(user, { projectId: project.id })), (await listApprovals(user, { projectId: project.id, status: "pending" })), (await listFiles(user, { projectId: project.id }))]);
+  const activity = (await listActivity(user, { projectIds: [project.id], limit: 8 }));
   const openTasks = tasks.filter((t) => t.status !== "done");
   const next = milestones.find((m) => m.status !== "completed");
   return (

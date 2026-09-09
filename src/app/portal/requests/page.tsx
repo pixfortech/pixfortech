@@ -11,7 +11,7 @@ const TYPES = ["edit", "bug", "feature", "design", "content", "integration", "pe
 export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const user = await requirePageUser("/portal/requests");
   const sp = await searchParams;
-  const [requests, projects] = await Promise.all([listRequests(user, { status: sp.status, type: sp.type, priority: sp.priority, projectId: sp.project }), listProjects(user)]);
+  const [requests, projects] = await Promise.all([(await listRequests(user, { status: sp.status, type: sp.type, priority: sp.priority, projectId: sp.project })), (await listProjects(user))]);
   return (
     <div>
       <PageTitle eyebrow="Portal" title="Requests" description="Edits, bugs, features and ideas, tracked from submission to completion." actions={<AppButton href="/portal/requests/new">Request a change</AppButton>} />

@@ -7,7 +7,7 @@ import { InviteForm, UserRow } from "@/components/workspace/forms";
 const ROLES = ["team_member", "project_manager", "admin", "super_admin"];
 export default async function Page() {
   const user = await requirePageUser("/admin/team");
-  const team = listTeam(user);
+  const team = (await listTeam(user));
   const manage = canManageTeam(user);
   return (
     <div>

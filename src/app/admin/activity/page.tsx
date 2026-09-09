@@ -7,8 +7,8 @@ import { ActivityFeed } from "@/components/workspace/ActivityFeed";
 export default async function Page() {
   const user = await requirePageUser("/admin/activity");
   const ids = await accessibleProjectIds(user);
-  const activity = listActivity(user, { projectIds: ids, limit: 120 });
-  const audit = isAdmin(user) ? listAudit(80) : [];
+  const activity = (await listActivity(user, { projectIds: ids, limit: 120 }));
+  const audit = isAdmin(user) ? (await listAudit(80)) : [];
   return (
     <div>
       <PageTitle eyebrow="Admin" title="Activity" description="What happened across projects, and the administrative audit trail." />

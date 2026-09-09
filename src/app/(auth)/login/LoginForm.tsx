@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useHydrated } from "@/lib/useHydrated";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 import { Field, inputCls, AppButton } from "@/components/app/primitives";
 
+
 export function LoginForm({ next, google }: { next?: string; google: boolean }) {
   const router = useRouter();
+  const hydrated = useHydrated();
   const [mode, setMode] = useState<"password" | "magic">("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,9 +37,9 @@ export function LoginForm({ next, google }: { next?: string; google: boolean }) 
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
-      <Field label="Email" htmlFor="email"><input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} /></Field>
+      <Field label="Email" htmlFor="email"><input id="email" type="email" autoComplete="email" required disabled={!hydrated} value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} /></Field>
       {mode === "password" && (
-        <Field label="Password" htmlFor="password"><input id="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} /></Field>
+        <Field label="Password" htmlFor="password"><input id="password" type="password" autoComplete="current-password" required disabled={!hydrated} value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls} /></Field>
       )}
       {error && <p role="alert" className="text-[0.8125rem] text-forge-300">{error}</p>}
       <AppButton type="submit" disabled={busy || !email || (mode === "password" && !password)}>{busy ? "Signing in…" : mode === "password" ? "Sign in" : "Email me a sign-in link"}</AppButton>

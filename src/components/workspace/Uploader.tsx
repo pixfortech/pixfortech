@@ -15,27 +15,34 @@ export function Uploader({ projectId, requestId, taskId, staff, compact }: { pro
   const [visible, setVisible] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  function upload() {
-    if (!files.length) return;
+  async function upload() {
+    if (!files.length || progress !== null) return;
     setError(null);
-    const fd = new FormData();
-    fd.set("projectId", projectId);
-    if (requestId) fd.set("requestId", requestId);
-    if (taskId) fd.set("taskId", taskId);
-    if (staff) fd.set("clientVisible", String(visible));
-    for (const f of files) fd.append("files", f);
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/upload");
-    xhr.upload.onprogress = (e) => { if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100)); };
-    xhr.onload = () => {
-      setProgress(null);
-      let json: { ok?: boolean; error?: string } = {};
-      try { json = JSON.parse(xhr.responseText); } catch { /* ignore */ }
-      if (xhr.status >= 200 && xhr.status < 300 && json.ok) { setFiles([]); toast({ title: `${files.length} file${files.length > 1 ? "s" : ""} uploaded`, kind: "success" }); router.refresh(); }
-      else setError(json.error ?? "Upload failed.");
+    setProgress(0);
+    const total = files.reduce((n, f) => n + f.size, 0);
+    let uploaded = 0;
+    const call = async (url: string, init: RequestInit) => {
+      const response = await fetch(url, init);
+      const json = await response.json();
+      if (!response.ok || !json.ok) throw new Error(json.error ?? "Upload failed.");
+      return json;
     };
-    xhr.onerror = () => { setProgress(null); setError("Network problem during upload."); };
-    xhr.send(fd);
+    try {
+      for (const file of files) {
+        const { id, chunkBytes } = await call("/api/upload/chunks", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: file.name, mime: file.type, size: file.size, target: { projectId, requestId, taskId, clientVisible: staff ? visible : true } }) });
+        for (let offset = 0, part = 0; offset < file.size; offset += chunkBytes, part++) {
+          const chunk = file.slice(offset, offset + chunkBytes);
+          await call(`/api/upload/chunks?id=${id}&part=${part}`, { method: "PUT", body: chunk });
+          uploaded += chunk.size;
+          setProgress(Math.min(99, Math.round(uploaded / total * 100)));
+        }
+        await call(`/api/upload/chunks?id=${id}&finish=1`, { method: "POST" });
+      }
+      setFiles([]);
+      toast({ title: `${files.length} file${files.length > 1 ? "s" : ""} uploaded`, kind: "success" });
+      router.refresh();
+    } catch (error) { setError(error instanceof Error ? error.message : "Network problem during upload."); }
+    finally { setProgress(null); }
   }
 
   return (

@@ -6,5 +6,5 @@ import { Milestones } from "@/components/workspace/Milestones";
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await requirePageUser(`/admin/projects/${id}/timeline`);
-  return <ProjectPage user={user} id={id} area="admin" tab="/timeline">{async (project) => <Milestones items={await listMilestones(user, project.id)} projectId={project.id} staff people={listTeam(user).map((t) => ({ id: t.id, name: t.name }))} />}</ProjectPage>;
+  return <ProjectPage user={user} id={id} area="admin" tab="/timeline">{async (project) => <Milestones items={await listMilestones(user, project.id)} projectId={project.id} staff people={(await listTeam(user)).map((t) => ({ id: t.id, name: t.name }))} />}</ProjectPage>;
 }
