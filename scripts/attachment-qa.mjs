@@ -3,9 +3,11 @@ import { launchBrowser, qaPassword } from "./qa-runtime.mjs";
 
 const base = process.argv[2] ?? "http://localhost:3000";
 const browser = await launchBrowser();
+let page;
 try {
   const context = await browser.newContext();
-  const page = await context.newPage();
+  page = await context.newPage();
+  page.setDefaultTimeout(60000);
   await page.goto(`${base}/login`);
   await page.getByLabel("Email").fill("maya@northbank.test");
   await page.getByLabel("Password").fill(qaPassword());
@@ -41,4 +43,11 @@ try {
   assert.equal(requestFile.status(), 200);
   assert.deepEqual(await requestFile.body(), bytes);
   console.log("PASS: chat and new-request attachments use private chunked storage and authorized downloads");
+} catch (error) {
+  if (page) {
+    console.log('Attachment failure:', new URL(page.url()).pathname);
+    console.log('Visible alerts:', await page.getByRole('alert').allTextContents());
+    await page.screenshot({ path: 'artifacts/qa/attachment-failure.png' });
+  }
+  throw error;
 } finally { await browser.close(); }
