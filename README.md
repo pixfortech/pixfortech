@@ -47,7 +47,7 @@ The site also hosts a client portal (`/portal`) and an admin dashboard (`/admin`
 
 **Profiles and public pages**: every account has a display identity (name, display name, title, timezone, bio, LinkedIn/GitHub/website, avatar) and a unique username (`src/lib/profile/identity.ts` holds the rules, `src/lib/profile/reserved.ts` the reserved names). Staff can choose a public address and publish a page at `/people/<slug>`; old addresses redirect permanently through `profile_slug_history`. Client profiles are always private. Authorisation never reads usernames or slugs.
 
-**Owner bootstrap**: `npm run admin:check` and `npm run admin:bootstrap` (see `docs/DEPLOYMENT.md`).
+**Owner bootstrap**: `npm run admin:check` and `npm run admin:bootstrap` (add `--email-link --app=<origin>` to gate the first sign-in on the emailed verification link). **Email delivery**: `npm run email:check -- --to=<address>` sends a probe through Resend and reports its delivery event; `--status=<id>` looks one up; see `docs/DEPLOYMENT.md`.
 
 **Roles**: `super_admin`, `admin`, `project_manager`, `team_member` (staff, land in `/admin`) and `client_admin`, `client_member` (clients, land in `/portal`). Every read and write goes through `src/server/services/*`, which resolve the actor's accessible projects (`accessibleProjectIds` / `requireProject`) before touching data. Clients only ever see their own organisation's projects, requests, files, conversations and approvals. Internal comments and internal conversations are filtered out at query level for clients, not hidden in the UI.
 

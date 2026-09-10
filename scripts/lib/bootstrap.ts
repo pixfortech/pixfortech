@@ -9,11 +9,17 @@ import type { Pool } from "pg";
  * generated here, returned once to the caller, and never stored in plain
  * text or logged by this module.
  */
+/**
+ * `emailLink` creates the owner unverified so the first sign-in is gated on
+ * the verification link the application emails (production runs with
+ * REQUIRE_EMAIL_VERIFICATION=true) and the password is set through the
+ * reset flow; the temporary password is never shown in that mode.
+ */
 export type BootstrapInput = { email?: string | null; name?: string | null; check?: boolean; emailLink?: boolean };
 export type SuperAdminSummary = { email: string; enabled: boolean; emailVerified: boolean; createdAt: string };
 export type BootstrapResult =
   | { action: "exists"; admins: SuperAdminSummary[] }
-  | { action: "created"; email: string; temporaryPassword: string }
+  | { action: "created"; email: string; temporaryPassword: string; emailVerified: boolean }
   | { action: "none" };
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -67,7 +73,7 @@ export async function runBootstrap(pool: Pool, input: BootstrapInput): Promise<B
     await client.query(`INSERT INTO account (id, account_id, provider_id, user_id, password) VALUES ($1, $2, 'credential', $2, $3)`, [randomUUID(), userId, hash]);
     await client.query(`INSERT INTO audit_events (id, actor_id, action, target_type, target_id, metadata) VALUES ($1, NULL, 'admin.bootstrap', 'user', $2, $3)`, [randomUUID(), userId, JSON.stringify({ email, method: input.emailLink ? "email-link" : "temporary-password" })]);
     await client.query("COMMIT");
-    return { action: "created", email, temporaryPassword };
+    return { action: "created", email, temporaryPassword, emailVerified: !input.emailLink };
   } catch (error) {
     await client.query("ROLLBACK").catch(() => undefined);
     throw error;

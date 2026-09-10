@@ -77,6 +77,7 @@ describe("admin bootstrap", () => {
     const address = `owner-${tag}-email@example.test`;
     const result = await runBootstrap(pool, { email: address, name: "Email Owner", emailLink: true });
     expect(result.action).toBe("created");
+    if (result.action === "created") expect(result.emailVerified).toBe(false);
     const rows = await pool.query('SELECT email_verified,must_change_password FROM "user" WHERE email = $1', [address]);
     expect(rows.rows[0]).toMatchObject({ email_verified: false, must_change_password: true });
     const audit = await pool.query("SELECT metadata FROM audit_events WHERE action = 'admin.bootstrap'");
