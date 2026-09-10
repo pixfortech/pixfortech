@@ -20,7 +20,7 @@ async function login(page, email, password = PASSWORD) {
   for (let i = 0; i < 4; i++) {
     await page.goto(base + "/login", { waitUntil: "load", ...T });
     await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Password").fill(password);
+    await page.getByLabel("Password", { exact: true }).fill(password);
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     const done = await page.waitForURL(/\/(portal|admin)/, { timeout: 15000 }).then(() => true).catch(() => false);
     if (done) return;
@@ -60,9 +60,105 @@ async function login(page, email, password = PASSWORD) {
   ok("client menu routes to portal", first === "/portal");
   await page.keyboard.press("ArrowDown"); await page.keyboard.press("Escape"); await page.waitForTimeout(150);
   ok("escape closes the menu", (await page.getByTestId("account-menu").count()) === 0);
-  await btn.click(); await menu.getByRole("menuitem", { name: /Sign out/ }).click(); await page.getByTestId("login-link").waitFor({ timeout: 60000 });
-  ok("sign out returns to the public site signed out", (await page.getByTestId("login-link").count()) === 1);
+  await btn.click(); await menu.getByRole("menuitem", { name: /Sign out/ }).click(); await page.waitForURL(/\/login\?signedout=1/, { timeout: 60000 });
+  await page.waitForFunction(() => document.querySelector('[data-testid="auth-pip"]')?.dataset.emotion === "goodbye", null, { timeout: 15000 }).catch(() => undefined);
+  ok("sign out lands on the signed-out gate with PiP waving", (await page.getByTestId("signed-out-note").count()) === 1 && (await page.getByTestId("auth-pip").getAttribute("data-emotion")) === "goodbye" && (await page.getByTestId("auth-pip-bubble").getAttribute("data-line") ?? "").startsWith("authLogout."));
+  await page.goto(base + "/", { waitUntil: "load", ...T });
+  ok("public site is signed out afterwards", (await page.getByTestId("login-link").count()) === 1);
   await ctx.close();
+}
+
+// 2b. The forge gate: PiP on the sign-in screens
+{
+  const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } }); const page = await ctx.newPage(); watch(page, "gate");
+  const pip = page.getByTestId("auth-pip"); const bubble = page.getByTestId("auth-pip-bubble");
+  const emotion = () => pip.getAttribute("data-emotion");
+  const lineId = async () => (await bubble.count()) ? await bubble.getAttribute("data-line") : null;
+  const spoken = [];
+  const note = async () => { const id = await lineId(); if (id && spoken[spoken.length - 1] !== id) spoken.push(id); };
+  await page.goto(base + "/login", { waitUntil: "load", ...T });
+  await page.waitForFunction(() => document.querySelector('[data-testid="auth-pip-bubble"]')?.dataset.line?.startsWith("authIdle."), null, { timeout: 15000 }).catch(() => undefined);
+  await note();
+  ok("login page greets with an idle line and a resting face", (await emotion()) === "idle" && spoken[0]?.startsWith("authIdle."), spoken.join(","));
+  const stage = await page.getByTestId("auth-stage").boundingBox(), card = await page.getByTestId("login-form").boundingBox();
+  ok("stage and form share the row without overlapping", !!stage && !!card && stage.x + stage.width <= card.x + 1);
+  await page.getByLabel("Email").focus(); await page.waitForTimeout(200); await note();
+  ok("email focus: attentive face and a line", (await emotion()) === "attentive" && spoken[spoken.length - 1]?.startsWith("authEmailFocus."));
+  await page.getByLabel("Email").pressSequentially("maya@northbank.test", { delay: 20 }); await page.waitForTimeout(150); await note();
+  ok("email typing: reading face", (await emotion()) === "reading");
+  await page.getByLabel("Password", { exact: true }).focus(); await page.waitForTimeout(120);
+  const peek = await emotion();
+  await page.waitForTimeout(900); await note();
+  ok("password focus: a peek, then eyes covered", peek === "peek" && (await emotion()) === "privacy" && (await pip.getAttribute("data-secret")) === "true" && spoken[spoken.length - 1]?.startsWith("authPasswordFocus."));
+  const faces = new Set();
+  for (const ch of "wrong-password-1") { await page.keyboard.type(ch); faces.add(await emotion()); }
+  ok("password typing: the face never changes with the characters", faces.size === 1 && faces.has("privacy"), [...faces].join(","));
+  await page.getByTestId("password-toggle").click(); await page.waitForTimeout(150); await note();
+  ok("show password: turned away further, still no comment on the value", (await emotion()) === "alarmed" && (await page.getByLabel("Password", { exact: true }).getAttribute("type")) === "text" && spoken[spoken.length - 1]?.startsWith("authPasswordShown."));
+  await page.getByTestId("password-toggle").click(); await page.waitForTimeout(150);
+  const afterHide = await emotion();
+  await page.getByLabel("Password", { exact: true }).focus(); await page.waitForTimeout(900);
+  ok("hide password: no longer alarmed, and eyes covered again once the field is back in focus", afterHide !== "alarmed" && (await emotion()) === "privacy", afterHide);
+  expectedErrors.set(page, { status: 401, path: "/api/auth/sign-in/email" });
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByTestId("login-error").waitFor({ timeout: 30000 }); await page.waitForTimeout(200); await note();
+  ok("wrong password: concern on PiP, a kind line, the real error message intact", (await emotion()) === "error" && spoken[spoken.length - 1]?.startsWith("authFailure.") && /do not match/.test(await page.getByTestId("login-error").textContent()));
+  await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('[data-testid="auth-pip"]')?.dataset.emotion === "success", null, { timeout: 30000 }).catch(() => undefined);
+  const successFace = await emotion(); await note();
+  await page.waitForURL(/\/portal/, { timeout: 60000 });
+  ok("right password: PiP opens the gate before the redirect", successFace === "success" && spoken[spoken.length - 1]?.startsWith("authSuccess."));
+  ok("gate lines never repeat", new Set(spoken).size === spoken.length, spoken.join(","));
+  await page.screenshot({ path: `${out}/gate-signed-in.png` });
+  // The rest of the gate is checked signed out; a signed-in visitor is sent straight past /login.
+  await ctx.clearCookies();
+  // Forgot and reset states
+  await page.goto(base + "/forgot-password", { waitUntil: "load", ...T });
+  await page.waitForFunction(() => document.querySelector('[data-testid="auth-pip-bubble"]')?.dataset.line?.startsWith("authForgot."), null, { timeout: 15000 }).catch(() => undefined);
+  ok("forgot password: curious face and a forgot line", (await emotion()) === "curious" && ((await lineId()) ?? "").startsWith("authForgot."));
+  await page.getByLabel("Email").fill("nobody@example.test"); await page.getByRole("button", { name: "Send reset link" }).click();
+  await page.getByTestId("reset-sent").waitFor({ timeout: 30000 }); await page.waitForTimeout(200);
+  ok("reset link sent: waiting face and a reset line", (await emotion()) === "waiting" && ((await lineId()) ?? "").startsWith("authResetSent."));
+  await page.goto(base + "/reset-password", { waitUntil: "load", ...T }); await page.waitForTimeout(700);
+  ok("reset page without a token: worried face", (await emotion()) === "worried");
+  await page.goto(base + "/reset-password?token=not-a-real-token", { waitUntil: "load", ...T }); await page.waitForTimeout(700);
+  ok("reset page: attentive face and a reset line", (await emotion()) === "attentive" && ((await lineId()) ?? "").startsWith("authReset."));
+  await page.getByLabel("New password").fill("short"); await page.getByLabel("Confirm password").fill("short"); await page.getByRole("button", { name: "Save password" }).click(); await page.waitForTimeout(200);
+  ok("reset validation slip: worried, no mockery, real message shown", (await emotion()) === "worried" && /ten characters/.test((await page.locator("form").getByRole("alert").textContent()) ?? ""));
+  await page.goto(base + "/verify-email", { waitUntil: "load", ...T }); await page.waitForTimeout(700);
+  ok("verification page: waiting face and an encouraging line", (await emotion()) === "waiting" && ((await lineId()) ?? "").startsWith("authVerification."));
+  await page.goto(base + "/verify-email?error=1", { waitUntil: "load", ...T }); await page.waitForTimeout(700);
+  ok("verification error: worried face", (await emotion()) === "worried");
+  await page.goto(base + "/login?reset=1", { waitUntil: "load", ...T }); await page.waitForTimeout(700);
+  ok("after a reset: relieved face and the saved-password note", (await emotion()) === "relieved" && /Password saved/.test(await page.textContent("body")));
+  // Keyboard: the whole form and PiP are reachable; a poke from the keyboard works.
+  await page.goto(base + "/login", { waitUntil: "load", ...T }); await page.waitForTimeout(500);
+  await page.getByTestId("auth-pip-body").focus(); await page.keyboard.press("Enter"); await page.waitForTimeout(120);
+  ok("keyboard poke: amused for a beat", (await emotion()) === "amused");
+  await page.getByLabel("Email").focus(); await page.keyboard.press("Tab"); const focused = await page.evaluate(() => document.activeElement?.id);
+  ok("tab order runs email to password", focused === "password");
+  await ctx.close();
+  // Reduced motion: faces still change, movement does not.
+  const r = await browser.newContext({ viewport: { width: 1366, height: 900 }, reducedMotion: "reduce" }); const rp = await r.newPage(); watch(rp, "gate-reduced");
+  await rp.goto(base + "/login", { waitUntil: "load", ...T });
+  await rp.waitForFunction(() => { const el = document.getElementById("password"); return el && !el.disabled; }, null, { timeout: 30000 });
+  await rp.getByLabel("Password", { exact: true }).focus(); await rp.waitForTimeout(900);
+  const still = await rp.getByTestId("auth-pip").evaluate((el) => el.classList.contains("pf-authpip--still") && getComputedStyle(el.querySelector(".pf-authpip__body")).animationName === "none");
+  ok("reduced motion: covered eyes without animation", still && (await rp.getByTestId("auth-pip").getAttribute("data-emotion")) === "privacy");
+  await r.close();
+  // Phone: strip layout, PiP visible, form clear.
+  const m = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }); const mp = await m.newPage(); watch(mp, "gate-mobile");
+  await mp.goto(base + "/login", { waitUntil: "load", ...T });
+  await mp.waitForFunction(() => { const el = document.getElementById("password"); return el && !el.disabled; }, null, { timeout: 30000 }); await mp.waitForTimeout(500);
+  const ms = await mp.getByTestId("auth-stage").boundingBox(), mf = await mp.getByTestId("login-form").boundingBox();
+  ok("phone: compact stage above the form, no overlap, no overflow", !!ms && !!mf && ms.height <= 150 && ms.y + ms.height <= mf.y + 1 && (await mp.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)));
+  await mp.getByTestId("auth-pip-body").tap({ force: true }); await mp.waitForTimeout(150);
+  ok("phone: a tap on PiP gets a reaction", (await mp.getByTestId("auth-pip").getAttribute("data-emotion")) === "amused");
+  await mp.getByLabel("Password", { exact: true }).tap(); await mp.waitForTimeout(900);
+  await mp.screenshot({ path: `${out}/gate-mobile-390.png` });
+  ok("phone: password focus covers the eyes", (await mp.getByTestId("auth-pip").getAttribute("data-emotion")) === "privacy");
+  await m.close();
 }
 
 // 3. Profile: display name, username, slug (+ redirect), publish, avatar, password change
@@ -322,10 +418,19 @@ if (!production) {
     const m = await browser.newContext({ viewport: { width: w, height: 800 }, isMobile: w < 768, hasTouch: true }); const p = await m.newPage(); watch(p, `mobile-${w}`);
     await login(p, "maya@northbank.test");
     const overflow = [];
-    for (const path of ["/", "/services", "/portal", "/portal/profile", "/people"]) {
+    for (const path of ["/", "/services", "/portal", "/portal/profile", "/people", "/login"]) {
       await p.goto(base + path, { waitUntil: "load", ...T }); await p.waitForTimeout(600);
       if (await p.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)) overflow.push(path);
       if (path === "/portal/profile") await p.screenshot({ path: `${out}/profile-${w}.png`, fullPage: true });
+      if (path === "/login") {
+        // Signed in users are redirected away from /login; the gate is checked on a signed-out page instead.
+        const anon = await browser.newContext({ viewport: { width: w, height: 800 }, isMobile: w < 768, hasTouch: true }); const ap = await anon.newPage(); watch(ap, `gate-${w}`);
+        await ap.goto(base + "/login", { waitUntil: "load", ...T }); await ap.waitForTimeout(700);
+        const sb = await ap.getByTestId("auth-stage").boundingBox(), fb = await ap.getByTestId("login-form").boundingBox(), lb = await ap.getByLabel("Email").boundingBox();
+        ok(`gate readable and clear of the form at ${w}px`, !!sb && !!fb && !!lb && sb.width <= w && (sb.y + sb.height <= fb.y + 1 || sb.x + sb.width <= fb.x + 1) && lb.width >= 200 && (await ap.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)), JSON.stringify(sb));
+        await ap.screenshot({ path: `${out}/gate-${w}.png` });
+        await anon.close();
+      }
       if (path === "/") {
         const bench = p.getByTestId("pip-bench"); await bench.scrollIntoViewIfNeeded();
         await p.waitForFunction(() => { const m = document.querySelector('[data-testid="pip-bench"]')?.dataset.mode; return m && m !== "loading"; }, null, { timeout: 15000 }).catch(() => undefined); await p.waitForTimeout(300);

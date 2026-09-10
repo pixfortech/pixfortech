@@ -14,7 +14,7 @@ async function login(email, area) {
   page.on("pageerror", e => errors.push(`${new URL(page.url()).pathname}: ${e.message}`));
   await page.goto(`${base}/login`);
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(qaPassword());
+  await page.getByLabel("Password", { exact: true }).fill(qaPassword());
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.waitForURL(new RegExp(`/${area}`), { timeout: 30000 });
   return { ctx, page };

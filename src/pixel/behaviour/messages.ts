@@ -60,6 +60,133 @@ const benchLibrary = {
   ]),
 };
 
+/**
+ * The forge gate: PiP on the sign-in screens. He greets, notices the email
+ * field, respects the password (eyes covered, no comment on what is typed),
+ * takes a failed attempt gracefully, opens the gate on success and waves
+ * people out. Each category is small and specific; nothing here repeats
+ * within a visit until the category is spent.
+ */
+const authLibrary = {
+  authIdle: lines("authIdle", [
+    "Back to the forge? The gate remembers you. I remember you better.",
+    "Credentials, please. I'll look at the ceiling for the second one.",
+    "Sign in and the doors do the rest. They're good doors. I built them.",
+    "Evening, morning, whichever it is. The forge doesn't sleep. I do, but not on duty.",
+    "You know the way in. I'm just here to make it look official.",
+    "Two fields between you and your projects. I've counted them for you.",
+  ]),
+  authEmailFocus: lines("authEmailFocus", [
+    "Start with the easy one.",
+    "That bit I'm allowed to read.",
+    "Your address. The one the invitations went to.",
+    "Email first. The gate likes to know who's knocking.",
+    "Go on. This part isn't secret.",
+  ]),
+  authEmailTyping: lines("authEmailTyping", [
+    "Looks like an address. I'm no expert. I am, actually.",
+    "Reading along. Politely.",
+    "That's the shape of an email. Promising.",
+    "Carry on. I'll pretend the at-sign is exciting.",
+  ]),
+  authPasswordFocus: lines("authPasswordFocus", [
+    "Eyes covered. Type away.",
+    "I'm not looking. I'm very deliberately not looking.",
+    "This part's yours. I'll study my feet.",
+    "Secrets are secrets. Even from the mascot.",
+    "Hands over eyes. Standard procedure. Also, manners.",
+    "I don't do passwords. I do pixels. Proceed.",
+  ]),
+  authPasswordTyping: lines("authPasswordTyping", [
+    "Still not looking.",
+    "Whatever you're typing, it's between you and the door.",
+    "La la la. Squares. Squares everywhere.",
+    "Counting the ceiling tiles. There are none. Still counting.",
+  ]),
+  authPasswordShown: lines("authPasswordShown", [
+    "It's visible now. I have turned around entirely.",
+    "Shown? Right. I'll be over here, facing the wall.",
+    "I saw nothing. I intend to keep it that way.",
+    "Bold. I'll look away twice as hard.",
+  ]),
+  authThinking: lines("authThinking", [
+    "Checking with the gate. It's thorough.",
+    "One moment. The lock is thinking.",
+    "Knocking on the inside for you.",
+  ]),
+  authFailure: lines("authFailure", [
+    "That key didn't fit. Try it again, slowly.",
+    "The gate stayed shut. It's picky, not personal.",
+    "Not quite. The lock and the key are disagreeing.",
+    "Close, probably. The door doesn't do close.",
+    "Hmm. Something's off by a character. It usually is.",
+    "No luck. If the password's wandered off, the reset link finds it.",
+  ]),
+  authSuccess: lines("authSuccess", [
+    "There you are. Doors open.",
+    "Right this way. I warmed the pixels.",
+    "Gate's open. Mind the sparks; they're pleased to see you.",
+    "In you go. Everything is exactly where you left it. I checked.",
+    "Key fits. Welcome back to the workshop.",
+    "Recognised. Off we go.",
+  ]),
+  authLogout: lines("authLogout", [
+    "Signed out. I'll keep the pixels warm.",
+    "See you soon. The gate will remember you; so will I.",
+    "Off you go. Nothing left behind, I swept.",
+    "Logged out, cleanly. Not a square out of place.",
+    "Until next time. I'll be here, guarding squares.",
+    "Door's closed behind you. Gently.",
+  ]),
+  authForgot: lines("authForgot", [
+    "Lost the key? Happens to everyone. Even me, and mine's a pixel.",
+    "No shame in it. Tell me the address and a new key is on its way.",
+    "Passwords wander. Addresses don't. Start there.",
+    "Misplaced, not lost. We'll forge another.",
+  ]),
+  authResetSent: lines("authResetSent", [
+    "Check your inbox. I sent the careful kind of magic.",
+    "On its way. It expires in an hour, so don't wander far.",
+    "Sent. If it's hiding, the spam folder is its usual corner.",
+    "Done. A link, one use only, exactly how I like them.",
+  ]),
+  authReset: lines("authReset", [
+    "New key time. Longer is stronger; I'd know, I'm twelve squares tall.",
+    "Choose something you'll remember and I'll never see.",
+    "Ten characters at least. A sentence beats a word.",
+    "Eyes covered for this one too. Type freely.",
+  ]),
+  authResetDone: lines("authResetDone", [
+    "New key forged. Try the door.",
+    "Saved. The old one's been melted down.",
+    "That's the one. Sign in and carry on.",
+    "Password replaced. Every other session was shown out, politely.",
+  ]),
+  authVerification: lines("authVerification", [
+    "One link in your inbox and the gate unlocks. I'll wait here.",
+    "Check your email. I'm hopeful. I'm always hopeful.",
+    "The link expires in an hour. I'll be watching the door until then.",
+    "Nearly there. Open the email and I'll do the rest.",
+  ]),
+  authVerified: lines("authVerified", [
+    "Verified. That's the hard part done.",
+    "Email confirmed. The gate approves. So do I.",
+    "All checked. Sign in whenever you're ready.",
+    "Relief. Yours and mine. In you come.",
+  ]),
+  authMagic: lines("authMagic", [
+    "Link sent. It works once, then it vanishes. Very dramatic.",
+    "Magic's in the post. The email kind, not the wand kind.",
+    "Check your inbox and tap the link. No password needed today.",
+    "A sign-in link, freshly forged. Expires soon; use it warm.",
+  ]),
+  authSleepy: lines("authSleepy", [
+    "Still there? I dozed off guarding the gate.",
+    "Take your time. I'll just rest my eyes. Both of them.",
+    "No rush. The forge keeps.",
+  ]),
+};
+
 export const pipLibrary = {
   greeting: lines("greeting", [
     "Hello. I'm PiP. I keep the pixels in order around here.",
@@ -347,6 +474,7 @@ export const pipLibrary = {
     "Closed. No hard feelings. Several soft ones.",
   ]),
   ...benchLibrary,
+  ...authLibrary,
 } as const;
 
 /** Per-game speech. Every game has its own invite, start, win, lose and exit lines. */

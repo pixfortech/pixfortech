@@ -29,7 +29,7 @@ async function fresh(email, password = PASSWORD) {
     for (let attempt = 0; attempt < 4; attempt++) {
       await page.goto(base + "/login", { waitUntil: "load", timeout: 90000 });
       await page.getByLabel("Email").fill(email);
-      await page.getByLabel("Password").fill(password);
+      await page.getByLabel("Password", { exact: true }).fill(password);
       await page.getByRole("button", { name: "Sign in" }).click();
       const done = await page.waitForURL((u) => /\/(portal|admin)/.test(u.pathname), { waitUntil: "commit", timeout: 30000 }).then(() => true).catch(() => false);
       if (done) break;
@@ -80,7 +80,7 @@ const logSize = () => readFileSync(log, "utf8").length;
     expectedErrors.set(oldLogin.page, [{ status: 401, path: "/api/auth/sign-in/email" }]);
     await oldLogin.page.goto(base + "/login", { waitUntil: "load" });
     await oldLogin.page.getByLabel("Email").fill("tom@northbank.test");
-    await oldLogin.page.getByLabel("Password").fill(PASSWORD);
+    await oldLogin.page.getByLabel("Password", { exact: true }).fill(PASSWORD);
     await oldLogin.page.getByRole("button", { name: "Sign in" }).click();
     await oldLogin.page.waitForTimeout(2500);
     ok("old password rejected after reset", oldLogin.page.url().includes("/login"), oldLogin.page.url().replace(base, ""));
