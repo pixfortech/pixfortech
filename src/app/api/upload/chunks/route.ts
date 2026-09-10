@@ -1,4 +1,5 @@
 import { AuthError, requireUser } from "@/server/auth/session";
+import { isTrustedUploadOrigin } from "@/server/auth/request-origin";
 import { beginUpload, finishUpload, putChunk } from "@/server/services/chunked-uploads";
 
 export const runtime = "nodejs";
@@ -6,8 +7,7 @@ export const dynamic = "force-dynamic";
 
 async function handle(req: Request) {
   try {
-    const origin = req.headers.get("origin");
-    if (!origin || new URL(origin).origin !== new URL(req.url).origin) return Response.json({ error: "Cross-origin uploads are not allowed." }, { status: 403 });
+    if (!isTrustedUploadOrigin(req)) return Response.json({ error: "Cross-origin uploads are not allowed." }, { status: 403 });
     const actor = await requireUser();
     const url = new URL(req.url);
     if (req.method === "PUT") {
