@@ -66,7 +66,7 @@ Realtime uses the existing PostgreSQL-backed event log and authenticated polling
 
 Mobile experience coverage includes 320, 360, 375, 390, 430 and 768 pixels. Profile checks cover persistence, username validation/uniqueness, roles, publishing, anonymous denial after unpublishing, noindex previews, sitemap removal, metadata and canonical URLs. Slug-change QA verifies the old address returns a permanent 308 redirect. Client project, request, file, conversation and approval access is denied across tenants.
 
-Live email QA confirmed password reset, old-password rejection, server-session revocation, reset-link single use, magic-link single use, role redirects and logout. Fresh verification delivery/link completion remains pending after the verification-on-sign-in fix; the isolated QA email account must be returned to its verified state through that link.
+Live email QA confirmed password reset, old-password rejection, server-session revocation, reset-link single use, magic-link single use, role redirects and logout. On September 10, a fresh verification email was delivered through Resend to the approved QA inbox. Its link verified the isolated account, which retained zero project access. Signing out and then signing in with the existing password succeeded on the candidate. The QA email account is now verified; production owner onboarding remains separate and incomplete.
 
 Local HTTP-to-Neon connection resets interrupted some earlier test attempts. The clean local runs used the application's supported PostgreSQL driver against the same isolated clone. Netlify continues to use its serverless Neon HTTP runtime. Earlier failed attempts are retained in the operational history; they were not counted as passes.
 
