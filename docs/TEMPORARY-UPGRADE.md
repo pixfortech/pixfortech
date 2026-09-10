@@ -6,7 +6,7 @@ This record supersedes the domain-cutover steps in DEPLOYMENT.md for this assign
 
 - Branch: `codex/final-experience-upgrade`.
 - Starting tested commit: `3d68a48c799681b31d9fbc7a2d4014a4fe3c9be4`.
-- Deployed application commit: `7d79039fe02171d41c94187c4d849daaeae71a7e`, including merged email-delivery diagnostics. Typecheck, lint and all 95 unit/integration checks passed after the merge; deployment smoke checks and a delivered reset message also passed. The full experience results below were recorded on the preceding application build `1a78d2a`.
+- Application baseline: `7d79039fe02171d41c94187c4d849daaeae71a7e`, including merged email-delivery diagnostics. The subsequent upload-origin fix is `07950bb`; typecheck, lint and all 105 unit/integration checks passed. The full experience results below were recorded on the preceding application build `1a78d2a`.
 - Candidate: https://codex-final-experience-upgrade--pixfortech-production.netlify.app
 - Netlify project: `pixfortech-production`. The candidate build completed successfully.
 - Existing deployment https://pixfortech-production.netlify.app remains on `codex/production-deployment`.
@@ -16,22 +16,24 @@ This record supersedes the domain-cutover steps in DEPLOYMENT.md for this assign
 
 The actual production Neon branch has all five migrations, including `0004_profile_identity.sql`. Read-only verification confirmed `username`, `public_slug`, `public_profile`, `experience`, and `profile_slug_history`. A separate pre-migration production branch preserves the previous state. No production reset, demo seed, SQLite import, destructive recovery, or production-file deletion was performed.
 
-Browser QA uses the separate `final-experience-qa` Neon clone. **The candidate currently uses that QA clone, not the owner production database.** Test accounts and sample project records must never be promoted into production.
+The full fixture-based browser QA used the separate `final-experience-qa` Neon clone. After the owner confirmed verification and password setup on September 10, only the final candidate's pooled and direct database variables were switched to the real production database. Build `6aa23408f68873a4c5df1396` completed successfully on commit `1c053d4`. No QA accounts or sample project records were copied into production.
 
 On September 10, the owner explicitly approved the production identity. The real production check found no Super Admin, and the existing idempotent bootstrap created exactly one enabled `super_admin`. A second check confirmed it exists with email verification pending. No demo account was created.
 
 Bootstrap used `--email-link` mode with the real production environment. The random temporary password was discarded; email verification and password setup remain required. It refuses to create another owner when any Super Admin already exists, including a disabled one. Complete onboarding through the delivered verification and password-reset links; never record the permanent password.
 
-The separate `codex/owner-onboarding` branch uses the same tested application commit and real production database at https://codex-owner-onboarding--pixfortech-production.netlify.app. Its purpose is to verify the real owner before switching the final candidate, as requested. The final candidate remains connected to the QA clone until the owner confirms verification. No custom domain or DNS change is involved.
+The separate `codex/owner-onboarding` branch uses the same tested application commit and real production database at https://codex-owner-onboarding--pixfortech-production.netlify.app. It allowed verification of the real owner before switching the final candidate, as requested. No custom domain or DNS change is involved.
 
 Onboarding deployment `6aa23229ebddeff00b58c3f5` completed successfully. Fresh owner verification and password-set requests both returned HTTP 200. Resend's verification send log independently confirmed HTTP 200, and both messages have Sent and Delivered events on September 10 at 10:01 AM as displayed in its dashboard:
 
 - Verification message: `e88b66b3-19e9-46bd-bf82-e2c7b79e2098`.
 - Password-set message: `0065bfd2-92c0-48ec-a34d-bfcd3f948274`.
 
-Both messages address the approved real owner and their private links target the onboarding hostname. Resend accepted the `onboarding@resend.dev` sender for this recipient; there was no sandbox rejection to fix. Delivered is the provider's delivery event, not proof the recipient has read the message. The owner must open the verification link and choose a private password through the fresh reset link. Those links and passwords are not recorded here. No production verification or password completion is claimed yet.
+Both messages address the approved real owner and their private links target the onboarding hostname. Resend accepted the `onboarding@resend.dev` sender for this recipient; there was no sandbox rejection to fix. Delivered is the provider's delivery event, not proof the recipient has read the message. The owner subsequently confirmed both steps; a read-only production check confirmed `email_verified=true`, `must_change_password=false`, an enabled `super_admin` role and a credential record. The permanent password was never requested or read.
 
-After QA and owner onboarding, securely point only the candidate branch's pooled and direct database variables to the actual production branch, rebuild, and verify the owner workspace and public site. Preserve the working existing deployment.
+Production currently contains one user, one studio organisation and no projects. The authenticated onboarding dashboard and team screen show the real owner and Super Admin access. Final-host authenticated browser checks require the owner's separate sign-in on that hostname; that handoff is pending. Public home/work/login, anonymous session and anonymous admin denial passed after the switch.
+
+Production infrastructure probes passed R2 write/read integrity, signed downloads, unsigned access denial (`400 InvalidArgument`) and forged-signature rejection (`403`). The non-personal probe objects use `staging/readiness/` and expire under the previously approved cleanup rule. A single owner-only in-app readiness notification was created using the existing service; persistence and realtime retrieval passed, while an unrelated user/organisation scope received none of that event. The owner's already-open onboarding UI received it live and showed one unread notification. No extra account was created. Full two-account project/file isolation remains evidenced by the isolated QA suite rather than by invented production tenants.
 
 ## Production configuration
 
@@ -51,6 +53,7 @@ Realtime uses the existing PostgreSQL-backed event log and authenticated polling
 - Preserve notification resource IDs independently of delivery IDs.
 - Use the shared server display clock in the live activity feed, avoiding hydration mismatches across minute boundaries.
 - Send a new verification email after a correct-password sign-in by an unverified user; access remains denied until verification succeeds.
+- Validate chunk-upload origins against the configured public application origin. A live same-origin anonymous probe exposed a proxy URL mismatch that incorrectly rejected legitimate uploads before authentication. Foreign/missing/malformed origins remain denied, forwarding headers cannot expand trust, and missing production origin configuration fails closed. Ten regression cases cover these boundaries.
 - Update browser tests for the new confirmation field, current accessible labels, asynchronous saved-state feedback, and actual production game invitations. Assertions and security protections remain intact.
 
 ## Validation evidence
@@ -58,8 +61,8 @@ Realtime uses the existing PostgreSQL-backed event log and authenticated polling
 | Check | Result |
 | --- | --- |
 | TypeScript and lint | Clean |
-| Unit tests | 78 passed |
-| Combined integration run | 95 passed: 78 unit + 17 integration |
+| Unit tests | 88 passed |
+| Combined integration run | 105 passed: 88 unit + 17 integration |
 | Local experience browser suite | 65/65, no unexpected browser errors |
 | Workflow browser suite | 23/23, including reset, invitation, file isolation, approvals and persisted kanban drag/drop |
 | Live experience suite | 41/41, no unexpected browser errors; includes password change/restoration, notification reconciliation and all six mobile widths |
@@ -96,7 +99,7 @@ Previous reported performance values were Home 88, Work 92, Login 88 and Admin 8
 
 ## OWNER_VERIFY
 
-- Complete the approved production owner's email verification and private password setup.
+- Complete the final-host owner browser check; verification and private password setup are already confirmed in production.
 - Review legal entity name, monitored studio inbox, location, timezone, social links and founding year.
 - Replace sample case studies with approved client names, project descriptions, imagery and substantiated outcomes.
 - Confirm staff biographies, portraits and publication consent.
@@ -104,4 +107,4 @@ Previous reported performance values were Home 88, Work 92, Login 88 and Admin 8
 - Review contact response-time statements, service copy, privacy/terms and other factual business claims.
 - Approve domain/DNS cutover and custom-domain transactional email in a separate task.
 
-**Not yet ready for final owner content review:** production owner onboarding, candidate production-database selection and final owner-account checks remain outstanding. DNS has not been changed.
+**Final owner-session check pending:** production owner verification/password setup and the candidate database switch are complete. The final hostname needs its own authenticated browser session to complete the remaining owner check. DNS has not been changed.
