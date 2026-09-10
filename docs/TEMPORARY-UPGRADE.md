@@ -6,7 +6,7 @@ This record supersedes the domain-cutover steps in DEPLOYMENT.md for this assign
 
 - Branch: `codex/final-experience-upgrade`.
 - Starting tested commit: `3d68a48c799681b31d9fbc7a2d4014a4fe3c9be4`.
-- Application commit: `1a78d2a3d6153335e68d3689ab6f74d79b146af1`.
+- Deployed application commit: `7d79039fe02171d41c94187c4d849daaeae71a7e`, including merged email-delivery diagnostics. Typecheck, lint and all 95 unit/integration checks passed after the merge; deployment smoke checks and a delivered reset message also passed. The full experience results below were recorded on the preceding application build `1a78d2a`.
 - Candidate: https://codex-final-experience-upgrade--pixfortech-production.netlify.app
 - Netlify project: `pixfortech-production`. The candidate build completed successfully.
 - Existing deployment https://pixfortech-production.netlify.app remains on `codex/production-deployment`.
@@ -18,9 +18,18 @@ The actual production Neon branch has all five migrations, including `0004_profi
 
 Browser QA uses the separate `final-experience-qa` Neon clone. **The candidate currently uses that QA clone, not the owner production database.** Test accounts and sample project records must never be promoted into production.
 
-The production Super Admin check found no account. Owner identity requires explicit confirmation: automatic approval review rejected inferring that privileged identity from the Netlify account. No production owner has been created and no production password setup has occurred.
+On September 10, the owner explicitly approved the production identity. The real production check found no Super Admin, and the existing idempotent bootstrap created exactly one enabled `super_admin`. A second check confirmed it exists with email verification pending. No demo account was created.
 
-After approval, use the idempotent bootstrap's `--email-link` mode with the real production environment. This discards the random temporary password, leaves email verification required, and requires password setup. It refuses to create another owner when any Super Admin already exists, including a disabled one. Complete onboarding through the delivered verification and password-reset links; never record the permanent password.
+Bootstrap used `--email-link` mode with the real production environment. The random temporary password was discarded; email verification and password setup remain required. It refuses to create another owner when any Super Admin already exists, including a disabled one. Complete onboarding through the delivered verification and password-reset links; never record the permanent password.
+
+The separate `codex/owner-onboarding` branch uses the same tested application commit and real production database at https://codex-owner-onboarding--pixfortech-production.netlify.app. Its purpose is to verify the real owner before switching the final candidate, as requested. The final candidate remains connected to the QA clone until the owner confirms verification. No custom domain or DNS change is involved.
+
+Onboarding deployment `6aa23229ebddeff00b58c3f5` completed successfully. Fresh owner verification and password-set requests both returned HTTP 200. Resend's verification send log independently confirmed HTTP 200, and both messages have Sent and Delivered events on September 10 at 10:01 AM as displayed in its dashboard:
+
+- Verification message: `e88b66b3-19e9-46bd-bf82-e2c7b79e2098`.
+- Password-set message: `0065bfd2-92c0-48ec-a34d-bfcd3f948274`.
+
+Both messages address the approved real owner and their private links target the onboarding hostname. Resend accepted the `onboarding@resend.dev` sender for this recipient; there was no sandbox rejection to fix. Delivered is the provider's delivery event, not proof the recipient has read the message. The owner must open the verification link and choose a private password through the fresh reset link. Those links and passwords are not recorded here. No production verification or password completion is claimed yet.
 
 After QA and owner onboarding, securely point only the candidate branch's pooled and direct database variables to the actual production branch, rebuild, and verify the owner workspace and public site. Preserve the working existing deployment.
 
@@ -87,7 +96,7 @@ Previous reported performance values were Home 88, Work 92, Login 88 and Admin 8
 
 ## OWNER_VERIFY
 
-- Confirm the privileged production owner identity and complete email/password onboarding.
+- Complete the approved production owner's email verification and private password setup.
 - Review legal entity name, monitored studio inbox, location, timezone, social links and founding year.
 - Replace sample case studies with approved client names, project descriptions, imagery and substantiated outcomes.
 - Confirm staff biographies, portraits and publication consent.
