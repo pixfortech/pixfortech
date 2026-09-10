@@ -680,6 +680,8 @@ body > header { z-index: 50; }
 .pf-bench--mobile { max-width: none; aspect-ratio: 26 / 14; }
 /* Placeholder before the bench code arrives: same footprint as the layout it will pick. */
 @media (max-width: 30rem) { .pf-bench--auto { max-width: none; aspect-ratio: 26 / 14; } }
+/* Before the canvas mounts, the placeholder shows a faint forge grid and floor so the space never reads as empty. */
+.pf-bench--auto { border-radius: var(--radius-md); background-image: linear-gradient(rgba(244,241,234,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(244,241,234,0.05) 1px, transparent 1px); background-size: 12px 12px; mask-image: radial-gradient(ellipse at 30% 100%, black 20%, transparent 78%); }
 .pf-bench__canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: pan-y; }
 .pf-bench__pip { position: absolute; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: var(--radius-sm); touch-action: manipulation; }
 .pf-bench__pip:focus-visible { outline: 2px dashed var(--color-forge-400); outline-offset: 2px; opacity: 0.8; }

@@ -12,8 +12,10 @@ function rng(seed) {
 }
 
 const palettes = {
-  ganguram: { bg: "#17110f", cell: "#241a16", warm: ["#e9a23b", "#f0b95c", "#ffe0a8"], cool: ["#6b2f2a"], seed: 1885 },
-  sd18: { bg: "#0f1218", cell: "#181d27", warm: ["#e63946", "#ff5a63"], cool: ["#f4f1ea", "#2b3446"], seed: 1818 },
+  // Ganguram: saffron, gold and cream mithai tones over a warm, dark counter.
+  ganguram: { bg: "#17110f", cell: "#2a1d18", warm: ["#e9a23b", "#f0b95c", "#ffd58a", "#ffe0a8", "#c9782a"], cool: ["#8a3a2e"], seed: 1885 },
+  // SD18: seam red and whites on a night-match ink, cut like a pitch.
+  sd18: { bg: "#0f1218", cell: "#1c2230", warm: ["#e63946", "#ff5a63", "#ff8a92", "#f4f1ea"], cool: ["#f4f1ea", "#3b4658"], seed: 1818 },
 };
 
 function cover(seed, palette, w = 1600, h = 1200) {
@@ -29,11 +31,11 @@ function cover(seed, palette, w = 1600, h = 1200) {
       const heat = Math.max(0, 1 - d * 2.6) + (r() - 0.5) * 0.25;
       const noise = r();
       let fill = null, op = 1;
-      if (heat > 0.62 && noise > 0.25) {
+      if (heat > 0.55 && noise > 0.2) {
         const all = [...palette.warm, ...palette.cool];
         fill = all[Math.floor(r() * all.length)];
         op = 0.75 + r() * 0.25;
-      } else if (heat > 0.3 && noise > 0.6) {
+      } else if (heat > 0.25 && noise > 0.55) {
         fill = palette.cell; op = 1;
       } else if (noise > 0.93) {
         fill = palette.cell; op = 0.9;
