@@ -9,13 +9,15 @@ export const services: Service[] = [
     slug: "website-design-development",
     index: "01",
     title: "Website Design & Development",
-    summary: "Marketing sites and company websites designed from the content out and built to load fast on the phones your customers actually own.",
+    headline: "Good-looking is the starting line. Working properly is the job.",
+    summary: "Distinctive, responsive websites designed around the business rather than whichever template was trending last Tuesday.",
     problem:
       "Most business websites were built from a template, edited by six people over four years, and now load slowly, look dated and convert poorly. Nobody is quite sure what can be changed safely.",
     capability:
       "We design the site around what it has to do, write the structure and copy hierarchy first, then build it as a componentised, accessible frontend with a content layer your team can edit without a developer.",
     outcome:
       "A site that represents the business properly, is fast on real devices, ranks on its own merit and can be extended without a rebuild.",
+    cta: "See how we build",
     technologies: ["nextjs", "react", "typescript", "tailwind", "wordpress", "performance"],
     deliverables: ["Information architecture and content hierarchy", "Responsive design system", "Componentised frontend build", "CMS integration and editor training", "SEO structure, metadata and schema", "Performance and accessibility pass"],
     body: [
@@ -30,84 +32,89 @@ export const services: Service[] = [
     ],
   },
   {
-    slug: "shopify-development",
+    slug: "e-commerce-development",
     index: "02",
-    title: "Shopify Development",
-    summary: "Custom themes, section architecture, Liquid, and Shopify API work for stores that have outgrown what a stock theme can do.",
+    title: "E-commerce Development",
+    headline: "Because “Add to Cart” deserves better company.",
+    summary: "Online stores designed to make browsing, choosing and buying feel straightforward.",
     problem:
-      "Off-the-shelf themes and a stack of apps get a store live, but every new feature becomes a workaround, the theme editor fights the merchant, and page speed slides with each installed app.",
+      "The store technically works, but finding the right product takes too many taps, the cart surprises people, and every new feature is another app fighting the theme for page speed.",
     capability:
-      "We build and customise Shopify themes with clean Liquid sections, metafield-driven templates and JavaScript written for the storefront rather than copied from a plugin. Where a feature needs data, we use the Storefront, Admin and Ajax APIs directly.",
+      "We design and build storefronts around the catalogue and the buying journey: clear collections, product pages that answer the real questions, a cart and checkout that stay out of the way, and integrations that behave like part of the platform.",
     outcome:
-      "A storefront the merchant can actually manage from the theme editor, with fewer apps, faster pages and custom features that behave like part of the platform.",
-    technologies: ["shopify", "liquid", "shopify-apis", "javascript", "html-css", "performance"],
-    deliverables: ["Theme design and development", "Section and block architecture", "Metafield and content modelling", "Custom cart, search and product logic", "App and third-party integrations", "Speed and conversion review"],
+      "A store the team can run day to day, that customers can browse on a phone without patience, and that can grow without being rebuilt.",
+    cta: "See how we sell",
+    technologies: ["shopify", "liquid", "shopify-apis", "javascript", "performance"],
+    deliverables: ["Storefront design and development", "Catalogue, collection and product-page structure", "Cart, checkout and ordering journeys", "Payment, shipping and third-party integrations", "Merchant handover and training", "Speed and conversion review"],
     body: [
-      "Shopify is a strong platform when it is used as intended. Most stores we inherit are fighting it: templates duplicated for each product type, JavaScript from five apps competing on the same page, and a merchant who is afraid to open the theme editor.",
-      "Our theme work is built on Online Store 2.0 conventions. Sections and blocks are designed so the merchant can compose pages without breaking them, and templates read from metafields rather than hardcoded content.",
-      "For anything beyond the theme, we work with Shopify's APIs directly. That covers custom cart behaviour, product configurators, wholesale logic, integrations with fulfilment and marketing tools, and headless builds where they are justified.",
+      "An online store has two customers: the person buying and the person running it. We design for both. Browsing has to be quick and obvious; the back office has to be manageable without a developer on call.",
+      "Where the platform is Shopify we work with its conventions: clean theme sections, metafield-driven templates and its APIs for anything custom. Where it is something else, the same discipline applies: fewer moving parts, faster pages, and features that feel native.",
     ],
     faqs: [
-      { q: "Can you work on our existing theme?", a: "Usually, yes. We audit it first and tell you honestly whether it is worth extending or should be rebuilt." },
-      { q: "Do you build headless Shopify stores?", a: "Only when there is a real reason, such as a content-heavy brand site with commerce inside it. For most merchants a well-built theme is faster to run and cheaper to maintain." },
-      { q: "Will you help reduce our app count?", a: "Yes. Replacing an app with a few hundred lines of Liquid and JavaScript is often the single largest speed improvement available." },
+      { q: "Can you work on our existing store?", a: "Usually, yes. We audit it first and tell you honestly whether it is worth extending or should be rebuilt." },
+      { q: "Do you handle payments, shipping and other integrations?", a: "Yes. Connecting the store to payment providers, shipping and the tools you already use is part of the build." },
     ],
   },
   {
-    slug: "web-applications",
+    slug: "graphic-design",
     index: "03",
-    title: "Web Applications",
-    summary: "Customer portals, internal tools and product backends built with Node.js, Laravel and React, typed and tested.",
+    title: "Graphic Design",
+    headline: "Sometimes the pixels need to leave the browser.",
+    summary: "Digital graphics and visual assets built with the same unhealthy respect for alignment.",
     problem:
-      "The business runs on spreadsheets, a legacy admin panel and a process only one person understands. Buying software does not fit, and the last custom build was abandoned by its developer.",
+      "The website looks considered, and then the social posts, banners and decks look like they came from somewhere else entirely. Every new asset is a fresh improvisation.",
     capability:
-      "We design and build web applications with a clear data model, authentication, role-based access and a frontend that is pleasant to use every day. Backends in Node.js or Laravel, interfaces in React, documented and version-controlled.",
+      "We design the visual assets that travel with a brand online: social graphics, banners, digital ads, presentation visuals and the templates that keep them consistent after we hand over.",
     outcome:
-      "Software that fits the way the business actually works, with an API that other tools can connect to and code a future team can take over.",
-    technologies: ["nodejs", "laravel", "php", "react", "typescript", "rest-apis"],
-    deliverables: ["Product discovery and data modelling", "API design and backend build", "Authentication and permissions", "Admin and customer interfaces", "Integrations with existing systems", "Documentation and handover"],
+      "Assets that look like they belong to the same company as the website, with a set of templates the team can keep using.",
+    cta: "See the visual side",
+    technologies: [],
+    deliverables: ["Social and campaign graphics", "Web and display banners", "Presentation and pitch visuals", "Reusable templates and asset kits", "Export-ready files for every channel"],
     body: [
-      "Custom software earns its place when the workflow is specific to the business. We start by mapping that workflow honestly, including the parts people do by hand today, before writing a line of code.",
-      "We favour boring, well-understood foundations: Laravel or Node.js on the backend, React on the front, relational data, and an API layer between them so the application can grow in either direction.",
-      "Every build includes the unglamorous parts that make software trustworthy: validation, permissions, error handling, logs and a deployment pipeline.",
+      "Good digital graphics are mostly restraint and alignment: a clear hierarchy, a grid that is respected, and type that is set with care. We bring the same eye to a banner that we bring to an interface.",
+      "Every asset is delivered in the formats each channel needs, with the source files and a short guide so the next version does not drift.",
     ],
     faqs: [
-      { q: "Do you take over applications built by someone else?", a: "Yes, after a code review so we can tell you what shape it is in and what it will cost to move forward." },
-      { q: "Node.js or Laravel?", a: "Whichever suits the team that will maintain it and the systems it has to talk to. We use both regularly." },
+      { q: "Do you design logos and full brand identities?", a: "Our focus is digital graphics and the assets that sit alongside a website. If your brand needs a ground-up identity, we will say so and help you brief it." },
     ],
   },
   {
-    slug: "ui-ux-design",
+    slug: "website-redesign",
     index: "04",
-    title: "UI & UX Design",
-    summary: "Interface design grounded in how people actually use the product, delivered as a system rather than a set of screens.",
+    title: "Website Redesign",
+    headline: "Your old website has served bravely. We should probably talk.",
+    summary: "We rethink outdated, confusing or underperforming websites without throwing away the parts that still work.",
     problem:
-      "The product works but people struggle with it. The interface grew feature by feature, nothing is consistent, and each new screen takes longer to design than the last.",
+      "The current site was right for the business five years ago. It is slow, awkward on phones, hard to update, and no longer says what the company actually does.",
     capability:
-      "We audit the current experience, restructure the journeys that matter, and design a component system with tokens for colour, type, spacing and states. Screens are designed for real content and real edge cases, then prototyped where the interaction is unclear.",
+      "We audit what is there, keep the pages, URLs and content that still earn their place, and redesign the rest around today's business: structure first, then the visual layer, then a build that is easier to maintain than the one it replaces.",
     outcome:
-      "A product that is easier to use and easier to extend, with a design system engineers can implement without guesswork.",
-    technologies: ["html-css", "react", "tailwind", "typescript"],
-    deliverables: ["UX audit and journey mapping", "Wireframes and flows", "Design tokens and component library", "High-fidelity screens", "Interactive prototypes", "Developer handoff documentation"],
+      "A site that feels current, works on real devices, keeps the search visibility you already have, and no longer needs a developer for routine changes.",
+    cta: "See how a redesign runs",
+    technologies: ["nextjs", "react", "wordpress", "html-css", "performance"],
+    deliverables: ["Audit of the current site and content", "Redirect and URL continuity plan", "Restructured information architecture", "Redesigned responsive system", "Rebuilt, maintainable frontend", "Launch checklist and handover"],
     body: [
-      "Good interface design is mostly decisions about hierarchy: what matters most on this screen, what the person is trying to do, and what should get out of the way. We make those decisions explicitly and write them down.",
-      "Because we also build, our design work is shaped by what will ship well. Components are designed with their states, responsive behaviour and content limits from the start.",
+      "A redesign is not a fresh start; it is an inheritance. We map what exists, measure what works, and make a case for each change rather than replacing everything on principle.",
+      "The build is planned so nothing that earns traffic breaks on launch day: redirects, metadata and content are carried across deliberately.",
     ],
     faqs: [
-      { q: "Can you design for a product we are building in-house?", a: "Yes. We deliver a token system, components and annotated screens that an internal engineering team can implement." },
+      { q: "Will we lose our search rankings?", a: "Not if the redesign is planned properly. Keeping or redirecting every URL that matters is part of the work, not an afterthought." },
+      { q: "Can we keep our current content management system?", a: "Often, yes. We recommend a change only when the current system is the thing holding the site back." },
     ],
   },
   {
-    slug: "optimisation-and-improvement",
+    slug: "performance-optimisation",
     index: "05",
-    title: "Optimisation & Improvement",
-    summary: "Performance, accessibility, conversion and code-health work on products that already exist and need to get better.",
+    title: "Performance & Optimisation",
+    headline: "Faster pages. Fewer excuses.",
+    summary: "We trim the unnecessary, improve responsiveness and make the experience feel lighter where it matters.",
     problem:
       "The site or store is live and earning, but it is slow, hard to maintain, or leaking conversions somewhere between landing and checkout. A full rebuild is not on the table.",
     capability:
-      "We measure first: Core Web Vitals on real devices, accessibility audits, analytics and session review. Then we work through a prioritised list, shipping improvements in small, reviewed releases.",
+      "We measure first: Core Web Vitals on real devices, accessibility checks, analytics and session review. Then we work through a prioritised list, shipping improvements in small, reviewed releases.",
     outcome:
       "A faster, more accessible product with measurable improvements, delivered without a rebuild or a pause on trading.",
+    cta: "See what gets trimmed",
     technologies: ["performance", "javascript", "shopify", "wordpress", "git"],
     deliverables: ["Performance audit and budget", "Accessibility review against WCAG 2.2", "Conversion and UX review", "Technical SEO fixes", "Code cleanup and dependency reduction", "Ongoing improvement retainer"],
     body: [
@@ -121,21 +128,23 @@ export const services: Service[] = [
   {
     slug: "integrations",
     index: "06",
-    title: "Integrations & Automation",
-    summary: "Connecting storefronts, CRMs, ERPs, payment and marketing tools so data moves without someone re-typing it.",
+    title: "Integrations",
+    headline: "Making different systems speak without shouting at each other.",
+    summary: "Practical integrations that connect the parts of your digital setup that should already be working together.",
     problem:
       "Orders are copied into the accounting system by hand, the CRM does not know who bought what, and three tools each hold a different version of the customer.",
     capability:
       "We build integrations using each platform's APIs and webhooks, with retries, logging and monitoring, so the connection keeps working after launch. Where no API exists, we design a sensible workaround and document it.",
     outcome:
       "Systems that agree with each other, fewer manual steps, and a clear record of what moved where and when.",
+    cta: "See what connects",
     technologies: ["nodejs", "rest-apis", "shopify-apis", "laravel", "php"],
     deliverables: ["Integration mapping and data contracts", "API and webhook development", "Scheduled sync and automation", "Error handling and alerting", "Documentation for operations teams"],
     body: [
       "Integration work is invisible when it works and expensive when it does not. We design each connection with failure in mind: idempotent operations, retries, and logs a non-developer can read.",
     ],
     faqs: [
-      { q: "Which platforms can you connect?", a: "Anything with an API or webhooks. Common requests involve Shopify, payment providers, email and CRM tools, and accounting or fulfilment systems." },
+      { q: "Which platforms can you connect?", a: "Anything with an API or webhooks. Common requests involve storefronts, payment providers, email and CRM tools, and accounting or fulfilment systems." },
     ],
   },
 ];

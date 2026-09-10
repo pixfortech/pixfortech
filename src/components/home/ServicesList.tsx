@@ -12,6 +12,8 @@ export type ServiceItem = {
   index: string;
   title: string;
   summary: string;
+  headline?: string;
+  cta?: string;
   problem: string;
   capability: string;
   outcome: string;
@@ -48,7 +50,10 @@ export function ServicesList({ services }: { services: ServiceItem[] }) {
                 )}
               >
                 <span className={cn("num text-small transition-colors", isOpen ? "text-forge-400" : "text-bone-600 group-hover:text-forge-400")}>{s.index}</span>
-                <span className="font-display text-[clamp(1.5rem,1.1rem+1.6vw,2.5rem)] font-semibold leading-[1.05] tracking-[-0.02em]">{s.title}</span>
+                <span className="min-w-0">
+                  <span className="block font-display text-[clamp(1.5rem,1.1rem+1.6vw,2.5rem)] font-semibold leading-[1.05] tracking-[-0.02em]">{s.title}</span>
+                  {s.headline && <span className={cn("mt-2 block text-[0.9375rem] leading-snug transition-colors", isOpen ? "text-bone-300" : "text-bone-500 group-hover:text-bone-300")}>{s.headline}</span>}
+                </span>
                 <span
                   aria-hidden="true"
                   className={cn("relative block h-6 w-6 text-bone-400 transition-transform duration-(--dur-base) ease-(--ease-out)", isOpen && "rotate-45 text-forge-400")}
@@ -71,6 +76,7 @@ export function ServicesList({ services }: { services: ServiceItem[] }) {
                   className="overflow-hidden"
                 >
                   <div className="grid gap-8 pb-8 sm:pl-[4rem] pl-[2.5rem] lg:grid-cols-12 lg:gap-10 lg:pb-10">
+                    <p className="max-w-prose text-bone-200 lg:col-span-12">{s.summary}</p>
                     <div className="grid gap-6 sm:grid-cols-3 lg:col-span-9">
                       <div>
                         <p className="eyebrow mb-2">Problem</p>
@@ -92,7 +98,7 @@ export function ServicesList({ services }: { services: ServiceItem[] }) {
                         ))}
                       </ul>
                       <Link href={`/services/${s.slug}`} className="group/link inline-flex items-center gap-2 font-medium text-bone-50 hover:text-forge-300 w-fit">
-                        <span className="link-line">About this service</span>
+                        <span className="link-line">{s.cta ?? "About this service"}</span>
                         <Arrow className="group-hover/link:translate-x-1" />
                       </Link>
                     </div>

@@ -31,6 +31,9 @@ const benchLibrary = {
     "Alignment first. Charm second. Charm's winning anyway.",
   ]),
   precisionInspect: lines("precisionInspect", [
+    "That one was two pixels off. I fixed it.",
+    "Close enough is not a coordinate.",
+    "I measured it twice. Then once more for dramatic effect.",
     "One pixel off. I can hear it from here.",
     "A cell to the left. Some would call that fine. I am not some.",
     "Measure twice. Forge once. Measure again, quietly.",
@@ -41,6 +44,7 @@ const benchLibrary = {
     "The grid agrees with me. The grid usually does.",
   ]),
   precisionComplete: lines("precisionComplete", [
+    "There. Exactly where it belongs.",
     "There. Exactly where I meant it.",
     "Placed. Not put down. Placed.",
     "Every pixel has an address. This one just moved in.",
@@ -203,6 +207,7 @@ export const pipLibrary = {
     "You're here more than most. I'm choosing to take that as a compliment.",
   ]),
   hero: lines("hero", [
+    "Bring the idea. I'll organise the pixels.",
     "Go on, poke the big block. It's sturdier than it looks.",
     "Those cubes respond to you. Try moving through them slowly.",
     "The hero is fully interactive. I built it. Mostly.",
@@ -273,6 +278,7 @@ export const pipLibrary = {
     "If you're thinking about it, the contact page is very short. I helped.",
   ]),
   pageComplete: lines("pageComplete", [
+    "I've cleared a space on the bench.",
     "That's the lot. Every last pixel. Nicely forged.",
     "Bottom of the page. You've seen all of it. I'm oddly proud.",
     "All pixels forged. You may now feel accomplished.",
@@ -285,7 +291,7 @@ export const pipLibrary = {
     "Every project has its own colours. Did you notice mine changed?",
   ]),
   work: lines("work", [
-    "These are samples of what we forge. Hover one and I'll show you its colours.",
+    "Real projects. Hover one and I'll show you its colours.",
     "Each project keeps its own palette. I keep the palettes.",
     "Look closely. Every one of these started as loose pixels and a conversation.",
     "The work page. My favourite. It's where the pixels show off.",
@@ -296,7 +302,7 @@ export const pipLibrary = {
     "Every pixel on this page belongs to this project. I've tagged them.",
   ]),
   services: lines("services", [
-    "Six things we're suspiciously good at. I'm not one of them; I'm a bonus.",
+    "Six things they're suspiciously good at. I'm not one of them; I'm a bonus.",
     "Pick a service. Each one has a proper description, no buzzwords. I checked.",
     "These are the tools. The people are on the About page. I'm on every page.",
     "Design and engineering in the same room. The room is nicer than it sounds.",
@@ -314,6 +320,7 @@ export const pipLibrary = {
     "Watch the pixels order themselves as you scroll. That's the process, illustrated.",
   ]),
   technologies: lines("technologies", [
+    "I asked for one framework. They started a debate.",
     "A deliberately short list. Everything on it has shipped for real.",
     "I run on Canvas 2D. It's not on the list, but it should be.",
     "Every tool here was chosen, not collected. There's a difference.",

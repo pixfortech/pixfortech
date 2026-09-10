@@ -11,6 +11,8 @@ export function Services() {
     index: s.index,
     title: s.title,
     summary: s.summary,
+    headline: s.headline,
+    cta: s.cta,
     problem: s.problem,
     capability: s.capability,
     outcome: s.outcome,
@@ -21,10 +23,10 @@ export function Services() {
       <Container>
         <SectionHeading
           eyebrow="Services"
-          number="02"
+          number="03"
           id="services-title"
           title={<>Things we&rsquo;re suspiciously good at.</>}
-          lead="Six services, one habit: we start with the problem you bring, not the deliverable we would like to sell."
+          lead="A short list because “we do everything” usually means nobody knows what the company actually does."
         />
         <Reveal className="mt-14 lg:mt-20">
           <ServicesList services={services} />

@@ -25,25 +25,25 @@ export function Hero() {
 
       <div className="container-x relative pointer-events-none">
         <div className="flex min-h-[100svh] flex-col justify-end pb-12 pt-[52svh] sm:pb-16 lg:justify-center lg:pb-24 lg:pt-32">
-          <div className="hero-copy max-w-[44rem] lg:max-w-[52rem]">
+          <div className="hero-copy max-w-[44rem] lg:max-w-[60rem]">
             <Rise>
-              <Eyebrow className="mb-6">Web engineering & product studio</Eyebrow>
+              <Eyebrow className="mb-6">Web design & development studio, Kolkata</Eyebrow>
             </Rise>
-            <h1 id="hero-title" className="display">
-              <LineReveal lines={["We forge", "digital experiences."]} delay={0.15} />
+            <h1 id="hero-title" className="display hero-title">
+              <LineReveal lines={["We forge digital experiences", "that actually earn their pixels."]} delay={0.15} />
             </h1>
             <Rise delay={0.35}>
-              <p className="lead mt-7 max-w-[34rem]">
-                Websites, Shopify stores and web applications, designed and engineered by the same people, to the pixel. Fast by default. Maintainable on purpose.
+              <p className="lead mt-7 max-w-[36rem]">
+                Websites, e-commerce and digital experiences built with intent, engineered with precision, and polished until every pixel knows exactly where it belongs.
               </p>
             </Rise>
             <Rise delay={0.45}>
               <div className="mt-9 flex flex-wrap items-center gap-3">
                 <Button href="/contact" size="lg" arrow>
-                  Start a project
+                  Start something worth forging
                 </Button>
                 <Button href="/work" size="lg" variant="secondary">
-                  See what we forged
+                  See what we&rsquo;ve built
                 </Button>
               </div>
             </Rise>

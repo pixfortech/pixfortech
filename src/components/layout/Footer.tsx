@@ -8,10 +8,11 @@ import { AccountControl } from "./AccountMenu";
 import { PipRestore } from "@/pixel/mascot/PipRestore";
 
 const secondary = [
-  { href: "/process", label: "Process" },
   { href: "/technologies", label: "Technologies" },
   { href: "/careers", label: "Careers" },
+  { href: "/contact", label: "Contact" },
 ];
+const socialLabels: Record<string, string> = { linkedin: "LinkedIn", instagram: "Instagram", github: "GitHub", x: "X" };
 
 const legal = [
   { href: "/privacy", label: "Privacy" },
@@ -31,13 +32,12 @@ export function Footer() {
               <Monogram size={32} />
               <span className="font-display text-xl font-semibold tracking-[-0.02em]">Pixel Forge Technologies</span>
             </Link>
-            <p className="mt-6 max-w-sm text-bone-400 text-small">
-              A web engineering and digital product studio. We design and build websites, Shopify stores and web applications that are fast, maintainable and made to be used. Every pixel is on purpose.
-            </p>
+            <p className="mt-6 max-w-sm text-bone-400 text-small">{site.tagline}</p>
+            <p className="mt-3 text-small text-bone-200">{site.location}</p>
             <div className="mt-8 flex flex-col gap-2 text-small">
               <a href={`mailto:${site.email}`} className="link-line w-fit text-bone-50">{site.email}</a>
               {site.phone && <a href={`tel:${site.phone}`} className="link-line w-fit text-bone-50">{site.phone}</a>}
-              <LocalTime timezone={site.timezone} label={site.location ? `${site.location},` : "Studio time"} />
+              <LocalTime timezone={site.timezone} label="Studio time," />
             </div>
           </div>
 
@@ -68,7 +68,7 @@ export function Footer() {
                 <ul className="flex flex-col gap-3 text-small">
                   {socials.map(([key, url]) => (
                     <li key={key}>
-                      <a href={url} className="link-line capitalize text-bone-200 hover:text-bone-50" rel="me noopener" target="_blank">{key === "x" ? "X" : key}</a>
+                      <a href={url} className="link-line text-bone-200 hover:text-bone-50" rel="me noopener" target="_blank">{socialLabels[key] ?? key}</a>
                     </li>
                   ))}
                 </ul>
@@ -90,7 +90,7 @@ export function Footer() {
         <div className="mt-8 flex flex-col gap-4 border-t border-line pt-6 pb-16 text-[0.8125rem] text-bone-600 sm:pb-12 lg:flex-row lg:items-start lg:justify-between lg:pb-0">
           <div className="flex flex-col gap-1">
             <p>© {year} {site.legalName}. All rights reserved.</p>
-            <p className="num">Designed, engineered and pixel-counted in-house.</p>
+            <p>{site.footerLine}</p>
           </div>
           <div className="flex flex-col gap-3 lg:items-end">
             <PixelCounterLine className="max-w-md text-bone-400 lg:pr-24" />

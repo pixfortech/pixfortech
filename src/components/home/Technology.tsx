@@ -11,10 +11,10 @@ export function Technology() {
       <Container>
         <SectionHeading
           eyebrow="Technology"
-          number="05"
+          number="06"
           id="tech-title"
           title={<>Tools we know well enough to argue about.</>}
-          lead="No logo wall. This is the stack we actually ship with, chosen for whoever has to maintain the product after we leave."
+          lead="We use the tools that fit the job, not the ones that make the longest logo wall."
         />
         <div className="mt-14 grid gap-10 lg:mt-20 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           {technologyGroups.map((g, gi) => {
@@ -34,7 +34,8 @@ export function Technology() {
             );
           })}
         </div>
-        <Reveal className="mt-12">
+        <Reveal className="mt-14 flex flex-col gap-6 border-t border-line pt-8 sm:flex-row sm:items-center sm:justify-between">
+          <p className="max-w-[28rem] font-display text-[1.25rem] font-semibold tracking-[-0.015em] text-bone-50">Technology is the toolbox. <span className="text-bone-400">The outcome is still the point.</span></p>
           <ArrowLink href="/technologies">How we choose a stack</ArrowLink>
         </Reveal>
       </Container>

@@ -12,7 +12,7 @@ import { formatDate } from "@/lib/utils";
 
 export const metadata = pageMetadata({
   title: "Insights",
-  description: "Practical writing from Pixel Forge Technologies on Shopify performance, design systems, accessibility and web engineering.",
+  description: "Practical writing from Pixel Forge Technologies on web performance, design systems, accessibility and building things properly.",
   path: "/insights",
 });
 

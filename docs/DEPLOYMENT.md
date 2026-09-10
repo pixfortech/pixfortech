@@ -137,6 +137,20 @@ Local TypeScript, lint and 54 unit tests passed during implementation. The produ
 
 Use Netlify's previous successful deploy to roll back application code. Preserve database compatibility and take a Neon branch/restore checkpoint before further schema changes. Do not restore old database state over new customer data. Keep the original SQLite source and backup until final migration acceptance.
 
+## Homepage content QA record (branch `codex/final-experience-upgrade`)
+
+Owner-approved content only: company facts, founder, Kolkata, the studio inbox, LinkedIn and Instagram, and two public projects (Ganguram Sweets, SD18 Sports). Sample case studies, their cover art and the "sample layout" copy paths were removed; the third work slot is an explicit call to action. Services were renamed to the approved six (e-commerce, graphic design and website redesign replace Shopify, web applications and UI/UX), with new slugs in the sitemap. The hero headline moved one step down the type scale so the longer approved line fits above the fold.
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck`, `npm run lint` | clean |
+| `npm test` | 107 passed |
+| `npm run test:integration` against the local QA cluster | 123 passed; `scripts/file-metadata-qa.test.ts` still needs `QA_DISPOSABLE_DATABASE=true` and the QA/production identity files |
+| `npm run build` | clean |
+| `node scripts/public-production-qa.mjs` on the production build | 24 public routes incl. both project studies and six service pages, sitemap, interactive 404, reduced motion, mobile menu, no overflow |
+| `node scripts/experience-qa.mjs` | 117 checks; hero pointer probes now aim at the block, right of the longer headline |
+| Visual review at 320, 360, 375, 390, 430, 768 and 1366 | no overflow, no clipped headings, PiP bubbles clear of copy, CTA card reads as a CTA |
+
 ## Forge gate QA record (branch `codex/pip-login-experience`)
 
 A brand layer over the existing Better Auth flows: no change to sign-in, reset, verification or session handling beyond a password visibility toggle, a 650 ms beat before the post-login redirect, and sign-out landing on `/login?signedout=1` instead of the home page. The corner mascot no longer mounts on auth pages; the gate PiP replaces it there.

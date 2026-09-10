@@ -43,16 +43,15 @@ describe("scroll-driven forge progress", () => {
 
 describe("theme resolution", () => {
   it("matches the longest route prefix", () => {
-    expect(resolveRouteTheme("/services/shopify-development")).toBe(routeThemes["/services"]);
+    expect(resolveRouteTheme("/services/e-commerce-development")).toBe(routeThemes["/services"]);
     expect(resolveRouteTheme("/insights")).toBe(routeThemes["/insights"]);
     expect(resolveRouteTheme("/nowhere")).toBe(routeThemes["/"]);
   });
-  it("gives each sample project its own identity", () => {
-    const a = themeForPath("/work/sample-shopify-storefront");
-    const b = themeForPath("/work/sample-company-website");
-    const c = themeForPath("/work/sample-web-application");
-    expect(new Set([a.primary, b.primary, c.primary]).size).toBe(3);
-    expect(new Set([a.behaviour, b.behaviour, c.behaviour]).size).toBe(3);
+  it("gives each project its own identity", () => {
+    const a = themeForPath("/work/ganguram-sweets");
+    const b = themeForPath("/work/sd18-sports");
+    expect(new Set([a.primary, b.primary]).size).toBe(2);
+    expect(new Set([a.behaviour, b.behaviour]).size).toBe(2);
     expect(themeForPath("/work")).toBe(routeThemes["/work"]);
   });
 });

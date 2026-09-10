@@ -14,8 +14,10 @@ export function ProjectCard({ project, priority = false, className, wide = false
   const { preview } = usePixel();
   const enter = () => preview(project.pixelTheme);
   const leave = () => preview(null);
+  const tags = project.tags ?? technologyNames(project.technologies);
+  const host = project.url ? new URL(project.url).host.replace(/^www\./, "") : null;
   return (
-    <article className={cn("group relative", className)} onPointerEnter={enter} onPointerLeave={leave} onFocusCapture={enter} onBlurCapture={leave}>
+    <article className={cn("group relative", className)} onPointerEnter={enter} onPointerLeave={leave} onFocusCapture={enter} onBlurCapture={leave} data-testid="project-card">
       <Link href={`/work/${project.slug}`} className="block rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forge-400">
         <div className={cn("relative overflow-hidden rounded-md border border-line bg-ink-850", wide ? "aspect-[4/3] sm:aspect-[16/9] lg:aspect-[21/9]" : "aspect-[4/3]")}>
           <Image
@@ -40,19 +42,26 @@ export function ProjectCard({ project, priority = false, className, wide = false
         <div className="mt-5 flex flex-col gap-3">
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
             <Heading className="h3 group-hover:text-forge-300 transition-colors duration-(--dur-fast)">{project.title}</Heading>
-            <span className="num text-small text-bone-400">{project.year}</span>
+            {project.year && <span className="num text-small text-bone-400">{project.year}</span>}
           </div>
           <p className="text-small text-bone-400">
             <span className="text-bone-200">{project.client}</span> · {project.industry}
           </p>
-          <p className="text-bone-200 max-w-prose">{project.outcome}</p>
+          <p className="max-w-prose font-display text-[1.125rem] font-semibold tracking-[-0.01em] text-bone-50">{project.headline ?? project.outcome}</p>
+          <p className="max-w-prose text-small text-bone-300">{project.summary}</p>
+          <span className="inline-flex items-center gap-2 font-medium text-bone-50 group-hover:text-forge-300"><span className="link-line">{project.cta ?? "Read the study"}</span><Arrow className="group-hover:translate-x-1" /></span>
         </div>
       </Link>
-      <ul className="mt-4 flex flex-wrap gap-1.5" aria-label="Technologies">
-        {technologyNames(project.technologies).slice(0, 5).map((t) => (
-          <li key={t}><Tag>{t}</Tag></li>
-        ))}
-      </ul>
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <ul className="flex flex-wrap gap-1.5" aria-label="What we did">
+          {tags.slice(0, 5).map((t) => (
+            <li key={t}><Tag>{t}</Tag></li>
+          ))}
+        </ul>
+        {project.url && host && (
+          <a href={project.url} target="_blank" rel="noopener" className="link-line text-[0.8125rem] text-bone-400 hover:text-bone-50" aria-label={`Visit ${project.title} at ${host}, opens in a new tab`}>{host} ↗</a>
+        )}
+      </div>
     </article>
   );
 }

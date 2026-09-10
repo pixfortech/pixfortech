@@ -49,6 +49,8 @@ export function organizationSchema() {
     logo: absoluteUrl("/icon"),
     description: site.description,
     email: site.email,
+    founder: { "@type": "Person", name: site.founder.name, jobTitle: site.founder.role },
+    address: { "@type": "PostalAddress", addressLocality: "Kolkata", addressCountry: "IN" },
     ...(sameAs.length ? { sameAs } : {}),
   };
 }

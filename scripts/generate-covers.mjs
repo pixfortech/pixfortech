@@ -1,5 +1,6 @@
-// Generates original abstract "pixel forge" cover art as SVG for placeholder
-// case studies. Deterministic per seed so output is stable in git.
+// Generates original abstract "pixel forge" cover art as SVG for the public
+// projects, in each project's own palette. Deterministic per seed so output
+// is stable in git. No logos, no screenshots: the same material as the site.
 import { writeFileSync, mkdirSync } from "node:fs";
 
 function rng(seed) {
@@ -10,11 +11,10 @@ function rng(seed) {
   };
 }
 
-const palettes = [
-  { bg: "#121215", cell: "#1c1c22", warm: ["#ff5a2c", "#ff7a4f", "#ffb08a"], cool: [] },
-  { bg: "#111114", cell: "#1a1a1f", warm: ["#ff5a2c"], cool: ["#f4f1ea"] },
-  { bg: "#121216", cell: "#1b1b21", warm: ["#ff5a2c", "#ff7a4f"], cool: ["#8b96ff", "#5560d6"] },
-];
+const palettes = {
+  ganguram: { bg: "#17110f", cell: "#241a16", warm: ["#e9a23b", "#f0b95c", "#ffe0a8"], cool: ["#6b2f2a"], seed: 1885 },
+  sd18: { bg: "#0f1218", cell: "#181d27", warm: ["#e63946", "#ff5a63"], cool: ["#f4f1ea", "#2b3446"], seed: 1818 },
+};
 
 function cover(seed, palette, w = 1600, h = 1200) {
   const r = rng(seed);
@@ -51,7 +51,5 @@ function cover(seed, palette, w = 1600, h = 1200) {
 }
 
 mkdirSync("public/work", { recursive: true });
-palettes.forEach((p, i) => {
-  writeFileSync(`public/work/sample-0${i + 1}.svg`, cover(1000 + i * 77, p));
-});
+for (const [name, p] of Object.entries(palettes)) writeFileSync(`public/work/${name}.svg`, cover(p.seed, p));
 console.log("covers written");

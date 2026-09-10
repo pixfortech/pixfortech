@@ -10,9 +10,9 @@ export function ProcessPreview() {
       <Container>
         <SectionHeading
           eyebrow="Process"
-          number="04"
+          number="05"
           id="process-title"
-          title={<>Discover. Design. Engineer. Refine. Launch.</>}
+          title={<>From &ldquo;I have an idea&rdquo; to &ldquo;yes, it actually works.&rdquo;</>}
           lead="Five stages, each ending in something written down that you can hold us to. Surprises are for birthdays, not handovers."
         />
         <ol className="mt-14 grid gap-px border border-line bg-line rounded-md overflow-hidden md:grid-cols-5 lg:mt-20">
@@ -23,11 +23,8 @@ export function ProcessPreview() {
                 <span className="h-1.5 w-1.5 bg-line-strong transition-colors group-hover:bg-forge-500" aria-hidden="true" />
               </div>
               <h3 className="font-display text-2xl font-semibold tracking-[-0.02em] uppercase">{stage.name}</h3>
-              <p className="mt-3 text-small text-bone-400">{stage.verb}</p>
-              <p className="mt-6 border-t border-line pt-4 text-[0.8125rem] text-bone-200">
-                <span className="eyebrow block mb-1.5 text-bone-600">Output</span>
-                {stage.output}
-              </p>
+              <p className="mt-3 font-medium text-bone-50">{stage.verb}</p>
+              <p className="mt-3 text-[0.8125rem] leading-snug text-bone-400">{stage.summary}</p>
             </Reveal>
           ))}
         </ol>

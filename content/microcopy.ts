@@ -146,7 +146,10 @@ export const copy = {
   /** Home page: PiP's bench beside the first section heading. */
   home: {
     benchEyebrow: "PiP's bench",
-    benchLine: "Ideas arrive as loose pixels. They leave with coordinates.",
+    benchLine: "Loose pixels enter at their own risk.",
+    pixelsEyebrow: "Pixels at work",
+    pixelsTitle: "Ideas come in messy. PiP sends them back aligned.",
+    pixelsLead: "We take rough ideas, scattered requirements and “can-you-just-make-it-pop” moments, then turn them into precise digital experiences with a reason behind every decision.",
     benchCaption: "PiP gathers a few loose pixels, builds something small, checks it against the grid, corrects the one pixel that is out, and places the finished piece exactly where it belongs.",
     benchCaptionStatic: "PiP beside a finished pixel piece, placed exactly on its grid.",
     benchPoke: "PiP at the bench. Press for a reaction.",

@@ -1,4 +1,4 @@
-const items = ["Design", "Development", "E-commerce", "Digital products", "Performance"];
+const items = ["Design", "Development", "E-commerce", "Graphic design", "Performance", "Pixel obsession"];
 
 function Track({ hidden }: { hidden?: boolean }) {
   return (

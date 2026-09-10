@@ -9,23 +9,18 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: "Work",
-  description: "Selected websites, Shopify storefronts and web applications designed and engineered by Pixel Forge Technologies.",
+  description: "Websites and e-commerce experiences designed and developed by Pixel Forge Technologies in Kolkata.",
   path: "/work",
 });
 
 export default function WorkPage() {
   const projects = getProjects();
-  const hasPlaceholders = projects.some((p) => p.placeholder);
   return (
     <>
       <PageHeader art={<PipScene kind="work" />}
         eyebrow="Work"
         title={["Built to be", "used."]}
-        lead={
-          hasPlaceholders
-            ? "Client case studies are being forged as we speak. The entries below are layout samples showing how each project will be told once it is approved."
-            : "Websites, storefronts and applications we designed and engineered, told as product stories rather than screenshot galleries."
-        }
+        lead="Real projects that made it out of the forge and into the real world. No imaginary client logos required."
       />
       <section className="section-y" aria-label="Projects">
         <Container>

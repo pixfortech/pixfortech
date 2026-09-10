@@ -36,6 +36,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   if (!project) notFound();
   const next = getNextProject(project.slug);
   const techs = technologyNames(project.technologies);
+  const sections = project.sections;
 
   return (
     <article>
@@ -52,15 +53,27 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
           <Rise>
             <h1 className="h1 mt-8 max-w-[18ch]">{project.title}</h1>
           </Rise>
+          {project.headline && (
+            <Rise delay={0.05}>
+              <p className="mt-5 font-display text-[clamp(1.25rem,1rem+1vw,1.75rem)] font-semibold tracking-[-0.015em] text-forge-300">{project.headline}</p>
+            </Rise>
+          )}
           <Rise delay={0.1}>
             <p className="lead mt-6 max-w-[40rem]">{project.summary}</p>
           </Rise>
+          {project.url && (
+            <Rise delay={0.12}>
+              <div className="mt-8">
+                <Button href={project.url} size="lg" arrow target="_blank" rel="noopener">{project.cta ?? "Visit the live site"}</Button>
+              </div>
+            </Rise>
+          )}
           <Rise delay={0.15}>
             <dl className="mt-12 grid grid-cols-2 gap-x-6 gap-y-8 border-t border-line pt-8 sm:grid-cols-4">
               <div><dt className="eyebrow mb-2">Client</dt><dd className="text-bone-50">{project.client}</dd></div>
               <div><dt className="eyebrow mb-2">Industry</dt><dd className="text-bone-50">{project.industry}</dd></div>
               <div><dt className="eyebrow mb-2">Services</dt><dd className="text-bone-50">{project.services.join(", ")}</dd></div>
-              <div><dt className="eyebrow mb-2">Year</dt><dd className="num text-bone-50">{project.year}</dd></div>
+              {project.year ? <div><dt className="eyebrow mb-2">Year</dt><dd className="num text-bone-50">{project.year}</dd></div> : project.url ? <div><dt className="eyebrow mb-2">Live at</dt><dd><a href={project.url} target="_blank" rel="noopener" className="link-line text-bone-50">{new URL(project.url).host.replace(/^www\./, "")}</a></dd></div> : null}
             </dl>
           </Rise>
         </Container>
@@ -72,9 +85,29 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
             <Image src={project.cover.src} alt={project.cover.alt} width={project.cover.width} height={project.cover.height} priority sizes="(min-width: 1440px) 1360px, 100vw" className="h-auto w-full" />
           </div>
         </Reveal>
+        {project.pipLine && (
+          <Reveal delay={0.05}>
+            <p className="mt-4 flex items-center gap-3 text-small text-bone-400" data-testid="project-pip-line"><span className="inline-block h-2 w-2 shrink-0 bg-forge-500" aria-hidden="true" /><span><span className="text-bone-200">PiP:</span> &ldquo;{project.pipLine}&rdquo;</span></p>
+          </Reveal>
+        )}
       </Container>
 
-      <Container className="section-y">
+      {!project.sections && (
+        <Container className="section-y">
+          <div className="grid gap-10 lg:grid-cols-12">
+            <div className="lg:col-span-4">
+              <Eyebrow number="01" as="p">What we forged</Eyebrow>
+              <ul className="mt-6 flex flex-wrap gap-1.5" aria-label="What we did">{(project.tags ?? project.services).map((t) => <li key={t}><Tag>{t}</Tag></li>)}</ul>
+            </div>
+            <div className="prose-pf lg:col-span-7 lg:col-start-6">
+              {(project.overview ?? [project.summary]).map((p, i) => <p key={i}>{p}</p>)}
+              <p className="text-bone-400">Results for this project are shared on request, with the client&rsquo;s agreement.</p>
+            </div>
+          </div>
+        </Container>
+      )}
+
+      {project.sections && <Container className="section-y">
         <div className="grid gap-16 lg:grid-cols-12">
           <aside className="lg:col-span-3">
             <div className="lg:sticky lg:top-28">
@@ -84,7 +117,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                   <li key={key}>
                     <a href={`#${key}`} className="flex items-baseline gap-3 text-bone-400 hover:text-bone-50 transition-colors">
                       <span className="num text-[0.6875rem] text-forge-400">{String(i + 1).padStart(2, "0")}</span>
-                      {project.sections[key].heading}
+                      {sections![key].heading}
                     </a>
                   </li>
                 ))}
@@ -95,7 +128,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
           </aside>
           <div className="lg:col-span-8 lg:col-start-5">
             {order.map((key, i) => {
-              const s = project.sections[key];
+              const s = sections![key];
               return (
                 <Reveal key={key} as="div" className="border-t border-line py-10 first:border-t-0 first:pt-0 sm:py-12">
                   <section id={key} className="scroll-mt-28 grid gap-6 sm:grid-cols-12">
@@ -139,7 +172,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
             </Reveal>
           </div>
         </div>
-      </Container>
+      </Container>}
 
       {next && (
         <section className="border-t border-line" aria-label="Next project">

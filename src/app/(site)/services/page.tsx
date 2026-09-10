@@ -11,7 +11,7 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: "Services",
-  description: "Website design and development, Shopify development, web applications, UI/UX design, optimisation and integrations from Pixel Forge Technologies.",
+  description: "Website design and development, e-commerce, graphic design, website redesign, performance and integrations from Pixel Forge Technologies, Kolkata.",
   path: "/services",
 });
 

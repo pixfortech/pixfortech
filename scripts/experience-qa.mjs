@@ -242,9 +242,10 @@ let slugOld = null, slugNew = null;
   await page.exposeFunction("__hero", (k) => kinds.push(k));
   await page.evaluate(() => window.addEventListener("pf:hero", (e) => window.__hero(e.detail.kind)));
   const box = await page.getByTestId("hero-scene").boundingBox();
-  await page.mouse.move(box.x + box.width * 0.72, box.y + box.height * 0.5, { steps: 10 });
+  // The block sits right of the headline; probes stay on that side so the copy never intercepts them.
+  await page.mouse.move(box.x + box.width * 0.9, box.y + box.height * 0.85); await page.mouse.move(box.x + box.width * 0.72, box.y + box.height * 0.5, { steps: 12 });
   await page.mouse.click(box.x + box.width * 0.72, box.y + box.height * 0.55); await page.waitForTimeout(200);
-  await page.mouse.move(box.x + box.width * 0.7, box.y + box.height * 0.5); await page.mouse.down(); await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.35, { steps: 12 }); await page.mouse.up();
+  await page.mouse.move(box.x + box.width * 0.85, box.y + box.height * 0.5); await page.mouse.down(); await page.mouse.move(box.x + box.width * 0.68, box.y + box.height * 0.4, { steps: 12 }); await page.mouse.up();
   await page.getByTestId("hero-scene").focus(); await page.keyboard.press("ArrowLeft"); await page.keyboard.press("Enter");
   for (let i = 0; i < 3; i++) { await page.mouse.click(box.x + box.width * 0.88, box.y + box.height * 0.25); await page.waitForTimeout(90); }
   await page.waitForTimeout(400);
@@ -275,7 +276,7 @@ let slugOld = null, slugNew = null;
   await fig.scrollIntoViewIfNeeded();
   await page.waitForFunction(() => document.querySelector('[data-testid="pip-bench"]')?.dataset.running === "true", null, { timeout: 20000 }).catch(() => undefined);
   ok("bench is live on desktop", (await fig.getAttribute("data-mode")) === "live" && (await fig.getAttribute("data-running")) === "true", `${await fig.getAttribute("data-mode")}/${await fig.getAttribute("data-running")}/${await fig.getAttribute("data-gate")}`);
-  const head = await page.locator("#work-title").boundingBox(); const fb = await fig.boundingBox();
+  const head = await page.locator("#pixels-title").boundingBox(); const fb = await fig.boundingBox();
   ok("bench sits beside the heading without overlapping it", !!head && !!fb && (fb.x >= head.x + head.width - 1 || fb.y >= head.y + head.height - 1));
   if (!production) {
     await page.evaluate(() => { window.__pfBench.speed = 8; });
@@ -320,7 +321,7 @@ let slugOld = null, slugNew = null;
   const m = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }); const mp = await m.newPage(); watch(mp, "bench-touch");
   await mp.goto(base + "/", { waitUntil: "load", ...T }); const mf = mp.getByTestId("pip-bench"); await mf.scrollIntoViewIfNeeded();
   await mp.waitForFunction(() => document.querySelector('[data-testid="pip-bench"]')?.dataset.running === "true", null, { timeout: 20000 }).catch(() => undefined);
-  const mh = await mp.locator("#work-title").boundingBox(); const mb = await mf.boundingBox();
+  const mh = await mp.locator("#pixels-title").boundingBox(); const mb = await mf.boundingBox();
   ok("phone: dedicated arrangement below the heading, no overlap", (await mf.getAttribute("data-mode")) === "mobile" && !!mh && !!mb && mb.y >= mh.y + mh.height - 1 && mb.x + mb.width <= 390);
   await mp.getByTestId("bench-pip").tap(); await mp.waitForTimeout(200);
   ok("touch: a tap on PiP pokes him", (await mf.getAttribute("data-pokes")) === "1");
@@ -434,7 +435,7 @@ if (!production) {
       if (path === "/") {
         const bench = p.getByTestId("pip-bench"); await bench.scrollIntoViewIfNeeded();
         await p.waitForFunction(() => { const m = document.querySelector('[data-testid="pip-bench"]')?.dataset.mode; return m && m !== "loading"; }, null, { timeout: 15000 }).catch(() => undefined); await p.waitForTimeout(300);
-        const hb = await p.locator("#work-title").boundingBox(), bb = await bench.boundingBox();
+        const hb = await p.locator("#pixels-title").boundingBox(), bb = await bench.boundingBox();
         ok(`bench readable and clear of the heading at ${w}px`, !!hb && !!bb && bb.width >= Math.min(300, w - 40) && bb.x >= 0 && bb.x + bb.width <= w + 1 && (bb.y >= hb.y + hb.height - 1 || bb.x >= hb.x + hb.width - 1), JSON.stringify(bb));
         await p.screenshot({ path: `${out}/home-${w}.png` });
       }

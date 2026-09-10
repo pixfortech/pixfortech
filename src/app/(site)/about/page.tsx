@@ -7,10 +7,11 @@ import { CtaBand } from "@/components/ui/CtaBand";
 import { ArrowLink } from "@/components/ui/ArrowLink";
 import { Monogram } from "@/components/ui/Logo";
 import { pageMetadata } from "@/lib/seo";
+import { site } from "@/lib/content";
 
 export const metadata = pageMetadata({
   title: "About",
-  description: "Pixel Forge Technologies is a web engineering and digital product studio that designs and builds websites, Shopify stores and web applications.",
+  description: "Pixel Forge Technologies is a web design and development studio in Kolkata, India, founded by Aman Rahul Chaurasia.",
   path: "/about",
 });
 
@@ -27,7 +28,7 @@ export default function AboutPage() {
       <PageHeader art={<PipScene kind="about" />}
         eyebrow="About"
         title={["A studio, not", "a supplier."]}
-        lead="Pixel Forge Technologies is a young, remote-first web engineering and digital product studio. We design and build websites, Shopify storefronts and web applications for businesses that need them to work as well as they look. Ideally better."
+        lead="Pixel Forge Technologies is a young web design and development studio in Kolkata. We design and build websites, e-commerce and digital experiences for businesses that need them to work as well as they look. Ideally better."
       />
 
       <section className="section-y" aria-labelledby="name-heading">
@@ -82,13 +83,13 @@ export default function AboutPage() {
             <div className="lg:col-span-6 lg:col-start-7">
               <Reveal delay={0.1}>
                 <div className="prose-pf">
-                  <p>We are a small team working remotely, with designers, frontend and backend engineers, and Shopify specialists who have shipped storefronts, marketing sites and custom applications.</p>
-                  <p>Interns and junior developers work on real client projects from the first week, with senior review on everything. It keeps the work honest and keeps us teaching.</p>
+                  <p>A small studio in Kolkata, working with designers and developers who care about the same details: the grid, the type, the loading time, the button someone will click twice.</p>
+                  <p>Junior developers work on real client projects from the first week, with senior review on everything. It keeps the work honest and keeps us teaching.</p>
                 </div>
-                {/* OWNER_VERIFY: add named team members here once approved for publication. */}
-                <div className="mt-10 rounded-md border border-dashed border-line-strong p-6 text-small text-bone-400">
-                  <div className="flex items-center gap-3 text-bone-200"><Monogram size={20} /> Team profiles</div>
-                  <p className="mt-2">Named team profiles will be published here once approved. In the meantime, you will meet the people on your project in the first call.</p>
+                <div className="mt-10 rounded-md border border-line p-6" data-testid="founder-card">
+                  <div className="flex items-center gap-3 text-bone-200"><Monogram size={20} /><span className="eyebrow">Founder</span></div>
+                  <p className="mt-4 font-display text-xl font-semibold tracking-[-0.015em] text-bone-50">{site.founder.name}</p>
+                  <p className="mt-1 text-small text-bone-400">{site.founder.role} · {site.location}</p>
                 </div>
                 <div className="mt-8"><ArrowLink href="/careers">Join the team</ArrowLink></div>
               </Reveal>

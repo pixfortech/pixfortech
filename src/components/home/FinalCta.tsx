@@ -15,12 +15,12 @@ export function FinalCta() {
             <Reveal>
               <h2 id="cta-title" className="h1">
                 Have something worth building?
-                <span className="block text-forge-500">Let&rsquo;s forge it.</span>
+                <span className="block text-forge-500">Let&rsquo;s give it coordinates.</span>
               </h2>
             </Reveal>
             <Reveal delay={0.1}>
-              <p className="lead mt-8 max-w-[32rem]">
-                Tell us what you are building. A person replies within two working days, with questions rather than a pitch deck.
+              <p className="lead mt-8 max-w-[34rem]">
+                Bring us the idea: polished, half-formed, or currently living in a file called <code className="rounded-xs bg-ink-850 px-1.5 py-0.5 font-mono text-[0.85em] text-bone-50">final-final-v3-really-final</code>. We&rsquo;ll work out what belongs where.
               </p>
             </Reveal>
             <Reveal delay={0.15}>
@@ -30,6 +30,7 @@ export function FinalCta() {
             </Reveal>
             <Reveal delay={0.2}>
               <PipScene kind="forge" className="mt-10 max-w-[22rem]" />
+              <p className="mt-3 flex items-center gap-3 text-small text-bone-400"><span className="inline-block h-2 w-2 shrink-0 bg-forge-500" aria-hidden="true" /><span><span className="text-bone-200">PiP:</span> &ldquo;I&rsquo;ve cleared a space on the bench.&rdquo;</span></p>
             </Reveal>
           </div>
           <Reveal delay={0.1} className="lg:col-span-5">

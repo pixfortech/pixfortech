@@ -40,7 +40,7 @@ const errors = [];
   page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
   await page.goto(base + "/", { waitUntil: "networkidle" });
   await page.evaluate(() => { document.documentElement.style.scrollBehavior = "auto"; });
-  const btn = page.getByRole("button", { name: "Shopify Development" });
+  const btn = page.getByRole("button", { name: "E-commerce Development" });
   await btn.scrollIntoViewIfNeeded();
   await btn.click();
   await page.waitForTimeout(600);

@@ -20,8 +20,12 @@ export type Service = {
   title: string;
   /** Two-digit index for section numbering */
   index: string;
+  /** One line in the brand voice, shown under the title */
+  headline?: string;
   /** One-line summary shown on cards */
   summary: string;
+  /** Call to action label for the service page link */
+  cta?: string;
   /** Problem the client typically brings */
   problem: string;
   /** What Pixel Forge does about it */
@@ -59,12 +63,25 @@ export type Project = {
   title: string;
   client: string;
   industry: string;
-  year: string;
+  /** Publication year, only when the owner has confirmed it. */
+  year?: string;
   services: string[];
   technologies: string[];
+  /** One-line headline in the brand voice, shown on the card and the study. */
+  headline?: string;
   /** Short, non-numeric outcome statement */
   outcome: string;
   summary: string;
+  /** Live site, when public. */
+  url?: string;
+  /** Card tags, when they differ from the technology list. */
+  tags?: string[];
+  /** Card call to action label. */
+  cta?: string;
+  /** A line from PiP, shown as a caption on the study. */
+  pipLine?: string;
+  /** Short truthful account of the work, for studies without a full write-up. */
+  overview?: string[];
   cover: ImageAsset;
   /**
    * Placeholder projects render with a visible "sample" label and are
@@ -74,7 +91,8 @@ export type Project = {
   placeholder: boolean;
   /** Owner-supplied, verified results. Never invent these. */
   results?: { label: string; value: string }[];
-  sections: {
+  /** Full case-study sections. Optional: a study can be told from `overview` alone. */
+  sections?: {
     context: CaseStudySection;
     challenge: CaseStudySection;
     objective: CaseStudySection;

@@ -654,6 +654,8 @@ body > header { z-index: 50; }
 .pf-scene__spark { animation: pip-fx 2.2s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .pf-scene__spark { animation: none; } }
 
+/* The hero headline is a full sentence now: a step down from the display scale so it fits above the fold. */
+.hero-title { font-size: clamp(2.5rem, 1rem + 5.6vw, 6.5rem); line-height: 0.94; letter-spacing: -0.035em; }
 /* Hero scene: the canvas takes pointer input everywhere, the copy stays clickable on top. */
 .hero-scene { touch-action: pan-y; cursor: crosshair; outline: none; }
 .hero-scene:focus-visible { outline: 2px solid var(--color-forge-400); outline-offset: -2px; }
