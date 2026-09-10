@@ -31,7 +31,9 @@ Onboarding deployment `6aa23229ebddeff00b58c3f5` completed successfully. Fresh o
 
 Both messages address the approved real owner and their private links target the onboarding hostname. Resend accepted the `onboarding@resend.dev` sender for this recipient; there was no sandbox rejection to fix. Delivered is the provider's delivery event, not proof the recipient has read the message. The owner subsequently confirmed both steps; a read-only production check confirmed `email_verified=true`, `must_change_password=false`, an enabled `super_admin` role and a credential record. The permanent password was never requested or read.
 
-Production currently contains one user, one studio organisation and no projects. The authenticated onboarding dashboard and team screen show the real owner and Super Admin access. Final-host authenticated browser checks require the owner's separate sign-in on that hostname; that handoff is pending. Public home/work/login, anonymous session and anonymous admin denial passed after the switch.
+Production currently contains one user, one studio organisation and no projects. The owner signed in separately on the final hostname; its dashboard and team screen confirm the real owner and Super Admin access. Final-host profile, settings, files and notifications pages loaded; the readiness notification persisted, realtime connected, staff visiting `/portal` redirected to `/admin`, and the public header displayed the authenticated account control. No browser errors were reported in these checks. The permanent password remained private.
+
+Upload-fix build `6aa236de2d35142125cddd2d` deployed commit `dcd0f68` successfully. All seven live authorization/origin checks passed: anonymous realtime/search/file access and same-origin uploads return 401, foreign-origin uploads return 403, and both workspace areas redirect anonymous visitors to login. Public home/work/login and anonymous session smoke checks also passed after the production switch.
 
 Production infrastructure probes passed R2 write/read integrity, signed downloads, unsigned access denial (`400 InvalidArgument`) and forged-signature rejection (`403`). The non-personal probe objects use `staging/readiness/` and expire under the previously approved cleanup rule. A single owner-only in-app readiness notification was created using the existing service; persistence and realtime retrieval passed, while an unrelated user/organisation scope received none of that event. The owner's already-open onboarding UI received it live and showed one unread notification. No extra account was created. Full two-account project/file isolation remains evidenced by the isolated QA suite rather than by invented production tenants.
 
@@ -67,6 +69,8 @@ Realtime uses the existing PostgreSQL-backed event log and authenticated polling
 | Workflow browser suite | 23/23, including reset, invitation, file isolation, approvals and persisted kanban drag/drop |
 | Live experience suite | 41/41, no unexpected browser errors; includes password change/restoration, notification reconciliation and all six mobile widths |
 | Core live app suite | Passed on application commit `1a78d2a`, including role redirects, tenant denials, realtime requests/chat, internal-comment isolation and logout; no unexpected browser errors |
+| Final real-production owner checks | Verified owner login/Super Admin, completed password setup, role routing, profile/settings/files, notification persistence, realtime connection and authenticated public header; no browser errors |
+| Final production authorization/origin probes | 7 passed, including the corrected chunk-upload origin boundary |
 | Live profile/privacy/security suite | 24 checks passed |
 | Production mini-games | 36 checks passed across all five games |
 | Public QA | 22 routes, sitemap, interactive 404, reduced motion, mobile menu and overflow checks passed |
@@ -99,7 +103,7 @@ Previous reported performance values were Home 88, Work 92, Login 88 and Admin 8
 
 ## OWNER_VERIFY
 
-- Complete the final-host owner browser check; verification and private password setup are already confirmed in production.
+- Review the real owner's profile content and preferences; verification, private password setup and final-host access are complete.
 - Review legal entity name, monitored studio inbox, location, timezone, social links and founding year.
 - Replace sample case studies with approved client names, project descriptions, imagery and substantiated outcomes.
 - Confirm staff biographies, portraits and publication consent.
@@ -107,4 +111,6 @@ Previous reported performance values were Home 88, Work 92, Login 88 and Admin 8
 - Review contact response-time statements, service copy, privacy/terms and other factual business claims.
 - Approve domain/DNS cutover and custom-domain transactional email in a separate task.
 
-**Final owner-session check pending:** production owner verification/password setup and the candidate database switch are complete. The final hostname needs its own authenticated browser session to complete the remaining owner check. DNS has not been changed.
+The production owner is working on the final temporary deployment. Content review and any later custom-domain/email-DNS cutover remain owner tasks; no DNS change or main merge was performed. The unrelated pre-existing `package-lock.json` worktree change was left untouched.
+
+**The final temporary deployment is ready for owner content review. DNS has not been changed.**
