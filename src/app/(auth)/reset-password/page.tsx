@@ -2,6 +2,7 @@ import { AuthCard } from "@/components/app/AuthCard";
 import { ResetForm } from "./ResetForm";
 import { pageMetadata } from "@/lib/seo";
 import { copy } from "@content/microcopy";
+import { AuthPipPage } from "@/pixel/auth/AuthPipPage";
 
 export const metadata = pageMetadata({ title: "Choose a new password", description: "Choose a new Pixel Forge password.", path: "/reset-password", noIndex: true });
 
@@ -9,6 +10,7 @@ export default async function ResetPasswordPage({ searchParams }: { searchParams
   const { token, error } = await searchParams;
   return (
     <AuthCard title={copy.auth.resetTitle} lead={copy.auth.resetLead}>
+      <AuthPipPage page={error === "INVALID_TOKEN" || !token ? "resetInvalid" : "reset"} />
       {error === "INVALID_TOKEN" || !token ? (
         <p className="rounded-md border border-forge-500/40 bg-forge-500/10 px-3 py-2 text-[0.8125rem] text-forge-300">{copy.auth.resetInvalid}</p>
       ) : (

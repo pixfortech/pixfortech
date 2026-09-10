@@ -10,7 +10,7 @@ async function login(email) {
   const page = await context.newPage();
   await page.goto(`${base}/login`);
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(qaPassword());
+  await page.getByLabel("Password", { exact: true }).fill(qaPassword());
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.waitForURL(/\/(portal|admin)/);
   return { context, page, request: context.request };

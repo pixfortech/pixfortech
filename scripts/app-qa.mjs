@@ -29,7 +29,7 @@ async function login(email, vw = W) {
   page.on("pageerror", (e) => errors.push(`[${email}] pageerror: ${e.message}`));
   await page.goto(base + "/login", { waitUntil: "load", timeout: 90000 });
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL((u) => /\/(portal|admin)/.test(u.pathname), { timeout: 20000 });
   await page.waitForLoadState("load");

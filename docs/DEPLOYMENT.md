@@ -137,6 +137,18 @@ Local TypeScript, lint and 54 unit tests passed during implementation. The produ
 
 Use Netlify's previous successful deploy to roll back application code. Preserve database compatibility and take a Neon branch/restore checkpoint before further schema changes. Do not restore old database state over new customer data. Keep the original SQLite source and backup until final migration acceptance.
 
+## Forge gate QA record (branch `codex/pip-login-experience`)
+
+A brand layer over the existing Better Auth flows: no change to sign-in, reset, verification or session handling beyond a password visibility toggle, a 650 ms beat before the post-login redirect, and sign-out landing on `/login?signedout=1` instead of the home page. The corner mascot no longer mounts on auth pages; the gate PiP replaces it there.
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck`, `npm run lint` | clean |
+| `npm test` (gatekeeper faces distinct and privacy poses eyeless, reducer transitions incl. password typing invariance, shown-password rule, failure/success, reset/magic/verify flows, doze/wake, line categories original and non-mocking) | passing |
+| `node scripts/experience-qa.mjs` gate section: idle greeting, email focus and typing faces, peek then covered eyes, no face change across typed characters, show/hide password, wrong password with the real error intact, success before redirect, no repeated lines, forgot/reset-sent/reset/invalid/verify/verify-error/reset-complete states, keyboard poke and tab order, reduced motion, phone strip and tap, gate clear of the form at 320/360/375/390/430/768, sign-out lands on the waving gate | 117 of 117 checks, no browser errors |
+| `node scripts/flows-qa.mjs` (reset, single-use links, invitation with verification, isolation, uploads, approvals, kanban) and `node scripts/app-qa.mjs` (role redirects, tenant denials, realtime, sign-out) | flows 23 of 23; app suite passed |
+| Lighthouse 13 mobile, `/login`, production build | 93 / 98 performance across two runs, accessibility 100, best practices 100, CLS 0 (88 on this machine before the gate) |
+
 ## PiP's bench QA record (branch `codex/pip-precision-builder`)
 
 A contained addition to the home page's first section; no auth, database, admin, realtime, storage, DNS or scroll-forge change. Run locally against the dev server with the demo fixtures.

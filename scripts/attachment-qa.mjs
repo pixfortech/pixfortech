@@ -22,7 +22,7 @@ try {
   page.setDefaultTimeout(60000);
   await page.goto(`${base}/login`);
   await page.getByLabel("Email").fill("maya@northbank.test");
-  await page.getByLabel("Password").fill(qaPassword());
+  await page.getByLabel("Password", { exact: true }).fill(qaPassword());
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.waitForURL(/\/portal/);
   await page.goto(`${base}/portal/projects`);

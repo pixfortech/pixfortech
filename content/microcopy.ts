@@ -45,6 +45,11 @@ export const copy = {
     resetDone: "Password saved. Sign in and carry on forging.",
     verifyTitle: "Check your inbox",
     notClient: "Not a client yet? Start a project",
+    signedOut: "Signed out. Come back whenever the forge calls.",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
+    stageAria: "PiP, the Pixel Forge mascot, keeping watch at the forge gate",
+    stageCaption: "Forge gate",
     mustChangeTitle: "Change your temporary password",
     mustChangeBody: "This account was set up with a temporary password. Choose your own before you carry on; it takes ten seconds and nobody else knows the old one.",
   },
@@ -154,6 +159,7 @@ export const copy = {
     restoreLabel: "Missing PiP?",
     restoreHint: "Bring PiP back",
     poke: "PiP, the Pixel Forge mascot. Press for a reaction.",
+    gate: "PiP at the forge gate. Press for a reaction.",
   },
 } as const;
 

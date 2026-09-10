@@ -7,7 +7,6 @@ import { authClient } from "@/lib/auth/client";
 import { Avatar } from "@/components/app/primitives";
 import { copy } from "@content/microcopy";
 import { cn } from "@/lib/utils";
-import { behaviour } from "@/pixel/behaviour/store";
 import { useHydrated } from "@/lib/useHydrated";
 
 type SessionUser = { id: string; name: string; email: string; image?: string | null; role?: string; displayName?: string | null };
@@ -102,11 +101,10 @@ function AccountMenu({ user, variant, onNavigate }: { user: SessionUser; variant
   }, [open]);
 
   const signOut = async () => {
-    behaviour.say("logout", { force: true });
     await authClient.signOut();
     setOpen(false);
     onNavigate?.();
-    router.replace("/");
+    router.replace("/login?signedout=1");
     router.refresh();
   };
 
