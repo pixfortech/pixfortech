@@ -17,7 +17,7 @@ export function ProcessPreview() {
         />
         <ol className="mt-14 grid gap-px border border-line bg-line rounded-md overflow-hidden md:grid-cols-5 lg:mt-20">
           {process.map((stage, i) => (
-            <Reveal as="li" key={stage.index} delay={i * 0.06} className="group relative bg-ink-900 p-6 sm:p-7 transition-colors duration-(--dur-base) hover:bg-ink-850">
+            <Reveal as="li" key={stage.index} delay={i * 0.06} variant="grid" className="group relative bg-ink-900 p-6 sm:p-7 transition-colors duration-(--dur-base) hover:bg-ink-850">
               <div className="flex items-center justify-between mb-8">
                 <span className="num text-[0.75rem] text-forge-400">{stage.index}</span>
                 <span className="h-1.5 w-1.5 bg-line-strong transition-colors group-hover:bg-forge-500" aria-hidden="true" />

@@ -24,6 +24,22 @@ export type Behaviour =
 
 export type RevealStyle = "sweep" | "scatter" | "rise" | "grid" | "edge";
 
+/**
+ * How an element materialises as it forges in. The horizontal wipe is the
+ * original; the rest let each kind of content assemble differently. All are
+ * driven by the same scroll-linked `--forge` value, so they freeze when the
+ * page stops and reverse when it scrolls back.
+ */
+export type RevealVariant =
+  | "horizontal" // left-to-right wipe (default)
+  | "line"       // top-down, for stacked headings
+  | "cluster"    // scale and lift settling into place, for grouped blocks
+  | "card"       // cluster with a firmer final snap, for project/service cards
+  | "grid"       // scale up into grid coordinates, for technology and process items
+  | "image"      // coarse to sharp, for illustrations and covers
+  | "snap"       // fast opacity with a tiny lift, for body copy (stays readable)
+  | "minimal";   // opacity only, for dense regions
+
 export type PixelTheme = {
   /** Hex colours. First is dominant. */
   primary: string;
@@ -55,4 +71,6 @@ export type RevealOptions = {
   cell?: number;
   /** Duration in ms for assemble/deconstruct. */
   duration?: number;
+  /** Materialisation variant. Defaults to "horizontal". */
+  variant?: RevealVariant;
 };

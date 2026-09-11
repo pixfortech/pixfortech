@@ -344,6 +344,10 @@ body {
 /* Reveal fallback: elements animate in via JS; before hydration they must be visible. */
 .reveal { opacity: 1; }
 
+/* Micro-interactions: restrained pixel-precise feedback, never large movement. */
+.pf-press { transition: transform 140ms var(--ease-out), box-shadow 140ms var(--ease-out); }
+.pf-press:active { transform: translate3d(0,1px,0) scale(0.985); }
+@media (prefers-reduced-motion: reduce) { .pf-press { transition: none; } .pf-press:active { transform: none; } }
 /* Pixel divider */
 .pixel-rule {
   height: 1px;
@@ -369,13 +373,15 @@ body {
 ------------------------------------------------------------------- */
 @keyframes rise-in {
   from { transform: translate3d(0, 110%, 0); }
+  72% { transform: translate3d(0, -2%, 0); }
+  86% { transform: translate3d(0.4%, 1%, 0); }
   to { transform: translate3d(0, 0, 0); }
 }
 @keyframes fade-up {
   from { opacity: 0; transform: translate3d(0, 14px, 0); }
   to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
-.anim-rise { animation: rise-in 0.85s var(--ease-out) both; }
+.anim-rise { animation: rise-in 0.9s var(--ease-out) both; }
 .anim-fade-up { animation: fade-up 0.7s var(--ease-out) both; }
 @media (prefers-reduced-motion: reduce) {
   .anim-rise, .anim-fade-up { animation: none; }
@@ -398,12 +404,48 @@ body > main, body > footer { position: relative; z-index: 1; }
 /* The site header is fixed and must stack above page content and the ambient canvases. */
 body > header { z-index: 50; }
 
-/* Scroll-forged content. --forge is 0..1, set only while an element is mid-forge. */
-[data-forge="unforged"] { clip-path: inset(0 100% 0 0); }
-[data-forge="active"] { clip-path: inset(-2px calc((1 - var(--forge, 1)) * 100%) -2px 0); }
+/* Scroll-forged content. --forge is 0..1, set only while an element is mid-forge.
+   The default (no variant) is a left-to-right wipe; variants below assemble
+   differently, all driven by the same scroll-linked --forge so they freeze
+   when scrolling stops and reverse when it scrolls back. Variants that carry
+   interactive content use opacity and transform only (never clip), so a card
+   frozen mid-forge is still fully clickable. */
+[data-forge="unforged"]:not([data-forge-variant]) { clip-path: inset(0 100% 0 0); }
+[data-forge="active"]:not([data-forge-variant]) { clip-path: inset(-2px calc((1 - var(--forge, 1)) * 100%) -2px 0); }
 [data-forge="forged"] { clip-path: none; }
+
+/* line: top-down clip, for stacked headings. */
+[data-forge-variant="line"][data-forge="unforged"] { clip-path: inset(0 0 100% 0); }
+[data-forge-variant="line"][data-forge="active"] { clip-path: inset(0 0 calc((1 - var(--forge, 1)) * 100%) 0); }
+
+/* snap: fast, stays readable — for body copy. Never below 0.45 opacity while on screen. */
+[data-forge-variant="snap"][data-forge="unforged"] { opacity: 0; transform: translate3d(0, 6px, 0); }
+[data-forge-variant="snap"][data-forge="active"] { opacity: calc(0.45 + 0.55 * var(--forge, 1)); transform: translate3d(0, calc((1 - var(--forge, 1)) * 6px), 0); }
+
+/* minimal: opacity only, for dense regions. */
+[data-forge-variant="minimal"][data-forge="unforged"] { opacity: 0; }
+[data-forge-variant="minimal"][data-forge="active"] { opacity: calc(0.5 + 0.5 * var(--forge, 1)); }
+
+/* cluster: scale and lift settling into place, for grouped blocks. */
+[data-forge-variant="cluster"][data-forge="unforged"] { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.985); }
+[data-forge-variant="cluster"][data-forge="active"] { opacity: var(--forge, 1); transform: translate3d(0, calc((1 - var(--forge, 1)) * 14px), 0) scale(calc(0.985 + 0.015 * var(--forge, 1))); }
+
+/* card: a firmer settle, for project and service cards. */
+[data-forge-variant="card"][data-forge="unforged"] { opacity: 0; transform: translate3d(0, 20px, 0) scale(0.97); }
+[data-forge-variant="card"][data-forge="active"] { opacity: var(--forge, 1); transform: translate3d(0, calc((1 - var(--forge, 1)) * 20px), 0) scale(calc(0.97 + 0.03 * var(--forge, 1))); }
+
+/* grid: snaps up into grid coordinates, for technology and process items. */
+[data-forge-variant="grid"][data-forge="unforged"] { opacity: 0; transform: scale(0.9); }
+[data-forge-variant="grid"][data-forge="active"] { opacity: var(--forge, 1); transform: scale(calc(0.9 + 0.1 * var(--forge, 1))); }
+
+/* image: coarse to sharp, for illustrations and covers. */
+[data-forge-variant="image"][data-forge="unforged"] { opacity: 0; transform: scale(1.04); }
+[data-forge-variant="image"][data-forge="active"] { opacity: var(--forge, 1); transform: scale(calc(1.04 - 0.04 * var(--forge, 1))); }
+
+[data-forge-variant][data-forge="forged"] { opacity: 1; transform: none; }
+
 @media (prefers-reduced-motion: reduce) {
-  [data-forge] { clip-path: none !important; }
+  [data-forge] { clip-path: none !important; opacity: 1 !important; transform: none !important; }
 }
 
 /* ------------------------------------------------------------------
@@ -771,3 +813,29 @@ body > header { z-index: 50; }
 @media (prefers-reduced-motion: reduce) {
   .pf-authpip__body, .pf-authpip__c, .pf-authpip__bubble, .auth-stage__dot, .auth-stage__lintel::after { animation: none !important; transition: none !important; }
 }
+
+/* PiP during a slow route transition. Sits above the transition mosaic, centred,
+   never interactive. Fades in after the mosaic has taken the page. */
+.pf-tpip {
+  position: fixed; z-index: 46; left: 50%; bottom: clamp(2.5rem, 12vh, 7rem); transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 0.75rem; pointer-events: none;
+  animation: pf-tpip-in 0.3s var(--ease-out) both;
+}
+.pf-tpip__stage { position: relative; width: clamp(3.25rem, 9vw, 4.5rem); aspect-ratio: 1; }
+.pf-tpip__pip { display: block; overflow: visible; animation: pf-tpip-bob 1.4s ease-in-out infinite; }
+.pf-tpip--long .pf-tpip__pip { animation: pf-tpip-tap 0.6s ease-in-out infinite; }
+.pf-tpip__block {
+  position: absolute; right: -6%; top: 34%; width: 16%; height: 16%; border-radius: 1px;
+  animation: pf-tpip-carry 1.4s ease-in-out infinite;
+}
+.pf-tpip__line {
+  margin: 0; max-width: min(20rem, 80vw); text-align: center; font-size: 0.8125rem; line-height: 1.35;
+  color: var(--color-bone-200); background: color-mix(in oklab, var(--color-ink-950) 70%, transparent);
+  border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 0.4rem 0.7rem;
+  animation: pf-tpip-in 0.3s var(--ease-out) both;
+}
+@keyframes pf-tpip-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes pf-tpip-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes pf-tpip-tap { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(4deg) translateY(1px); } }
+@keyframes pf-tpip-carry { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-4px) rotate(20deg); } }
+@media (prefers-reduced-motion: reduce) { .pf-tpip { display: none; } }

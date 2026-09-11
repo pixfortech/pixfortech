@@ -1,5 +1,5 @@
 import { cellThreshold, forgeBand, forgeProgress, forgeState, type ForgeState } from "./reveal-logic";
-import type { RevealOptions } from "./types";
+import type { RevealOptions, RevealVariant } from "./types";
 
 export type RevealEntry = {
   el: HTMLElement;
@@ -11,7 +11,11 @@ export type RevealEntry = {
   seed: number;
 };
 
-const DEFAULTS: Required<RevealOptions> = { style: "sweep", cell: 16, duration: 0 };
+const DEFAULTS: Required<RevealOptions> = { style: "sweep", cell: 16, duration: 0, variant: "horizontal" };
+
+/** Variants whose CSS reveal runs left-to-right, so the canvas forge front matches them. */
+const FRONT_VARIANTS = new Set<RevealVariant>(["horizontal", "line"]);
+export const drawsFront = (v: RevealVariant) => FRONT_VARIANTS.has(v);
 
 /**
  * Scroll-driven reveal registry.
@@ -53,7 +57,7 @@ export class RevealManager {
       return () => undefined;
     }
     const entry: RevealEntry = {
-      el, opts: { style: opts.style ?? DEFAULTS.style, cell: opts.cell ?? DEFAULTS.cell, duration: 0 },
+      el, opts: { style: opts.style ?? DEFAULTS.style, cell: opts.cell ?? DEFAULTS.cell, duration: 0, variant: opts.variant ?? DEFAULTS.variant },
       progress: 0, state: "unforged", candidate: false, seed: this.seedCounter++,
     };
     this.entries.set(el, entry);

@@ -34,7 +34,7 @@ export function Manifesto() {
           </div>
           <ul className="grid gap-px border border-line bg-line sm:grid-cols-2 lg:col-span-6 lg:col-start-7 rounded-md overflow-hidden">
             {principles.map((p, i) => (
-              <Reveal as="li" key={p.title} delay={i * 0.06} className="bg-ink-900 p-7 sm:p-8">
+              <Reveal as="li" key={p.title} delay={i * 0.06} variant="cluster" className="bg-ink-900 p-7 sm:p-8">
                 <span className="num block text-[0.75rem] text-forge-400 mb-6">0{i + 1}</span>
                 <h3 className="font-display text-xl font-semibold tracking-[-0.015em] mb-3">{p.title}</h3>
                 <p className="text-small text-bone-400">{p.body}</p>

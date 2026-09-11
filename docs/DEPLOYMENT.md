@@ -137,6 +137,22 @@ Local TypeScript, lint and 54 unit tests passed during implementation. The produ
 
 Use Netlify's previous successful deploy to roll back application code. Preserve database compatibility and take a Neon branch/restore checkpoint before further schema changes. Do not restore old database state over new customer data. Keep the original SQLite source and backup until final migration acceptance.
 
+## Motion upgrade QA record (branch `codex/final-experience-upgrade`)
+
+Adaptive pixel-reconstruction and scroll-forge motion, layered on the existing engine. No change to auth, database, realtime, storage, DNS or the approved content; the interactive hero, PiP Precision Builder and PiP auth gate are untouched.
+
+**Architecture.** Section reveals stay scroll-linked through the existing `--forge`/`data-forge` pipeline, but each element now requests a variant (`data-forge-variant`) that changes how it materialises: `line` (top-down, headings), `snap`/`minimal` (fast, body copy — never below ~0.45 opacity so it stays readable when scrolling stops), `cluster`/`card` (opacity+lift settle for grouped blocks and cards, never clip so interactive cards stay clickable mid-forge), `grid` (scale into coordinates for process and technology), `image` (coarse-to-sharp). The canvas forge front is drawn only for the left-to-right family (`horizontal`, `line`). The route transition keeps its approved coarse block-mosaic exit and reconstruction; a new `TransitionPip` overlay adds delay-tiered loading behaviour (nothing under 400 ms, PiP carrying a pixel 400–1500 ms, PiP tapping a stray block with one non-repeating line over 1500 ms) with a hard 8 s safety timeout so the screen can never stay pixelated. Reduced motion neutralises every variant to opacity 1 / no transform / no clip and hides the transition overlay. Performance tiers are inherited from the engine (`static` tier disables transitions and reveals); variants are pure CSS transforms/opacity with no new per-frame JS.
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck`, `npm run lint` | clean |
+| `npm test` (adds reveal-variant test) | 108 passed |
+| Motion QA (variants present, cards non-clipping and clickable mid-forge, reduced-motion neutralised, no overflow, no page errors, PiP delay tiers under-400/400-1500/over-1500 ms, clears on ready, 8 s safety timeout) | 12 of 12 |
+| `node scripts/public-production-qa.mjs` on the production build | 24 routes, sitemap, 404, reduced motion, mobile menu, no overflow |
+| `node scripts/experience-qa.mjs` | 117 of 117 |
+| `npm run build` | clean |
+| Visual review at 1366/390 plus mid-forge frames | headings forge line-by-line, cards settle, technology/process snap into grid, transition PiP shows its long-phase line |
+
 ## Homepage content QA record (branch `codex/final-experience-upgrade`)
 
 Owner-approved content only: company facts, founder, Kolkata, the studio inbox, LinkedIn and Instagram, and two public projects (Ganguram Sweets, SD18 Sports). Sample case studies, their cover art and the "sample layout" copy paths were removed; the third work slot is an explicit call to action. Services were renamed to the approved six (e-commerce, graphic design and website redesign replace Shopify, web applications and UI/UX), with new slugs in the sitemap. The hero headline moved one step down the type scale so the longer approved line fits above the fold.

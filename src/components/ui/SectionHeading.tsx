@@ -27,7 +27,7 @@ export function SectionHeading({ eyebrow, number, title, lead, className, align 
             {eyebrow}
           </Eyebrow>
         </Reveal>
-        <Reveal delay={0.05}>
+        <Reveal delay={0.05} variant="line">
           <Tag id={id} className={level === "h1" ? "h1" : "h2"}>
             {title}
           </Tag>
@@ -35,7 +35,7 @@ export function SectionHeading({ eyebrow, number, title, lead, className, align 
       </div>
       {art ? <div className="min-w-0 w-full lg:col-span-6 lg:col-start-7 lg:row-span-2 lg:row-start-1 lg:self-end">{art}</div> : null}
       {lead ? (
-        <Reveal delay={0.1} className={cn(art ? "lg:col-span-6 lg:col-start-1 lg:row-start-2" : align === "split" ? "lg:col-span-4 lg:col-start-9 lg:self-end" : "lg:col-span-7")}>
+        <Reveal delay={0.1} variant="snap" className={cn(art ? "lg:col-span-6 lg:col-start-1 lg:row-start-2" : align === "split" ? "lg:col-span-4 lg:col-start-9 lg:self-end" : "lg:col-span-7")}>
           <div className="lead">{lead}</div>
         </Reveal>
       ) : null}

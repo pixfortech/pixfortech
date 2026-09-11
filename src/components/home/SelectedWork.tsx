@@ -20,11 +20,11 @@ export function SelectedWork() {
         />
         <div className="mt-14 grid gap-x-8 gap-y-14 lg:grid-cols-2 lg:mt-20">
           {projects.map((p, i) => (
-            <Reveal key={p.slug} delay={i * 0.05} className={i === 0 ? "lg:col-span-2" : ""}>
+            <Reveal key={p.slug} delay={i * 0.05} variant="card" className={i === 0 ? "lg:col-span-2" : ""}>
               <ProjectCard project={p} priority={i === 0} wide={i === 0} />
             </Reveal>
           ))}
-          <Reveal delay={0.1}>
+          <Reveal delay={0.1} variant="card">
             <NextSlotCard className="h-full" />
           </Reveal>
         </div>

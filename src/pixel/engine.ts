@@ -1,6 +1,6 @@
 import { computeHome, mulberry, type FieldContext, type HomeResult, type Particle } from "./behaviours";
 import { particleBudget, pickQualityTier } from "./quality";
-import { drawForgeFront, RevealManager, type RevealEntry } from "./reveals";
+import { drawForgeFront, drawsFront, RevealManager, type RevealEntry } from "./reveals";
 import { forgeTheme, hexToRgb, mixRgb, rgbCss } from "./themes";
 import type { PixelTheme, QualityTier, RevealOptions } from "./types";
 
@@ -416,7 +416,7 @@ export class PixelEngine {
 
     // Scroll-driven forge fronts
     if (this.tier !== "static") {
-      for (const e of this.inflight) drawForgeFront(ctx, e, colours, this.w, this.h);
+      for (const e of this.inflight) if (drawsFront(e.opts.variant)) drawForgeFront(ctx, e, colours, this.w, this.h);
     }
 
     // Bursts

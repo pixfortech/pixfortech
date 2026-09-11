@@ -62,7 +62,7 @@ export default function AboutPage() {
             </div>
             <ul className="grid gap-px border border-line bg-line rounded-md overflow-hidden sm:grid-cols-2 lg:col-span-7 lg:col-start-6">
               {beliefs.map((b, i) => (
-                <Reveal as="li" key={b.title} delay={i * 0.06} className="bg-ink-900 p-7">
+                <Reveal as="li" key={b.title} delay={i * 0.06} variant="cluster" className="bg-ink-900 p-7">
                   <span className="num block text-[0.75rem] text-forge-400 mb-6">0{i + 1}</span>
                   <h3 className="font-display text-xl font-semibold tracking-[-0.015em]">{b.title}</h3>
                   <p className="mt-3 text-small text-bone-400">{b.body}</p>

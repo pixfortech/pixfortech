@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { usePixel } from "./context";
-import type { RevealStyle } from "./types";
+import type { RevealStyle, RevealVariant } from "./types";
 
 type Props = {
   children: ReactNode;
@@ -14,6 +14,8 @@ type Props = {
   style?: RevealStyle;
   /** Block size in CSS px. */
   cell?: number;
+  /** Materialisation variant; defaults to "horizontal". */
+  variant?: RevealVariant;
   id?: string;
 };
 
@@ -23,21 +25,21 @@ type Props = {
  * purely by scroll position: stop scrolling and it freezes, scroll back and
  * it unforges. Content is always in the DOM and visible without JavaScript.
  */
-export function PixelReveal({ children, className, delay = 0, as = "div", style, cell, id }: Props) {
+export function PixelReveal({ children, className, delay = 0, as = "div", style, cell, variant = "horizontal", id }: Props) {
   const ref = useRef<HTMLElement | null>(null);
   const { registerReveal, theme, ready } = usePixel();
   const themeStyle = theme.transitionStyle;
 
   useEffect(() => {
     if (!ready || !ref.current) return;
-    return registerReveal(ref.current, { style: style ?? themeStyle, cell });
+    return registerReveal(ref.current, { style: style ?? themeStyle, cell, variant });
     // Re-register when style changes; the engine handles the initial in-view state.
-  }, [registerReveal, ready, style, themeStyle, cell]);
+  }, [registerReveal, ready, style, themeStyle, cell, variant]);
 
   const Tag = as;
   const css: CSSProperties | undefined = delay ? ({ "--reveal-delay": `${delay}s` } as CSSProperties) : undefined;
   return (
-    <Tag ref={(el: HTMLElement | null) => { ref.current = el; }} id={id} className={className} data-forge="forged" style={css}>
+    <Tag ref={(el: HTMLElement | null) => { ref.current = el; }} id={id} className={className} data-forge="forged" data-forge-variant={variant === "horizontal" ? undefined : variant} style={css}>
       {children}
     </Tag>
   );

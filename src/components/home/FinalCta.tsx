@@ -12,7 +12,7 @@ export function FinalCta() {
       <Container className="relative">
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-10 items-end">
           <div className="lg:col-span-7">
-            <Reveal>
+            <Reveal variant="line">
               <h2 id="cta-title" className="h1">
                 Have something worth building?
                 <span className="block text-forge-500">Let&rsquo;s give it coordinates.</span>
@@ -33,7 +33,7 @@ export function FinalCta() {
               <p className="mt-3 flex items-center gap-3 text-small text-bone-400"><span className="inline-block h-2 w-2 shrink-0 bg-forge-500" aria-hidden="true" /><span><span className="text-bone-200">PiP:</span> &ldquo;I&rsquo;ve cleared a space on the bench.&rdquo;</span></p>
             </Reveal>
           </div>
-          <Reveal delay={0.1} className="lg:col-span-5">
+          <Reveal delay={0.1} variant="card" className="lg:col-span-5">
             <ProjectStarter />
           </Reveal>
         </div>

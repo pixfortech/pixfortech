@@ -20,7 +20,7 @@ export function Technology() {
           {technologyGroups.map((g, gi) => {
             const list = techs.filter((t) => t.group === g.key);
             return (
-              <Reveal key={g.key} delay={gi * 0.05}>
+              <Reveal key={g.key} delay={gi * 0.05} variant="grid">
                 <h3 className="eyebrow mb-5 border-b border-line pb-3">{g.label}</h3>
                 <ul className="flex flex-col gap-3">
                   {list.map((t) => (

@@ -301,3 +301,8 @@ export const behaviour = new BehaviourStore();
 export function useBehaviour(): BehaviourState {
   return useSyncExternalStore(behaviour.subscribe, behaviour.get, behaviour.get);
 }
+
+/** Subscribe to just the route-transition flag, so consumers don't re-render on pointer moves. */
+export function useTransitioning(): boolean {
+  return useSyncExternalStore(behaviour.subscribe, () => behaviour.get().transitioning, () => false);
+}

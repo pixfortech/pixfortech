@@ -192,6 +192,14 @@ const authLibrary = {
 };
 
 export const pipLibrary = {
+  pipTransition: lines("pipTransition", [
+    "Still forging. This page has a lot of squares.",
+    "One pixel is refusing to cooperate. Standard.",
+    "Nearly there. I'm checking the alignment.",
+    "Hold on. Something is two pixels off.",
+    "Reassembling. Mind the loose corners.",
+    "Almost. The grid and I are negotiating.",
+  ]),
   greeting: lines("greeting", [
     "Hello. I'm PiP. I keep the pixels in order around here.",
     "Welcome in. Mind the sparks; they're decorative but they mean it.",
