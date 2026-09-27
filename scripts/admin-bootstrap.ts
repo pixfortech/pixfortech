@@ -14,7 +14,7 @@
  */
 import { existsSync } from "node:fs";
 import { createPool, directUrl } from "./lib/pool";
-import { runBootstrap } from "./lib/bootstrap";
+import { duplicateEmails, runBootstrap } from "./lib/bootstrap";
 import { requestVerificationEmail } from "./lib/resend";
 
 if (existsSync(".env.local") && !process.env.DATABASE_URL_UNPOOLED && !process.env.DATABASE_URL) process.loadEnvFile(".env.local");
@@ -34,7 +34,11 @@ async function main() {
       console.log("No super admin exists. Run `npm run admin:bootstrap` with BOOTSTRAP_ADMIN_EMAIL and BOOTSTRAP_ADMIN_NAME set to create one.");
     } else if (result.action === "exists") {
       console.log(`Super admin present (${result.admins.length}); nothing created.`);
-      for (const a of result.admins) console.log(`  ${a.email}  enabled=${a.enabled}  emailVerified=${a.emailVerified}  since=${a.createdAt.slice(0, 10)}`);
+      for (const a of result.admins) console.log(`  ${a.email}  id=${a.id}  role=${a.role}  enabled=${a.enabled}  emailVerified=${a.emailVerified}  since=${a.createdAt.slice(0, 10)}`);
+      if (check) {
+        const dupes = await duplicateEmails(pool);
+        console.log(dupes.length ? `Duplicate accounts by email (case-insensitive): ${dupes.map((d) => `${d.email} ×${d.count}`).join(", ")}` : "Duplicate accounts by email: none");
+      }
     } else if (!result.emailVerified) {
       console.log(`Super admin created for ${result.email} with an unverified email. The temporary password has been discarded.`);
       console.log("Sign-in is refused until the verification link is opened; then set the password with “Forgot password” on the sign-in page.");
@@ -43,7 +47,7 @@ async function main() {
         console.log(`Verification email requested from ${app}: HTTP ${r.status}. Confirm the send in that deployment's server log (\`[email] resend accepted id=…\`) and check delivery with \`npm run email:check -- --status=<id>\`.`);
         if (r.status >= 400) { console.error(r.body); process.exitCode = 1; }
       } else {
-        console.log("No --app=<origin> was given, so nothing was emailed. Request the link with `npm run email:check -- --verify=<email> --app=<origin>`, or sign in once with any password: a correct-password attempt resends it.");
+        console.log("No --app=<origin> was given, so nothing was emailed. Request the link with `npm run email:check -- --verify=<email> --app=<origin>`, or from the deployed /verify-email page (“Resend verification email”). Completing “Forgot password” also confirms the address.");
       }
     } else {
       console.log("");

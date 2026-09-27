@@ -54,7 +54,7 @@ Realtime uses the existing PostgreSQL-backed event log and authenticated polling
 - Make the bootstrap executable under the repository's TypeScript runtime and support verified-email onboarding without exposing a temporary password.
 - Preserve notification resource IDs independently of delivery IDs.
 - Use the shared server display clock in the live activity feed, avoiding hydration mismatches across minute boundaries.
-- Send a new verification email after a correct-password sign-in by an unverified user; access remains denied until verification succeeds.
+- Unverified sign-ins are refused with a deliberate “Resend verification email” action (60 s cooldown per address); sign-in itself no longer sends mail, and only `EMAIL_NOT_VERIFIED` is ever reported as “verify your email”.
 - Validate chunk-upload origins against the configured public application origin. A live same-origin anonymous probe exposed a proxy URL mismatch that incorrectly rejected legitimate uploads before authentication. Foreign/missing/malformed origins remain denied, forwarding headers cannot expand trust, and missing production origin configuration fails closed. Ten regression cases cover these boundaries.
 - Update browser tests for the new confirmation field, current accessible labels, asynchronous saved-state feedback, and actual production game invitations. Assertions and security protections remain intact.
 

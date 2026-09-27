@@ -79,11 +79,12 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Oversized brand treatment */}
-        <div className="relative mt-16 select-none sm:mt-24" aria-hidden="true">
+        {/* Brand close: the promise, sized to the longest line so nothing clips at any width */}
+        <div className="relative mt-16 select-none sm:mt-24" data-testid="footer-brand-close">
           <div className="pixel-rule mb-6" />
-          <p className="font-display font-bold leading-[0.8] tracking-[-0.05em] text-[clamp(3rem,12.6vw,12.5rem)] whitespace-nowrap text-bone-50/90">
-            PIXEL<span className="text-forge-500">.</span>FORGE
+          <p className="text-center font-display font-bold uppercase leading-[0.86] tracking-[-0.045em] text-[clamp(1.75rem,11.4vw,10.25rem)] text-bone-50/90">
+            <span className="block whitespace-nowrap">Every pixel<span className="text-forge-500">.</span></span>
+            <span className="block whitespace-nowrap">Accounted for<span className="text-forge-500">.</span></span>
           </p>
         </div>
 

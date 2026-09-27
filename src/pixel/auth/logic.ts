@@ -19,6 +19,7 @@ export type AuthEvent =
   | { type: "submit" } | { type: "failure" } | { type: "success" }
   | { type: "magicSent" } | { type: "forgotSent" } | { type: "resetDone" }
   | { type: "warn" }
+  | { type: "verifyNeeded" } | { type: "verifySent" } | { type: "verifyFailed" } | { type: "verifyAlready" }
   | { type: "idleTimeout" } | { type: "wake" } | { type: "poke" };
 
 export type AuthPipState = {
@@ -99,6 +100,15 @@ export function reduceAuth(s: AuthPipState, e: AuthEvent): AuthPipState {
     case "warn":
       // A validation slip (short or mismatched password): concern, no commentary, back to work shortly.
       return { ...s, ...brief("worried", s.secret ? "privacy" : rest, 2800), say: null };
+    case "verifyNeeded":
+      // Right password, unconfirmed inbox: not a failure, just one step left.
+      return { ...s, secret: false, shown: false, ...hold("waiting"), say: "authVerification" };
+    case "verifySent":
+      return { ...s, secret: false, ...hold("waiting"), say: "authVerification" };
+    case "verifyFailed":
+      return { ...s, ...brief("worried", rest, 4000), say: null };
+    case "verifyAlready":
+      return { ...s, ...hold("relieved"), say: "authVerified" };
     case "idleTimeout":
       if (s.secret || s.emotion === "success") return s;
       return { ...s, ...hold("sleepy"), ...once(s, "sleepy", "authSleepy") };

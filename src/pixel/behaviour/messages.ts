@@ -171,6 +171,7 @@ const authLibrary = {
     "Check your email. I'm hopeful. I'm always hopeful.",
     "The link expires in an hour. I'll be watching the door until then.",
     "Nearly there. Open the email and I'll do the rest.",
+    "I only need to verify this once. Promise.",
   ]),
   authVerified: lines("authVerified", [
     "Verified. That's the hard part done.",

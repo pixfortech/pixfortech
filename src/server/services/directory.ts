@@ -86,7 +86,7 @@ export async function inviteUser(actor: Actor, input: { name: string; email: str
   const existing = (await db.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.email, input.email.toLowerCase())).limit(1))[0];
   if (existing) throw new AuthError(403, "A user with that email already exists.");
   const tempPassword = crypto.randomUUID() + "Aa1!";
-  const created = await auth.api.signUpEmail({ body: { name: input.name, email: input.email.toLowerCase(), password: tempPassword } });
+  const created = await auth.api.signUpEmail({ body: { name: input.name, email: input.email.toLowerCase(), password: tempPassword, callbackURL: "/login?verified=1" } });
   const userId = created.user.id;
   (await db.update(schema.users).set({ role: input.role, organisationId: staffRole ? ((await studioOrg())?.id ?? null) : input.organisationId, title: input.title ?? null }).where(eq(schema.users.id, userId)));
   let emailed = true;

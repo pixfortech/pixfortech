@@ -8,6 +8,8 @@ import { Field, inputCls, AppButton } from "@/components/app/primitives";
 import { copy } from "@content/microcopy";
 import { authPip } from "@/pixel/auth/store";
 import { PasswordInput } from "@/components/app/PasswordInput";
+import { ResendVerification } from "@/components/app/ResendVerification";
+import { signInErrorMessage } from "@/lib/auth/sign-in-error";
 
 export function LoginForm({ next, google }: { next?: string; google: boolean }) {
   const router = useRouter();
@@ -16,12 +18,13 @@ export function LoginForm({ next, google }: { next?: string; google: boolean }) 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [unverified, setUnverified] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null); setBusy(true);
+    setError(null); setUnverified(null); setBusy(true);
     authPip.dispatch({ type: "submit" });
     try {
       if (mode === "magic") {
@@ -30,7 +33,11 @@ export function LoginForm({ next, google }: { next?: string; google: boolean }) 
         return;
       }
       const res = await authClient.signIn.email({ email, password, rememberMe: true });
-      if (res.error) { setError(res.error.status === 403 ? copy.auth.loginUnverified : copy.auth.loginWrong); authPip.dispatch({ type: "failure" }); return; }
+      if (res.error) {
+        const outcome = signInErrorMessage(res.error);
+        if (outcome === "unverified") { setUnverified(email.trim()); authPip.dispatch({ type: "verifyNeeded" }); return; }
+        setError(outcome); authPip.dispatch({ type: "failure" }); return;
+      }
       // PiP opens the gate; the redirect follows a beat later so the moment reads.
       authPip.dispatch({ type: "success" });
       window.setTimeout(() => { router.replace(next ?? "/redirect"); router.refresh(); }, 650);
@@ -58,6 +65,13 @@ export function LoginForm({ next, google }: { next?: string; google: boolean }) 
         </Field>
       )}
       {error && <p role="alert" className="text-[0.8125rem] text-forge-300" data-testid="login-error">{error}</p>}
+      {unverified && (
+        <div className="flex flex-col gap-3 rounded-md border border-forge-500/40 bg-forge-500/10 px-4 py-3" data-testid="login-unverified">
+          <p role="alert" className="text-[0.875rem] font-medium text-bone-50">{copy.auth.loginUnverified}</p>
+          <p className="text-[0.8125rem] text-bone-300">{copy.auth.loginUnverifiedHint}</p>
+          <ResendVerification email={unverified} />
+        </div>
+      )}
       <AppButton type="submit" disabled={busy || !email || (mode === "password" && !password)}>{busy ? "Signing in…" : mode === "password" ? "Sign in" : "Email me a sign-in link"}</AppButton>
       <div className="flex items-center justify-between text-[0.8125rem]">
         <button type="button" onClick={switchMode} className="text-bone-400 hover:text-bone-50">{mode === "password" ? copy.auth.magicSwitch : copy.auth.passwordSwitch}</button>

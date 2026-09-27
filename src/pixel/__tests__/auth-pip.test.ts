@@ -109,3 +109,22 @@ describe("gatekeeper lines", () => {
     for (const l of linesFor("authFailure")) expect(l.text).not.toMatch(/stupid|idiot|wrong again|fail/i);
   });
 });
+
+describe("verification moments", () => {
+  it("an unverified sign-in is a waiting moment, not a failure", () => {
+    const s = run([{ type: "load", page: "login" }, { type: "passwordFocus" }, { type: "submit" }, { type: "verifyNeeded" }]);
+    expect(s.emotion).toBe("waiting");
+    expect(s.secret).toBe(false);
+    expect(s.say).toBe("authVerification");
+  });
+  it("a sent link waits, a provider failure worries then settles, an already-verified address relaxes", () => {
+    expect(run([{ type: "verifySent" }], initialAuthState("verify")).emotion).toBe("waiting");
+    const failed = run([{ type: "verifyFailed" }], initialAuthState("verify"));
+    expect(failed.emotion).toBe("worried");
+    expect(failed.settleTo).toBe("waiting");
+    expect(run([{ type: "verifyAlready" }], initialAuthState("verify")).emotion).toBe("relieved");
+  });
+  it("PiP promises verification is a one-off", () => {
+    expect(linesFor("authVerification").map((l) => l.text)).toContain("I only need to verify this once. Promise.");
+  });
+});

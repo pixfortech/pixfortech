@@ -16,7 +16,7 @@ import type { Pool } from "pg";
  * reset flow; the temporary password is never shown in that mode.
  */
 export type BootstrapInput = { email?: string | null; name?: string | null; check?: boolean; emailLink?: boolean };
-export type SuperAdminSummary = { email: string; enabled: boolean; emailVerified: boolean; createdAt: string };
+export type SuperAdminSummary = { id: string; email: string; role: string; enabled: boolean; emailVerified: boolean; createdAt: string };
 export type BootstrapResult =
   | { action: "exists"; admins: SuperAdminSummary[] }
   | { action: "created"; email: string; temporaryPassword: string; emailVerified: boolean }
@@ -30,10 +30,18 @@ export function generateTemporaryPassword(): string {
 }
 
 export async function listSuperAdmins(pool: Pool): Promise<SuperAdminSummary[]> {
-  const res = await pool.query<{ email: string; disabled: boolean; email_verified: boolean; created_at: Date }>(
-    `SELECT email, disabled, email_verified, created_at FROM "user" WHERE role = 'super_admin' ORDER BY created_at`,
+  const res = await pool.query<{ id: string; email: string; role: string; disabled: boolean; email_verified: boolean; created_at: Date }>(
+    `SELECT id, email, role, disabled, email_verified, created_at FROM "user" WHERE role = 'super_admin' ORDER BY created_at`,
   );
-  return res.rows.map((r) => ({ email: r.email, enabled: !r.disabled, emailVerified: r.email_verified, createdAt: r.created_at.toISOString() }));
+  return res.rows.map((r) => ({ id: r.id, email: r.email, role: r.role, enabled: !r.disabled, emailVerified: r.email_verified, createdAt: r.created_at.toISOString() }));
+}
+
+/** Read-only: addresses held by more than one account, compared case-insensitively. */
+export async function duplicateEmails(pool: Pool): Promise<{ email: string; count: number }[]> {
+  const res = await pool.query<{ email: string; count: string }>(
+    `SELECT lower(email) AS email, count(*) AS count FROM "user" GROUP BY lower(email) HAVING count(*) > 1 ORDER BY 1`,
+  );
+  return res.rows.map((r) => ({ email: r.email, count: Number(r.count) }));
 }
 
 export async function runBootstrap(pool: Pool, input: BootstrapInput): Promise<BootstrapResult> {

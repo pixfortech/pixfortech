@@ -13,10 +13,12 @@
     "db:seed": "node scripts/seed.mjs",
     "qa:app": "node scripts/app-qa.mjs",
     "qa:forge": "node scripts/forge-qa.mjs",
+    "qa:verification": "node scripts/verification-qa.mjs",
     "db:migrate": "tsx scripts/migrate-postgres.ts",
     "db:import-sqlite": "tsx scripts/migrate-postgres.ts --import-sqlite",
     "admin:bootstrap": "tsx scripts/admin-bootstrap.ts",
     "admin:check": "tsx scripts/admin-bootstrap.ts --check",
+    "admin:verify-owner": "tsx scripts/verify-owner.ts",
     "email:check": "tsx scripts/email-check.ts",
     "test:integration": "vitest run --config scripts/vitest.integration.config.mts"
   },
