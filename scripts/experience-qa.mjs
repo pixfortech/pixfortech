@@ -108,7 +108,7 @@ async function login(page, email, password = PASSWORD) {
   await page.waitForFunction(() => document.querySelector('[data-testid="auth-pip"]')?.dataset.emotion === "success", null, { timeout: 30000 }).catch(() => undefined);
   const successFace = await emotion(); await note();
   await page.waitForURL(/\/portal/, { timeout: 60000 });
-  ok("right password: PiP opens the gate before the redirect", successFace === "success" && spoken[spoken.length - 1]?.startsWith("authSuccess."));
+  ok("right password: PiP opens the gate as the dashboard loads", successFace === "success" && spoken[spoken.length - 1]?.startsWith("authSuccess."));
   ok("gate lines never repeat", new Set(spoken).size === spoken.length, spoken.join(","));
   await page.screenshot({ path: `${out}/gate-signed-in.png` });
   // The rest of the gate is checked signed out; a signed-in visitor is sent straight past /login.

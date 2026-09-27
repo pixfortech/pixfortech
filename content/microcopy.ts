@@ -32,6 +32,7 @@ export const copy = {
     loginFooterLink: "Reset your password",
     loginVerified: "Email verified. You can sign in now.",
     loginWrong: "That email and password do not match.",
+    loginOpening: "Opening your workbench…",
     loginUnverified: "Your email still needs verifying.",
     loginUnverifiedHint: "Open the link we emailed when the account was set up, or ask for a fresh one. You only do this once.",
     /** A 403 that is not about verification: the page was opened from an address the auth server does not trust. */

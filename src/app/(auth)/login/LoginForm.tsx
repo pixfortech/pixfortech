@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useHydrated } from "@/lib/useHydrated";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
@@ -10,9 +10,13 @@ import { authPip } from "@/pixel/auth/store";
 import { PasswordInput } from "@/components/app/PasswordInput";
 import { ResendVerification } from "@/components/app/ResendVerification";
 import { signInErrorMessage } from "@/lib/auth/sign-in-error";
+import { homeForRole, isRole } from "@/lib/auth/roles";
+import { safeNext } from "@/lib/auth/safe-next";
 
-export function LoginForm({ next, google }: { next?: string; google: boolean }) {
+export function LoginForm({ next: requestedNext, google }: { next?: string; google: boolean }) {
   const router = useRouter();
+  const next = safeNext(requestedNext);
+  const [opening, startOpening] = useTransition();
   const hydrated = useHydrated();
   const [mode, setMode] = useState<"password" | "magic">("password");
   const [email, setEmail] = useState("");
@@ -28,7 +32,7 @@ export function LoginForm({ next, google }: { next?: string; google: boolean }) 
     authPip.dispatch({ type: "submit" });
     try {
       if (mode === "magic") {
-        const res = await authClient.signIn.magicLink({ email, callbackURL: next ?? "/portal" });
+        const res = await authClient.signIn.magicLink({ email, callbackURL: next ?? "/redirect" });
         if (res.error) { setError(res.error.message ?? "Could not send the link."); authPip.dispatch({ type: "failure" }); } else { setSent(true); authPip.dispatch({ type: "magicSent" }); }
         return;
       }
@@ -38,9 +42,14 @@ export function LoginForm({ next, google }: { next?: string; google: boolean }) 
         if (outcome === "unverified") { setUnverified(email.trim()); authPip.dispatch({ type: "verifyNeeded" }); return; }
         setError(outcome); authPip.dispatch({ type: "failure" }); return;
       }
-      // PiP opens the gate; the redirect follows a beat later so the moment reads.
+      // PiP opens the gate while the dashboard loads; navigation never waits for him.
+      // The sign-in response carries the role, so the destination is known now: no
+      // /redirect hop, no second session lookup, no refresh (the dashboard's own
+      // layout reads the new session cookie on this navigation).
       authPip.dispatch({ type: "success" });
-      window.setTimeout(() => { router.replace(next ?? "/redirect"); router.refresh(); }, 650);
+      const role = (res.data?.user as { role?: unknown } | undefined)?.role;
+      const destination = next ?? (isRole(role) ? homeForRole(role) : "/redirect");
+      startOpening(() => router.replace(destination));
     } finally { setBusy(false); }
   }
 
@@ -72,7 +81,7 @@ export function LoginForm({ next, google }: { next?: string; google: boolean }) 
           <ResendVerification email={unverified} />
         </div>
       )}
-      <AppButton type="submit" disabled={busy || !email || (mode === "password" && !password)}>{busy ? "Signing in…" : mode === "password" ? "Sign in" : "Email me a sign-in link"}</AppButton>
+      <AppButton type="submit" disabled={busy || opening || !email || (mode === "password" && !password)}>{opening ? copy.auth.loginOpening : busy ? "Signing in…" : mode === "password" ? "Sign in" : "Email me a sign-in link"}</AppButton>
       <div className="flex items-center justify-between text-[0.8125rem]">
         <button type="button" onClick={switchMode} className="text-bone-400 hover:text-bone-50">{mode === "password" ? copy.auth.magicSwitch : copy.auth.passwordSwitch}</button>
         {google && <button type="button" onClick={() => authClient.signIn.social({ provider: "google", callbackURL: next ?? "/redirect" })} className="text-bone-400 hover:text-bone-50">Continue with Google</button>}

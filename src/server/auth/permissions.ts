@@ -4,6 +4,7 @@
  * is trusted from the browser; callers pass a server-side session user.
  */
 import { CLIENT_ROLES, STAFF_ROLES, type Role } from "../db/schema";
+import { homeForRole } from "../../lib/auth/roles";
 
 export type Actor = { id: string; role: Role; organisationId: string | null; disabled?: boolean };
 
@@ -58,4 +59,5 @@ export function allowedRequestTransitions(a: Actor, current: string): string[] {
   return client[current] ?? [];
 }
 
-export const homeFor = (a: Actor) => (isStaff(a) ? "/admin" : "/portal");
+/** Same rule the sign-in form applies to the sign-in response (src/lib/auth/roles.ts). */
+export const homeFor = (a: Actor) => homeForRole(a.role);

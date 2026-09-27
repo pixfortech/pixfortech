@@ -109,6 +109,8 @@ describe("after verification", () => {
     const before = verifications().length;
     const first = await post("/sign-in/email", { email, password }, "http://localhost:3000");
     expect(first.status).toBe(200);
+    // The sign-in form routes on this: the role must be in the response.
+    expect(((await first.clone().json()) as { user?: { role?: string } }).user?.role).toBe("client_member");
     const c1 = sessionCookie(first);
     expect((await sessionFor(c1))?.user.emailVerified).toBe(true);
 

@@ -14,10 +14,8 @@ const now = () => timestamp("created_at", { withTimezone: true, mode: "date", pr
 const updated = () => timestamp("updated_at", { withTimezone: true, mode: "date", precision: 3 }).notNull().defaultNow();
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: "date", precision: 3 });
 
-export const ROLES = ["super_admin", "admin", "project_manager", "team_member", "client_admin", "client_member"] as const;
-export type Role = (typeof ROLES)[number];
-export const STAFF_ROLES: Role[] = ["super_admin", "admin", "project_manager", "team_member"];
-export const CLIENT_ROLES: Role[] = ["client_admin", "client_member"];
+import { ROLES } from "../../lib/auth/roles";
+export { ROLES, STAFF_ROLES, CLIENT_ROLES, type Role } from "../../lib/auth/roles";
 
 // ---------------------------------------------------------------- organisations
 export const organisations = pgTable("organisations", {

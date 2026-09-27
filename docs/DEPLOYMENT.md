@@ -143,6 +143,10 @@ Temporary-host validation has passed core login/logout, role redirects, foreign 
 
 `npm run qa:verification` (local dev server only) exercises all of this in a browser, including the footer at eight widths.
 
+## Post-sign-in navigation (branch `codex/final-experience-upgrade`)
+
+Password sign-in used to wait 650 ms for PiP's success animation, then client-navigate to `/redirect`, which looked the session up again and redirected to `/admin` or `/portal`, followed by a `router.refresh()`. The sign-in response already carries the user's role, so the form now picks the destination itself (a safe `next`, else `/admin` for staff and `/portal` for clients, using the same `homeForRole` rule as the server's `homeFor`) and navigates immediately; PiP's success face plays while the dashboard loads. `next` is honoured only for plain same-site paths (`src/lib/auth/safe-next.ts`), on the form and on the signed-in `/login` redirect. `/redirect` remains as the fallback for magic links, Google and old links; it has no loading screen on purpose, so it answers with an immediate 307 and never paints. Measured on a local production build (`npm run qa:login -- http://localhost:3000 --flows`): median sign-in response to painted dashboard 896 ms before, about 225 ms after. On the hosted site the saving is larger, since the removed `/redirect` hop also cost a network round trip and a database session lookup.
+
 ## Validation and rollback
 
 The latest validation includes 56 passing unit tests, type checking, lint and a successful production build. The display clock is supplied by the server for matching initial hydration, then advances on the client; its regression test covers a minute boundary. Calendar dates use UTC consistently. Browser notification permissions are read only after hydration. The final phone-width regression passes all ten admin/client pages without horizontal overflow or browser exceptions. Chat and request attachment upload/download regression passes on the same deployment. The deployed kanban check passes both explicit save completion and exact-task persistence after reload.
